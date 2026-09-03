@@ -11,17 +11,32 @@ dart run build_runner build --delete-conflicting-outputs
 
 ## Running the app
 
-The client talks to the Tajeer AI backend. Point it at yours:
+Configuration comes from `.env` files, read by Flutter's
+`--dart-define-from-file`. Copy the template and point it at your backend:
 
 ```bash
-flutter run --dart-define=TAJEER_API_URL=http://10.0.2.2:3000
+cp .env.example .env
+make run
 ```
 
-`10.0.2.2` is the host machine as seen from the Android emulator. A physical
-device needs your LAN address. Without the define, the environment's default
-applies — see `lib/app/config/app_config.dart`.
+`10.0.2.2` is the host machine as seen from the Android emulator; a physical
+device needs your LAN address.
 
-Select a deployment with `--dart-define=TAJEER_ENV=development|staging|production`.
+`.env` is gitignored and takes precedence over `.env.development`, so you can
+work on a device without editing a committed file. Other deployments:
+
+```bash
+make run-staging
+make run-prod
+make build-prod
+```
+
+The API and the socket are separate hosts in staging and production
+(`TAJEER_API_URL` and `TAJEER_SOCKET_URL`). Setting only `TAJEER_API_URL`
+points both at it, which is what a single local backend wants.
+
+> These values are compiled into the binary and are extractable from a shipped
+> APK. They are hostnames — never put a secret in one.
 
 ## The checks
 

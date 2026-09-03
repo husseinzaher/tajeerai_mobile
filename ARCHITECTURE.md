@@ -483,8 +483,18 @@ source, not invented.
 5. **`message:send` is idempotent on `clientMessageId`** and reports
    `deduplicated`.
 
-6. **The API and the socket share one origin.** The gateway is served by the
-   Nest application.
+6. **The API and the socket are separate hosts** in staging and production --
+   `api.tajeerai.com` and `socket.tajeerai.com` — and collapse onto one origin
+   locally, where a single Nest process serves both. They are configured
+   independently (`TAJEER_API_URL`, `TAJEER_SOCKET_URL`).
+
+   The split is safe for authentication because the client never depended on
+   the API's cookies reaching the socket host: `AuthRemoteDataSource` reads the
+   access token's *value* out of the cookie jar, and the handshake carries it
+   as `auth.token`. A browser client would need a different arrangement.
+
+   The staging hostnames follow the production pattern and are **unconfirmed**
+   against a deployed environment.
 
 7. **`conversation:list` acknowledges a cursor-paginated page.** The client
    reads `items` / `data`, `nextCursor` and `hasMore`; if the server names the
@@ -502,8 +512,12 @@ Recorded so they are decisions, not omissions.
   could only assert against a mock of the library. Everything built on it is
   tested through the `SocketClient` interface with a fake transport. An
   integration test against a running backend would close this.
-- **`custom_lint` / `riverpod_lint`** are not installed: they pin an older
-  analyzer than `riverpod_generator` 4.x requires. Revisit when that resolves.
+- **`custom_lint` / `riverpod_lint`** are not installed: `custom_lint` caps at
+  `analyzer ^8` while `riverpod_generator` 4.x requires `^13`. Rechecked after
+  a full `pub upgrade --major-versions`; still unresolvable upstream. Revisit
+  when `custom_lint` moves.
+- **Staging hostnames** in `.env.staging` follow the production pattern and are
+  not confirmed against a deployed environment.
 - **Bundled fonts.** `IBM Plex Sans Arabic` is requested by name with a fallback
   stack; the face is not yet shipped as an asset.
 - **Push notifications.** `infrastructure/notifications/` is intentionally

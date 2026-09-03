@@ -17,6 +17,11 @@ build/
 *.g.dart
 *.freezed.dart
 
+# Local build configuration. The per-environment files (.env.development,
+# .env.staging, .env.production) ARE committed -- they hold hostnames, not
+# secrets. `.env` is the developer's own override and is not.
+.env
+
 # Coverage
 coverage/
 

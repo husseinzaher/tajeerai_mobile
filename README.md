@@ -52,14 +52,44 @@ flutter pub get
 dart run build_runner build --delete-conflicting-outputs
 ```
 
-Run it against a backend:
+Run it:
 
 ```bash
-flutter run --dart-define=TAJEER_API_URL=http://10.0.2.2:3000
+make run                  # against .env (or .env.development if you have none)
+make run-staging
+make run-prod
+```
+
+## Configuration
+
+Build configuration lives in `.env` files, read natively by Flutter's
+`--dart-define-from-file` — no runtime dependency, and the values are resolved
+at compile time.
+
+| File | Committed | Purpose |
+| --- | --- | --- |
+| `.env.development` | yes | Local backend. One Nest process serves both roles. |
+| `.env.staging` | yes | Staging hosts. |
+| `.env.production` | yes | `api.tajeerai.com` and `socket.tajeerai.com`. |
+| `.env.example` | yes | Template, documented. |
+| `.env` | **no** | Your own overrides. Wins when present. |
+
+```bash
+cp .env.example .env      # then point TAJEER_API_URL at your LAN address
 ```
 
 `10.0.2.2` is the host machine as seen from the Android emulator; a physical
 device needs your LAN address.
+
+**The API and the socket are separate hosts** in staging and production, so they
+are configured independently. That is safe for authentication: the session
+cookies the API sets are never sent to the socket host, and the client never
+relied on them being — it reads the access token out of the cookie jar and the
+handshake carries it as `auth.token`.
+
+> **These values are compiled into the binary and can be read back out of a
+> shipped APK.** They are hostnames. Never put a secret, key or credential in
+> one of these files.
 
 ## Commands
 
