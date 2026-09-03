@@ -1,0 +1,24 @@
+# Code generation configuration.
+#
+# `dart run build_runner build` reproduces every `.g.dart` and `.freezed.dart`
+# in the project from scratch; CI runs it before analysis so a stale committed
+# artifact cannot hide a broken generator.
+targets:
+  $default:
+    builders:
+      drift_dev:
+        options:
+          # Store DateTime as ISO-8601 UTC text rather than as a local-time
+          # unix epoch, which is drift's default.
+          #
+          # This app compares timestamps it wrote locally against ISO-8601 UTC
+          # stamps from the server -- `occurredAt` on every socket event, and
+          # the `syncedAt` sync cursor. With epoch storage those values come
+          # back as local `DateTime`s: the *instant* is right, so ordering
+          # still works, but the UTC flag is lost and any round-trip
+          # comparison or serialisation silently changes zone. Text storage
+          # keeps what was written.
+          store_date_time_values_as_text: true
+
+          # Generated table classes are named after the row, not the table.
+          named_parameters: true

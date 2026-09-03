@@ -1,0 +1,62 @@
+# Static analysis for the Tajeer AI mobile client.
+#
+# Architecture is enforced separately by `dart run tool/check_architecture.dart`
+# -- the analyzer checks Dart correctness, the guard checks layering. Both run
+# in CI and both must pass.
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**
+    # Generated sources are checked by the builder that writes them; linting
+    # them only produces noise nobody can act on without editing a generator.
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+
+  errors:
+    # An unused import or a dead field is a defect in a codebase this size --
+    # it means a refactor was left half-finished.
+    unused_import: error
+    unused_local_variable: error
+    unused_field: error
+    dead_code: error
+    # Awaiting is not optional in the outbox and sync paths: a dropped future
+    # is a mutation that silently never happens.
+    unawaited_futures: error
+
+linter:
+  rules:
+    # Incompatible with the codebase's convention of private fields behind
+    # public constructor parameter names (`SocketConnection({required url})`
+    # assigning `_url`). Dart forbids a named parameter starting with `_`, so
+    # the lint's suggested fix cannot be applied without leaking the field.
+    prefer_initializing_formals: false
+
+    # Enforced beyond the Flutter defaults.
+    always_declare_return_types: true
+    avoid_dynamic_calls: true
+    avoid_slow_async_io: true
+    cancel_subscriptions: true
+    close_sinks: true
+    comment_references: false
+    prefer_final_locals: true
+    prefer_single_quotes: true
+    require_trailing_commas: true
+    unawaited_futures: true
+    use_super_parameters: true
+
+    # `if (x != null) 'key': x` in a map literal is clearer than the null-aware
+    # marker when the key is conditional rather than the value -- the lint does
+    # not distinguish the two cases.
+    use_null_aware_elements: false
