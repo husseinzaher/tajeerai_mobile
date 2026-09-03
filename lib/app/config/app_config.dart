@@ -8,10 +8,10 @@ import 'environment.dart';
 ///
 /// ## Two origins
 ///
-/// The API and the socket are separate hosts in production
-/// (`api.tajeerai.com` and `socket.tajeerai.com`), so they are configured
-/// independently. Locally they collapse onto one origin, because a single Nest
-/// process serves both.
+/// The API and the socket are configured independently, because production
+/// splits them across `api.tajeerai.com` and `socket.tajeerai.com`. Staging
+/// and local development each serve both roles from one host, so there the two
+/// values are simply equal -- which is why neither is derived from the other.
 ///
 /// The split has one consequence worth stating: the session cookies the API
 /// sets on its own domain are **not** sent to the socket host. That costs this
@@ -90,7 +90,8 @@ class AppConfig {
       // 10.0.2.2 is the host machine as seen from the Android emulator; a
       // physical device needs TAJEER_API_URL pointed at the LAN address.
       Environment.development => 'http://10.0.2.2:3000',
-      Environment.staging => 'https://api.staging.tajeerai.com',
+      // Staging serves both roles from one host.
+      Environment.staging => 'https://staging.tajeerai.com',
       Environment.production => 'https://api.tajeerai.com',
     };
   }
@@ -99,7 +100,7 @@ class AppConfig {
     return switch (environment) {
       // One local Nest process serves both roles.
       Environment.development => 'http://10.0.2.2:3000',
-      Environment.staging => 'https://socket.staging.tajeerai.com',
+      Environment.staging => 'https://staging.tajeerai.com',
       Environment.production => 'https://socket.tajeerai.com',
     };
   }

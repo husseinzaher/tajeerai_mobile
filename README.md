@@ -69,7 +69,7 @@ at compile time.
 | File | Committed | Purpose |
 | --- | --- | --- |
 | `.env.development` | yes | Local backend. One Nest process serves both roles. |
-| `.env.staging` | yes | Staging hosts. |
+| `.env.staging` | yes | `staging.tajeerai.com` — one host, both roles. |
 | `.env.production` | yes | `api.tajeerai.com` and `socket.tajeerai.com`. |
 | `.env.example` | yes | Template, documented. |
 | `.env` | **no** | Your own overrides. Wins when present. |
@@ -81,11 +81,15 @@ cp .env.example .env      # then point TAJEER_API_URL at your LAN address
 `10.0.2.2` is the host machine as seen from the Android emulator; a physical
 device needs your LAN address.
 
-**The API and the socket are separate hosts** in staging and production, so they
-are configured independently. That is safe for authentication: the session
-cookies the API sets are never sent to the socket host, and the client never
-relied on them being — it reads the access token out of the cookie jar and the
-handshake carries it as `auth.token`.
+**The API and the socket are separate hosts in production**
+(`api.tajeerai.com`, `socket.tajeerai.com`); staging and development serve both
+roles from one host. They are configured independently so that difference costs
+nothing.
+
+The split is safe for authentication: the session cookies the API sets are never
+sent to the socket host, and the client never relied on them being — it reads
+the access token out of the cookie jar and the handshake carries it as
+`auth.token`.
 
 > **These values are compiled into the binary and can be read back out of a
 > shipped APK.** They are hostnames. Never put a secret, key or credential in
