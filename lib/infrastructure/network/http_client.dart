@@ -45,7 +45,8 @@ class HttpClient {
 
     final dio = Dio(
       BaseOptions(
-        baseUrl: config.apiBaseUrl,
+        // Origin plus the backend's global prefix -- see AppConfig.apiRoot.
+        baseUrl: config.apiRoot,
         connectTimeout: config.connectTimeout,
         receiveTimeout: config.receiveTimeout,
         headers: <String, Object?>{

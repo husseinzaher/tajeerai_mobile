@@ -27,7 +27,16 @@ class AppConfig {
     required this.connectTimeout,
     required this.receiveTimeout,
     required this.commandTimeout,
+    this.apiPathPrefix = defaultApiPathPrefix,
   });
+
+  /// The backend's global route prefix.
+  ///
+  /// Nest declares `app.setGlobalPrefix('api')`, and the production nginx
+  /// proxies `/api/` through without stripping it, so every HTTP route is
+  /// `/api/v1/...` in every environment. Held here rather than repeated in
+  /// each path so a change is one edit.
+  static const String defaultApiPathPrefix = '/api';
 
   /// Builds the configuration from compile-time defines.
   ///
@@ -53,10 +62,15 @@ class AppConfig {
       _ => _defaultSocketUrl(environment),
     };
 
+    const prefixOverride = String.fromEnvironment('TAJEER_API_PREFIX');
+
     return AppConfig(
       environment: environment,
       apiBaseUrl: apiBaseUrl,
       socketUrl: socketUrl,
+      apiPathPrefix: prefixOverride.isNotEmpty
+          ? prefixOverride
+          : defaultApiPathPrefix,
       connectTimeout: const Duration(seconds: 15),
       receiveTimeout: const Duration(seconds: 30),
       commandTimeout: const Duration(seconds: 20),
@@ -65,9 +79,20 @@ class AppConfig {
 
   final Environment environment;
 
-  /// Origin for the HTTP API. Routes are versioned under `/v1`, matching the
-  /// backend's `@Controller('v1/auth')`.
+  /// Origin for the HTTP API, without a path.
+  ///
+  /// Also the domain the session cookie jar is keyed on -- see
+  /// `AuthRemoteDataSource`.
   final String apiBaseUrl;
+
+  /// The backend's global prefix. See [defaultApiPathPrefix].
+  final String apiPathPrefix;
+
+  /// Where HTTP requests are actually sent: origin plus prefix.
+  ///
+  /// Routes below it are versioned (`/v1/auth/login`), matching the backend's
+  /// `@Controller('v1/auth')` under its global prefix.
+  String get apiRoot => '$apiBaseUrl$apiPathPrefix';
 
   /// Origin for the Socket.IO connection.
   ///
@@ -87,9 +112,11 @@ class AppConfig {
 
   static String _defaultApiUrl(Environment environment) {
     return switch (environment) {
-      // 10.0.2.2 is the host machine as seen from the Android emulator; a
-      // physical device needs TAJEER_API_URL pointed at the LAN address.
-      Environment.development => 'http://10.0.2.2:3000',
+      // 10.0.2.2 is the host machine as seen from the Android emulator, and
+      // 4040 is where docker-compose publishes the backend (container :4000).
+      // A physical device cannot reach 10.0.2.2 -- it needs TAJEER_API_URL
+      // pointed at the machine's LAN address.
+      Environment.development => 'http://10.0.2.2:4040',
       // Staging serves both roles from one host.
       Environment.staging => 'https://staging.tajeerai.com',
       Environment.production => 'https://api.tajeerai.com',
@@ -99,7 +126,7 @@ class AppConfig {
   static String _defaultSocketUrl(Environment environment) {
     return switch (environment) {
       // One local Nest process serves both roles.
-      Environment.development => 'http://10.0.2.2:3000',
+      Environment.development => 'http://10.0.2.2:4040',
       Environment.staging => 'https://staging.tajeerai.com',
       Environment.production => 'https://socket.tajeerai.com',
     };

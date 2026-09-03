@@ -122,6 +122,117 @@ void main() {
       expect(conversation.displayName, 'Unknown customer');
     });
 
+    group('the rail payload, as the backend actually sends it', () {
+      /// One row from `conversation:list`, in the shape
+      /// `ConversationService.list` builds.
+      Map<String, Object?> railRow({
+        Object? pinnedAt,
+        Object? archivedAt,
+        List<Object?>? messages,
+      }) {
+        return <String, Object?>{
+          'id': 'c1',
+          'state': 'open',
+          'unreadCount': 2,
+          'createdAt': '2026-02-01T09:00:00.000Z',
+          'lastMessageAt': '2026-03-01T12:00:00.000Z',
+          'pinnedAt': pinnedAt,
+          'archivedAt': archivedAt,
+          'muted': false,
+          'tags': <Object?>[],
+          'customer': <String, Object?>{
+            'id': 'cu1',
+            'name': 'Ada Lovelace',
+            'phone': '+201000000000',
+            'photoUrl': 'https://cdn.test/ada.png',
+          },
+          'messages': messages ?? <Object?>[],
+        };
+      }
+
+      test('takes the preview from the attached latest message', () {
+        // Regression: the backend attaches the newest message as a
+        // one-element `messages` array and sends no `lastMessagePreview`.
+        // Reading a preview field produced an Inbox where every row said
+        // "No messages yet" -- confirmed on a real device.
+        final conversation = ConversationDto.decode(
+          railRow(
+            messages: <Object?>[
+              <String, Object?>{'id': 'm1', 'body': 'See you then'},
+            ],
+          ),
+        );
+
+        expect(conversation.lastMessagePreview, 'See you then');
+      });
+
+      test('collapses whitespace in the preview', () {
+        final conversation = ConversationDto.decode(
+          railRow(
+            messages: <Object?>[
+              <String, Object?>{'id': 'm1', 'body': 'line one\n\nline two'},
+            ],
+          ),
+        );
+
+        expect(conversation.lastMessagePreview, 'line one line two');
+      });
+
+      test('names an attachment when the latest message has no body', () {
+        final conversation = ConversationDto.decode(
+          railRow(
+            messages: <Object?>[
+              <String, Object?>{
+                'id': 'm1',
+                'body': null,
+                'mediaUrl': 'https://cdn.test/a.jpg',
+              },
+            ],
+          ),
+        );
+
+        expect(conversation.lastMessagePreview, 'Attachment');
+      });
+
+      test('has no preview for a thread with no messages', () {
+        expect(ConversationDto.decode(railRow()).lastMessagePreview, isNull);
+      });
+
+      test('reads pinned and archived from their timestamps', () {
+        // The rail sends `pinnedAt` / `archivedAt`, not booleans. Reading
+        // `pinned` / `archived` meant a pinned thread never sorted to the top.
+        final pinned = ConversationDto.decode(
+          railRow(pinnedAt: '2026-03-01T10:00:00.000Z'),
+        );
+        final archived = ConversationDto.decode(
+          railRow(archivedAt: '2026-03-01T10:00:00.000Z'),
+        );
+        final plain = ConversationDto.decode(railRow());
+
+        expect(pinned.isPinned, isTrue);
+        expect(archived.isArchived, isTrue);
+        expect(archived.acceptsNewMessages, isFalse);
+        expect(plain.isPinned, isFalse);
+        expect(plain.isArchived, isFalse);
+      });
+
+      test('reads the customer name and resolved photo', () {
+        final conversation = ConversationDto.decode(railRow());
+
+        expect(conversation.customerName, 'Ada Lovelace');
+        expect(conversation.displayName, 'Ada Lovelace');
+        expect(conversation.customerAvatarUrl, 'https://cdn.test/ada.png');
+      });
+
+      test('takes muted as the server resolved it', () {
+        // "Muted until a time that has passed" is not muted, and the backend
+        // declines to make every client re-implement that comparison.
+        final row = railRow()..['muted'] = true;
+
+        expect(ConversationDto.decode(row).isMuted, isTrue);
+      });
+    });
+
     test('normalises timestamps to UTC', () {
       final conversation = ConversationDto.decode(<String, Object?>{
         'id': 'c1',

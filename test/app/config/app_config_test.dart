@@ -70,6 +70,44 @@ void main() {
       expect(Uri.parse(config.socketUrl).host, 'socket.tajeerai.com');
     });
 
+    test('sends HTTP under the backend global prefix', () {
+      const config = AppConfig(
+        environment: Environment.production,
+        apiBaseUrl: 'https://api.tajeerai.com',
+        socketUrl: 'https://socket.tajeerai.com',
+        connectTimeout: Duration(seconds: 15),
+        receiveTimeout: Duration(seconds: 30),
+        commandTimeout: Duration(seconds: 20),
+      );
+
+      // Nest declares setGlobalPrefix('api') and the production nginx proxies
+      // /api/ through without stripping it, so every route is /api/v1/...
+      // Requests built without it 404 -- which is exactly what a live probe
+      // against the running backend returned.
+      expect(config.apiRoot, 'https://api.tajeerai.com/api');
+    });
+
+    test('leaves the cookie-jar origin unprefixed', () {
+      final config = AppConfig.resolve();
+
+      // Cookies are keyed by domain, not by the API's path prefix.
+      expect(config.apiBaseUrl, isNot(contains('/api')));
+    });
+
+    test('the prefix is overridable for a deployment that strips it', () {
+      const config = AppConfig(
+        environment: Environment.staging,
+        apiBaseUrl: 'https://staging.tajeerai.com',
+        socketUrl: 'https://staging.tajeerai.com',
+        connectTimeout: Duration(seconds: 15),
+        receiveTimeout: Duration(seconds: 30),
+        commandTimeout: Duration(seconds: 20),
+        apiPathPrefix: '',
+      );
+
+      expect(config.apiRoot, 'https://staging.tajeerai.com');
+    });
+
     test('the command timeout is separate from the receive timeout', () {
       const config = AppConfig(
         environment: Environment.development,

@@ -67,7 +67,33 @@ void main() {
       expect(lastCommand().payload.containsKey('archived'), isFalse);
     });
 
-    test('decodes a page', () async {
+    test('decodes the page the backend actually returns', () async {
+      // `toCursorPage` returns `{data, meta:{hasMore, nextCursor}}`. Reading
+      // the pagination from the top level silently disabled paging past the
+      // first page.
+      client.nextAck = const SocketAckSuccess(<String, Object?>{
+        'data': <Object?>[
+          <String, Object?>{
+            'id': 'c1',
+            'state': 'open',
+            'createdAt': '2026-03-01T12:00:00.000Z',
+          },
+        ],
+        'meta': <String, Object?>{
+          'nextCursor': 'cursor-1',
+          'hasMore': true,
+          'total': 42,
+        },
+      });
+
+      final page = await remote.listConversations();
+
+      expect(page.conversations.single.id, 'c1');
+      expect(page.nextCursor, 'cursor-1');
+      expect(page.hasMore, isTrue);
+    });
+
+    test('still reads a flat page shape', () async {
       client.nextAck = const SocketAckSuccess(<String, Object?>{
         'items': <Object?>[
           <String, Object?>{
@@ -82,14 +108,13 @@ void main() {
 
       final page = await remote.listConversations();
 
-      expect(page.conversations.single.id, 'c1');
       expect(page.nextCursor, 'cursor-1');
       expect(page.hasMore, isTrue);
     });
 
     test('skips a malformed row rather than losing the page', () async {
       client.nextAck = const SocketAckSuccess(<String, Object?>{
-        'items': <Object?>[
+        'data': <Object?>[
           <String, Object?>{'no': 'id'},
           <String, Object?>{
             'id': 'c2',
@@ -107,7 +132,7 @@ void main() {
 
     test('returns an empty page when the payload is not a list', () async {
       client.nextAck = const SocketAckSuccess(<String, Object?>{
-        'items': 'unexpected',
+        'data': 'unexpected',
       });
 
       expect((await remote.listConversations()).conversations, isEmpty);

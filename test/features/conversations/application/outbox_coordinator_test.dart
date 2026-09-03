@@ -352,6 +352,33 @@ void main() {
         OutboxStatus.pending,
       );
     });
+
+    test('also returns the message from sending to pending', () async {
+      // Regression, seen on a real device: `_sendMessage` moves the row to
+      // `sending` before dispatching, so a process killed mid-flight left the
+      // bubble reading "Sending" forever while the queue had quietly gone back
+      // to `pending`. The two must be recovered together.
+      await queueSend();
+      await database.outboxDao.claim('client-1', now: clock());
+      await messages.updateState(
+        messageId: 'client-1',
+        state: MessageState.sending,
+      );
+
+      await coordinator.recoverInterrupted();
+
+      expect(messages.stateUpdates.last.messageId, 'client-1');
+      expect(messages.stateUpdates.last.state, MessageState.pending);
+    });
+
+    test('leaves a pending entry\'s message alone', () async {
+      await queueSend();
+
+      await coordinator.recoverInterrupted();
+
+      // Nothing was in flight, so nothing needed resetting.
+      expect(messages.stateUpdates, isEmpty);
+    });
   });
 
   group('concurrency', () {

@@ -83,7 +83,7 @@ void main() {
     test('points at the local backend on both roles', () {
       expect(env['TAJEER_ENV'], 'development');
       expect(env['TAJEER_API_URL'], env['TAJEER_SOCKET_URL']);
-      expect(env['TAJEER_API_URL'], contains('10.0.2.2'));
+      expect(env['TAJEER_API_URL'], 'http://10.0.2.2:4040');
     });
 
     test('never points a development build at a real deployment', () {

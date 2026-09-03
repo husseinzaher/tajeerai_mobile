@@ -68,12 +68,17 @@ class ConversationRemoteDataSource {
       ),
     );
 
-    final items = ack.data['items'] ?? ack.data['data'] ?? ack.rawData;
+    final items = ack.data['data'] ?? ack.data['items'] ?? ack.rawData;
+
+    // `toCursorPage` nests pagination under `meta`; reading it from the top
+    // level silently disabled paging past the first page.
+    final meta = ack.data['meta'];
+    final pagination = meta is Map ? meta : ack.data;
 
     return ConversationPage(
       conversations: _decodeConversations(items),
-      nextCursor: ack.data['nextCursor']?.toString(),
-      hasMore: ack.data['hasMore'] == true,
+      nextCursor: pagination['nextCursor']?.toString(),
+      hasMore: pagination['hasMore'] == true,
     );
   }
 

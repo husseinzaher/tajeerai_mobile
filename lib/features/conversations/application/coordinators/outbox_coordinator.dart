@@ -70,13 +70,30 @@ class OutboxCoordinator {
 
   bool _draining = false;
 
-  /// Returns entries stuck in-flight to the queue.
+  /// Returns entries stuck in-flight to the queue, and the messages with them.
   ///
   /// Run once at start-up. An in-flight row means the process died mid-send:
   /// the command may or may not have reached the server, which is precisely
   /// what the idempotency key covers, so retrying is safe and dropping is not.
-  Future<int> recoverInterrupted() =>
-      _outbox.recoverInFlight(now: _clock().toUtc());
+  ///
+  /// Resetting the *message* alongside the entry matters for what the user
+  /// sees. `_sendMessage` moves the row to `sending` before dispatching, and a
+  /// process that dies mid-flight leaves it there -- so the bubble reads
+  /// "Sending" forever while the queue has quietly gone back to `pending`.
+  /// Observed on a real device: two messages stuck on "Sending" with nothing
+  /// in flight behind them.
+  Future<int> recoverInterrupted() async {
+    final entries = await _outbox.watchUnsettled().first;
+    final recovered = await _outbox.recoverInFlight(now: _clock().toUtc());
+
+    for (final entry in entries) {
+      if (entry.status != OutboxStatus.inFlight) continue;
+
+      await _markMessageState(entry, MessageState.pending, null);
+    }
+
+    return recovered;
+  }
 
   /// Sends everything currently due.
   ///

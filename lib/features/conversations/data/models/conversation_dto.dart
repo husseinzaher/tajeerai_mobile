@@ -30,11 +30,15 @@ abstract final class ConversationDto {
       subject: json['subject']?.toString(),
       unreadCount: _int(json['unreadCount']) ?? 0,
       tags: _tags(json['tags']),
-      lastMessagePreview: json['lastMessagePreview']?.toString(),
+      lastMessagePreview: _preview(json),
       lastMessageAt: parseTime(json['lastMessageAt']),
       lastInboundMessageAt: parseTime(json['lastInboundMessageAt']),
-      isPinned: json['pinned'] == true || json['isPinned'] == true,
-      isArchived: json['archived'] == true || json['isArchived'] == true,
+      // The rail sends timestamps, not booleans: `pinnedAt` and `archivedAt`
+      // are null when unset. `muted` is already resolved server-side, because
+      // "muted until a time that has passed" is not muted and the backend
+      // declines to make every client re-implement that comparison.
+      isPinned: _isSet(json['pinnedAt']) || json['isPinned'] == true,
+      isArchived: _isSet(json['archivedAt']) || json['isArchived'] == true,
       isMuted: json['muted'] == true || json['isMuted'] == true,
       isBotEnabled: json['isBotEnabled'] == true,
       createdAt: parseTime(json['createdAt']) ?? DateTime.now().toUtc(),
@@ -64,6 +68,39 @@ abstract final class ConversationDto {
     };
   }
 
+  /// The rail's one-line preview.
+  ///
+  /// The backend attaches the newest message as a one-element `messages`
+  /// array rather than a preview string -- it hydrates the real row so the
+  /// client can show media and template messages properly. There is no
+  /// `lastMessagePreview` field; reading one produced an Inbox where every
+  /// row said "No messages yet".
+  static String? _preview(Map<String, Object?> json) {
+    final direct = json['lastMessagePreview']?.toString();
+
+    if (direct != null && direct.isNotEmpty) return direct;
+
+    final messages = json['messages'];
+
+    if (messages is! List || messages.isEmpty) return null;
+
+    final latest = messages.first;
+
+    if (latest is! Map) return null;
+
+    final body = latest['body']?.toString();
+
+    if (body != null && body.trim().isNotEmpty) {
+      return body.replaceAll(RegExp(r'\s+'), ' ').trim();
+    }
+
+    // A media message has no body. Naming the kind beats an empty row.
+    return latest['mediaUrl'] == null ? null : 'Attachment';
+  }
+
+  /// A nullable timestamp used as a flag.
+  static bool _isSet(Object? raw) => raw != null && raw.toString().isNotEmpty;
+
   /// The customer's name, wherever the payload happens to carry it.
   ///
   /// The rail payload nests a `customer` object; some events carry only a flat
@@ -77,13 +114,23 @@ abstract final class ConversationDto {
 
     if (customer is! Map) return null;
 
-    return customer['displayName']?.toString() ?? customer['name']?.toString();
+    // `name` is what the rail's customer object carries; `displayName` is the
+    // discovery payload's spelling.
+    final name = customer['name'] ?? customer['displayName'];
+    final text = name?.toString();
+
+    return text == null || text.isEmpty ? null : text;
   }
 
   static String? _customerAvatar(Map<String, Object?> json) {
     final customer = json['customer'];
 
     if (customer is Map) {
+      // The rail resolves the photo server-side into `photoUrl`.
+      final photo = customer['photoUrl']?.toString();
+
+      if (photo != null && photo.isNotEmpty) return photo;
+
       final avatar = customer['avatar'];
 
       if (avatar is Map) return avatar['url']?.toString();
