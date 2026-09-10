@@ -57,19 +57,13 @@ class AppAvatarGroup extends StatelessWidget {
           height: diameter,
           child: Stack(
             children: <Widget>[
-              // Painted last-to-first so the first person named is on top.
-              for (int i = shown - 1; i >= 0; i--)
-                PositionedDirectional(
-                  start: i * step,
-                  child: _ringed(
-                    context,
-                    AppAvatar(
-                      name: names[i],
-                      imageUrl: i < imageUrls.length ? imageUrls[i] : null,
-                      size: size,
-                    ),
-                  ),
-                ),
+              // Paint order IS stacking order, and it has to run one way. The
+              // overflow bubble sits furthest toward the end and tucks under
+              // the last face; each face tucks under the one before it; the
+              // first person named is on top. The bubble used to be painted
+              // last, which put it on top of the last face from the other side
+              // — that face was covered on both edges and its initials crowded.
+              // The Display golden caught it, and is what will catch it again.
               if (overflow > 0)
                 PositionedDirectional(
                   start: shown * step,
@@ -91,6 +85,18 @@ class AppAvatarGroup extends StatelessWidget {
                           color: colors.textMuted,
                         ),
                       ),
+                    ),
+                  ),
+                ),
+              for (int i = shown - 1; i >= 0; i--)
+                PositionedDirectional(
+                  start: i * step,
+                  child: _ringed(
+                    context,
+                    AppAvatar(
+                      name: names[i],
+                      imageUrl: i < imageUrls.length ? imageUrls[i] : null,
+                      size: size,
                     ),
                   ),
                 ),
