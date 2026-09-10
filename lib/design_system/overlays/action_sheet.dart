@@ -80,8 +80,11 @@ abstract final class AppActionSheet {
       ),
     );
 
-    // Fired after the sheet is gone, so an action that opens another sheet is
-    // not fighting a route that is still animating out.
+    // Fired after the route is popped, not after it has finished animating
+    // out — `show` completes as soon as `Navigator.pop` runs. That is still
+    // the ordering that matters: by the time an action runs, the sheet is no
+    // longer the route taking input, so an action that opens another one is
+    // pushing onto a navigator that has already let go of this.
     chosen?.onSelected();
   }
 }

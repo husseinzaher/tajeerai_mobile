@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../app/theme/theme.dart';
+import '../display/segmented_control.dart';
+import '../display/tabs.dart';
 import 'showcase_registry.dart';
 import 'showcase_scaffold.dart';
 import 'showcase_section.dart';
@@ -119,14 +121,18 @@ class _Controls extends StatelessWidget {
         runSpacing: TajeerSpacing.xs,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: <Widget>[
-          _Segmented<TajeerPreset>(
+          // The real component. This was a private copy until
+          // `AppSegmentedControl` existed — which is the right order: the
+          // showcase is allowed to be the thing that notices a primitive is
+          // missing, never the thing that keeps its own version of one.
+          AppSegmentedControl<TajeerPreset>(
             value: preset,
             onChanged: onPreset,
             options: <TajeerPreset, String>{
               for (final TajeerPreset p in TajeerPreset.values) p: p.name,
             },
           ),
-          _Segmented<ThemeMode>(
+          AppSegmentedControl<ThemeMode>(
             value: mode,
             onChanged: onMode,
             options: const <ThemeMode, String>{
@@ -135,7 +141,7 @@ class _Controls extends StatelessWidget {
               ThemeMode.system: 'System',
             },
           ),
-          _Segmented<TextDirection>(
+          AppSegmentedControl<TextDirection>(
             value: direction,
             onChanged: onDirection,
             options: const <TextDirection, String>{
@@ -143,70 +149,6 @@ class _Controls extends StatelessWidget {
               TextDirection.ltr: 'LTR',
             },
           ),
-        ],
-      ),
-    );
-  }
-}
-
-/// A local control, not a design-system component.
-///
-/// `AppSegmentedControl` does not exist yet. When it does this is deleted and
-/// the showcase uses it — which is the right order: the showcase is allowed to
-/// be the thing that notices a primitive is missing, never the thing that
-/// keeps a private copy of one.
-class _Segmented<T> extends StatelessWidget {
-  const _Segmented({
-    required this.value,
-    required this.options,
-    required this.onChanged,
-  });
-
-  final T value;
-  final Map<T, String> options;
-  final ValueChanged<T> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final TajeerColors colors = context.colors;
-
-    return Container(
-      padding: const EdgeInsets.all(2),
-      decoration: BoxDecoration(
-        color: colors.surfaceMuted,
-        borderRadius: TajeerRadii.fullAll,
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          for (final MapEntry<T, String> option in options.entries)
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => onChanged(option.key),
-              child: AnimatedContainer(
-                duration: context.motion.fast,
-                curve: context.motion.standard,
-                constraints: const BoxConstraints(minHeight: 36),
-                alignment: Alignment.center,
-                padding: const EdgeInsetsDirectional.symmetric(
-                  horizontal: TajeerSpacing.sm,
-                ),
-                decoration: BoxDecoration(
-                  color: option.key == value
-                      ? colors.primary
-                      : Colors.transparent,
-                  borderRadius: TajeerRadii.fullAll,
-                ),
-                child: Text(
-                  option.value,
-                  style: context.type.labelSm.copyWith(
-                    color: option.key == value
-                        ? colors.primaryForeground
-                        : colors.textMuted,
-                  ),
-                ),
-              ),
-            ),
         ],
       ),
     );
@@ -226,62 +168,18 @@ class _SectionTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final TajeerColors colors = context.colors;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.surface,
-        border: Border(bottom: BorderSide(color: colors.border)),
-      ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsetsDirectional.symmetric(
-          horizontal: TajeerSpacing.sm,
-        ),
-        child: Row(
-          children: <Widget>[
-            for (int i = 0; i < sections.length; i++)
-              GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => onChanged(i),
-                child: Container(
-                  constraints: const BoxConstraints(minHeight: 44),
-                  alignment: Alignment.center,
-                  padding: const EdgeInsetsDirectional.symmetric(
-                    horizontal: TajeerSpacing.sm,
-                  ),
-                  decoration: BoxDecoration(
-                    border: BorderDirectional(
-                      bottom: BorderSide(
-                        color: i == index ? colors.primary : Colors.transparent,
-                        width: 2,
-                      ),
-                    ),
-                  ),
-                  child: Row(
-                    spacing: TajeerSpacing.xs2,
-                    children: <Widget>[
-                      Icon(
-                        sections[i].icon,
-                        size: 16,
-                        color: i == index
-                            ? colors.textPrimary
-                            : colors.textMuted,
-                      ),
-                      Text(
-                        sections[i].title,
-                        style: context.type.labelMd.copyWith(
-                          color: i == index
-                              ? colors.textPrimary
-                              : colors.textMuted,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-          ],
-        ),
+    // Also the real component. What was hand-rolled here is exactly what
+    // AppTabs is: a scrollable row of labelled destinations with an underline
+    // on the selected one.
+    return ColoredBox(
+      color: context.colors.surface,
+      child: AppTabs(
+        index: index,
+        onChanged: onChanged,
+        tabs: <AppTab>[
+          for (final ShowcaseSection section in sections)
+            AppTab(label: section.title, icon: section.icon),
+        ],
       ),
     );
   }

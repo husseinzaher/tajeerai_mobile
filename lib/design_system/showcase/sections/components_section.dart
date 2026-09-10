@@ -6,12 +6,22 @@ import '../../buttons/app_button.dart';
 import '../../cards/app_card.dart';
 import '../../display/avatar.dart';
 import '../../display/badge.dart';
+import '../../display/avatar_group.dart';
+import '../../display/chip.dart';
+import '../../display/labelled_separator.dart';
+import '../../display/list_item.dart';
+import '../../display/list_section.dart';
 import '../../display/section_header.dart';
+import '../../display/segmented_control.dart';
+import '../../display/status_dot.dart';
+import '../../display/tabs.dart';
 import '../../display/separator.dart';
 import '../../feedback/empty_state.dart';
 import '../../feedback/error_state.dart';
 import '../../feedback/inline_error.dart';
+import '../../feedback/progress_bar.dart';
 import '../../feedback/status_banner.dart';
+import '../../feedback/tooltip.dart';
 import '../../inputs/app_checkbox.dart';
 import '../../inputs/app_radio.dart';
 import '../../inputs/app_select.dart';
@@ -22,6 +32,7 @@ import '../../inputs/password_field.dart';
 import '../../inputs/search_field.dart';
 import '../../loaders/skeleton.dart';
 import '../../loaders/spinner.dart';
+import '../../overlays/action_sheet.dart';
 import '../../overlays/app_bottom_sheet.dart';
 import '../../overlays/app_dialog.dart';
 import '../../overlays/app_snackbar.dart';
@@ -225,6 +236,77 @@ ShowcaseSection displaySection() => ShowcaseSection(
       ),
     ),
     ShowcaseExample(
+      name: 'Chips',
+      description:
+          'A control, not a badge: it has a pressed state, a selected state and '
+          'a 44px target. Removing and selecting are separate taps.',
+      builder: (BuildContext context) => const _ChipsDemo(),
+    ),
+    ShowcaseExample(
+      name: 'Presence and avatar groups',
+      description:
+          'An unknown presence draws nothing. Unknown is not offline, and a '
+          'grey dot is a confident answer to a question the app cannot answer.',
+      builder: (BuildContext context) => const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: TajeerSpacing.md,
+        children: <Widget>[
+          Row(
+            spacing: TajeerSpacing.md,
+            children: <Widget>[
+              AppAvatar(name: 'سارة أحمد', presence: AppPresence.online),
+              AppAvatar(name: 'محمد علي', presence: AppPresence.away),
+              AppAvatar(name: 'خالد', presence: AppPresence.busy),
+              AppAvatar(name: 'نورة', presence: AppPresence.offline),
+              AppAvatar(name: 'ريم', presence: AppPresence.unknown),
+            ],
+          ),
+          AppAvatarGroup(
+            names: <String>['أحمد', 'سارة', 'خالد', 'نورة', 'محمد'],
+          ),
+        ],
+      ),
+    ),
+    ShowcaseExample(
+      name: 'List items',
+      description:
+          'Emphasis is a flag, not something each list styles for itself — '
+          'which is how two lists end up disagreeing about what unread looks '
+          'like. The selected row is marked on the START edge, so it flips.',
+      builder: (BuildContext context) => const _ListDemo(),
+    ),
+    ShowcaseExample(
+      name: 'Tabs and segmented control',
+      description:
+          'Not the same widget. Tabs navigate a panel; a segmented control '
+          'picks a value and announces itself as mutually exclusive. Merging '
+          'them would force one to lie to a screen reader.',
+      builder: (BuildContext context) => const _TabsDemo(),
+    ),
+    ShowcaseExample(
+      name: 'Labelled separator',
+      builder: (BuildContext context) => const Column(
+        spacing: TajeerSpacing.md,
+        children: <Widget>[
+          AppLabelledSeparator(label: 'أو تابع باستخدام'),
+          AppLabelledSeparator(
+            label: 'رسائل غير مقروءة',
+            tone: AppSeparatorTone.primary,
+          ),
+        ],
+      ),
+    ),
+    ShowcaseExample(
+      name: 'Tooltip',
+      description:
+          'Long-press only — there is no hover on a phone. The semantic label '
+          'is the real accessibility answer; this is the extra sentence.',
+      builder: (BuildContext context) => AppTooltip(
+        message: 'تمت المزامنة قبل دقيقتين',
+        child: AppBadge(label: 'متزامن', variant: AppBadgeVariant.muted),
+      ),
+    ),
+    ShowcaseExample(
       name: 'Card and section header',
       builder: (BuildContext context) => const AppCard(
         child: Column(
@@ -261,6 +343,21 @@ ShowcaseSection statesSection() => ShowcaseSection(
           AppSkeleton.text(width: 220),
           AppSkeleton.text(width: 160),
           AppSkeleton.circle(),
+        ],
+      ),
+    ),
+    ShowcaseExample(
+      name: 'Progress',
+      description:
+          'null is indeterminate — something is happening and nobody can say '
+          'how much is left. A different claim from 0, which says it has not '
+          'started.',
+      builder: (BuildContext context) => const Column(
+        spacing: TajeerSpacing.sm,
+        children: <Widget>[
+          AppProgressBar(value: 0.35),
+          AppProgressBar(value: 0.8, tone: AppProgressTone.success),
+          AppProgressBar(),
         ],
       ),
     ),
@@ -342,6 +439,38 @@ ShowcaseSection overlaysSection() => ShowcaseSection(
       ),
     ),
     ShowcaseExample(
+      name: 'Action sheet',
+      description:
+          'Composed over the bottom sheet, not a second one. This is the '
+          'long-press menu, the overflow menu, and why there is no ProfileMenu.',
+      builder: (BuildContext context) => AppButton(
+        label: 'Open actions',
+        variant: AppButtonVariant.outline,
+        onPressed: () => AppActionSheet.show(
+          context: context,
+          title: 'سارة أحمد',
+          actions: <AppAction>[
+            AppAction(
+              label: 'تثبيت المحادثة',
+              icon: LucideIcons.pin,
+              onSelected: () {},
+            ),
+            AppAction(
+              label: 'كتم الإشعارات',
+              icon: LucideIcons.bellOff,
+              onSelected: () {},
+            ),
+            AppAction(
+              label: 'حذف المحادثة',
+              icon: LucideIcons.trash2,
+              destructive: true,
+              onSelected: () {},
+            ),
+          ],
+        ),
+      ),
+    ),
+    ShowcaseExample(
       name: 'Snackbar',
       builder: (BuildContext context) => Wrap(
         spacing: TajeerSpacing.xs,
@@ -366,6 +495,125 @@ ShowcaseSection overlaysSection() => ShowcaseSection(
 // --- stateful demos --------------------------------------------------------
 // The showcase owns the state a controlled component needs, exactly as a screen
 // would. It never owns a *variant* of the component.
+
+class _ChipsDemo extends StatefulWidget {
+  const _ChipsDemo();
+
+  @override
+  State<_ChipsDemo> createState() => _ChipsDemoState();
+}
+
+class _ChipsDemoState extends State<_ChipsDemo> {
+  final Set<String> _selected = <String>{'الكل'};
+  final List<String> _filters = <String>[
+    'الكل',
+    'غير مقروءة',
+    'مهمة',
+    'مؤرشفة',
+  ];
+
+  @override
+  Widget build(BuildContext context) => Wrap(
+    spacing: TajeerSpacing.xs,
+    runSpacing: TajeerSpacing.xs,
+    children: <Widget>[
+      for (final String filter in _filters)
+        AppChip(
+          label: filter,
+          selected: _selected.contains(filter),
+          onTap: () => setState(() {
+            _selected.contains(filter)
+                ? _selected.remove(filter)
+                : _selected.add(filter);
+          }),
+          onRemove: filter == 'الكل'
+              ? null
+              : () => setState(() => _filters.remove(filter)),
+        ),
+    ],
+  );
+}
+
+class _ListDemo extends StatefulWidget {
+  const _ListDemo();
+
+  @override
+  State<_ListDemo> createState() => _ListDemoState();
+}
+
+class _ListDemoState extends State<_ListDemo> {
+  int _selected = 0;
+
+  @override
+  Widget build(BuildContext context) => AppListSection(
+    title: 'المحادثات',
+    children: <Widget>[
+      AppListItem(
+        leading: const AppAvatar(
+          name: 'سارة أحمد',
+          presence: AppPresence.online,
+        ),
+        title: const Text('سارة أحمد'),
+        subtitle: const Text('مرحباً، هل المنتج ما زال متوفر؟'),
+        meta: const Text('10:24'),
+        trailing: AppBadge.count(3),
+        emphasised: true,
+        selected: _selected == 0,
+        onTap: () => setState(() => _selected = 0),
+      ),
+      AppListItem(
+        leading: const AppAvatar(name: 'متجر النخبة'),
+        title: const Text('متجر النخبة'),
+        subtitle: const Text('تم شحن طلبك بنجاح'),
+        meta: const Text('09:15'),
+        selected: _selected == 1,
+        onTap: () => setState(() => _selected = 1),
+      ),
+      AppListItem(
+        leading: const AppAvatar(name: 'محمد علي', presence: AppPresence.away),
+        title: const Text('محمد علي'),
+        subtitle: const Text('كم مدة التوصيل؟'),
+        meta: const Text('أمس'),
+        selected: _selected == 2,
+        onTap: () => setState(() => _selected = 2),
+      ),
+    ],
+  );
+}
+
+class _TabsDemo extends StatefulWidget {
+  const _TabsDemo();
+
+  @override
+  State<_TabsDemo> createState() => _TabsDemoState();
+}
+
+class _TabsDemoState extends State<_TabsDemo> {
+  int _tab = 0;
+  String _segment = 'all';
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    spacing: TajeerSpacing.md,
+    children: <Widget>[
+      AppTabs(
+        index: _tab,
+        onChanged: (int i) => setState(() => _tab = i),
+        tabs: <AppTab>[
+          const AppTab(label: 'الكل'),
+          AppTab(label: 'غير مقروءة', badge: AppBadge.count(12)),
+          const AppTab(label: 'مؤرشفة'),
+        ],
+      ),
+      AppSegmentedControl<String>(
+        value: _segment,
+        options: const <String, String>{'all': 'الكل', 'mine': 'المسندة إليّ'},
+        onChanged: (String v) => setState(() => _segment = v),
+      ),
+    ],
+  );
+}
 
 class _SelectDemo extends StatefulWidget {
   const _SelectDemo();
