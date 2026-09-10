@@ -232,6 +232,7 @@ void main() {
         '_Segmented',
         '_SectionTabs',
         '_SelectDemo',
+        '_SearchableSelectDemo',
         '_TogglesDemo',
         '_RadioDemo',
       ];

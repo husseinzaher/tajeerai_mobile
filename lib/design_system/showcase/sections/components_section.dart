@@ -171,6 +171,14 @@ ShowcaseSection formsSection() => ShowcaseSection(
       builder: (BuildContext context) => const _SelectDemo(),
     ),
     ShowcaseExample(
+      name: 'Searchable select',
+      description:
+          'The same component with searchable: true — not a sibling. The match '
+          'folds the alef family and drops harakat, so "احمد" finds "أحمد", '
+          'which is how people actually type.',
+      builder: (BuildContext context) => const _SearchableSelectDemo(),
+    ),
+    ShowcaseExample(
       name: 'Checkbox and switch',
       description: 'The whole row is the target, not the 22px box.',
       builder: (BuildContext context) => const _TogglesDemo(),
@@ -386,6 +394,68 @@ class _SelectDemoState extends State<_SelectDemo> {
         label: 'SMS',
         description: 'Not connected',
         enabled: false,
+      ),
+    ],
+    onChanged: (String value) => setState(() => _value = value),
+  );
+}
+
+class _SearchableSelectDemo extends StatefulWidget {
+  const _SearchableSelectDemo();
+
+  @override
+  State<_SearchableSelectDemo> createState() => _SearchableSelectDemoState();
+}
+
+class _SearchableSelectDemoState extends State<_SearchableSelectDemo> {
+  String? _value;
+
+  @override
+  Widget build(BuildContext context) => AppSelect<String>(
+    label: 'أسند إلى',
+    placeholder: 'اختر عضو الفريق',
+    searchable: true,
+    value: _value,
+    options: const <AppSelectOption<String>>[
+      AppSelectOption<String>(
+        value: '1',
+        label: 'أحمد محمد',
+        description: 'مالك المتجر',
+      ),
+      AppSelectOption<String>(
+        value: '2',
+        label: 'سارة أحمد',
+        description: 'خدمة العملاء',
+      ),
+      AppSelectOption<String>(
+        value: '3',
+        label: 'خالد عبدالله',
+        description: 'المبيعات',
+      ),
+      AppSelectOption<String>(
+        value: '4',
+        label: 'فاطمة الزهراء',
+        description: 'التسويق',
+      ),
+      AppSelectOption<String>(
+        value: '5',
+        label: 'Reem Al-Saleh',
+        description: 'Support',
+      ),
+      AppSelectOption<String>(
+        value: '6',
+        label: 'محمد علي',
+        description: 'المبيعات',
+      ),
+      AppSelectOption<String>(
+        value: '7',
+        label: 'نورة سعد',
+        description: 'خدمة العملاء',
+      ),
+      AppSelectOption<String>(
+        value: '8',
+        label: 'عبدالرحمن يوسف',
+        description: 'الحسابات',
       ),
     ],
     onChanged: (String value) => setState(() => _value = value),

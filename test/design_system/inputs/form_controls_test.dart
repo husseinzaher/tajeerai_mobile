@@ -4,6 +4,7 @@ import 'package:tajeerai_mobile/app/theme/theme.dart';
 import 'package:tajeerai_mobile/design_system/inputs/app_checkbox.dart';
 import 'package:tajeerai_mobile/design_system/inputs/app_radio.dart';
 import 'package:tajeerai_mobile/design_system/inputs/app_select.dart';
+import 'package:tajeerai_mobile/design_system/inputs/search_field.dart';
 import 'package:tajeerai_mobile/design_system/inputs/app_switch.dart';
 import 'package:tajeerai_mobile/design_system/inputs/app_text_field.dart';
 import 'package:tajeerai_mobile/design_system/inputs/otp_field.dart';
@@ -300,6 +301,143 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(chosen, isNull);
+    });
+  });
+
+  group('AppSelect — searchable', () {
+    Widget subject({ValueChanged<String>? onChanged}) => wrapWidget(
+      AppSelect<String>(
+        label: 'القناة',
+        placeholder: 'اختر قناة',
+        searchable: true,
+        value: null,
+        options: const <AppSelectOption<String>>[
+          AppSelectOption<String>(value: 'wa', label: 'WhatsApp'),
+          AppSelectOption<String>(value: 'ig', label: 'Instagram'),
+          AppSelectOption<String>(
+            value: 'sms',
+            label: 'SMS',
+            description: 'الرسائل النصية',
+          ),
+          AppSelectOption<String>(value: 'ahmed', label: 'أحمد'),
+        ],
+        onChanged: onChanged ?? (_) {},
+      ),
+    );
+
+    testWidgets('filters as you type, and still reports the choice', (
+      WidgetTester tester,
+    ) async {
+      String? chosen;
+      await tester.pumpWidget(subject(onChanged: (String v) => chosen = v));
+
+      await tester.tap(find.text('اختر قناة'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Instagram'), findsOneWidget);
+
+      await tester.enterText(find.byType(TextField).first, 'what');
+      await tester.pumpAndSettle();
+
+      expect(find.text('Instagram'), findsNothing);
+      expect(find.text('WhatsApp'), findsOneWidget);
+
+      await tester.tap(find.text('WhatsApp'));
+      await tester.pumpAndSettle();
+      expect(chosen, 'wa');
+    });
+
+    testWidgets('matches a description, not only a label', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(subject());
+
+      await tester.tap(find.text('اختر قناة'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).first, 'النصية');
+      await tester.pumpAndSettle();
+
+      expect(find.text('SMS'), findsOneWidget);
+      expect(find.text('WhatsApp'), findsNothing);
+    });
+
+    testWidgets('says so when nothing matches', (WidgetTester tester) async {
+      await tester.pumpWidget(subject());
+
+      await tester.tap(find.text('اختر قناة'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).first, 'telegram');
+      await tester.pumpAndSettle();
+
+      expect(find.text('No matches'), findsOneWidget);
+    });
+
+    testWidgets('finds an Arabic name typed without its hamza', (
+      WidgetTester tester,
+    ) async {
+      // The case a plain `contains` gets wrong every day: the option is
+      // "أحمد" and nobody reaches for the hamza key to look for it.
+      await tester.pumpWidget(subject());
+
+      await tester.tap(find.text('اختر قناة'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).first, 'احمد');
+      await tester.pumpAndSettle();
+
+      expect(find.text('أحمد'), findsOneWidget);
+    });
+
+    testWidgets('an unsearchable select shows no search field', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        wrapWidget(
+          AppSelect<String>(
+            placeholder: 'Pick',
+            value: null,
+            options: const <AppSelectOption<String>>[
+              AppSelectOption<String>(value: 'a', label: 'A'),
+            ],
+            onChanged: (_) {},
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Pick'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AppSearchField), findsNothing);
+    });
+  });
+
+  group('foldForSearch', () {
+    test('folds the alef family to one form', () {
+      for (final String variant in <String>['أحمد', 'إحمد', 'آحمد', 'ٱحمد']) {
+        expect(foldForSearch(variant), foldForSearch('احمد'), reason: variant);
+      }
+    });
+
+    test('folds alef maqsura, teh marbuta and the Farsi letters', () {
+      expect(foldForSearch('على'), foldForSearch('علي'));
+      expect(foldForSearch('فاطمة'), foldForSearch('فاطمه'));
+      expect(foldForSearch('کریم'), foldForSearch('كريم'));
+    });
+
+    test('drops harakat and tatweel, which are presentation', () {
+      expect(foldForSearch('مُحَمَّد'), foldForSearch('محمد'));
+      expect(foldForSearch('مـحـمـد'), foldForSearch('محمد'));
+    });
+
+    test('lower-cases Latin and trims, leaving everything else alone', () {
+      expect(foldForSearch('  WhatsApp '), 'whatsapp');
+      expect(foldForSearch('SMS'), 'sms');
+    });
+
+    test('does not merge letters that are genuinely different', () {
+      // The fold has to stop somewhere: د and ذ are different letters, and a
+      // search that treated them as one would return the wrong customer.
+      expect(foldForSearch('دار'), isNot(foldForSearch('ذار')));
+      expect(foldForSearch('صبر'), isNot(foldForSearch('سبر')));
     });
   });
 
