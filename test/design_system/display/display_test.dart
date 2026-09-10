@@ -214,6 +214,37 @@ void main() {
       }
     });
 
+    testWidgets('the count is sized like the initials beside it', (
+      WidgetTester tester,
+    ) async {
+      // Two texts in one row of circles, one sizing rule. At the default 32px
+      // a fixed type step happened to match; at 80px it did not, and the "+2"
+      // looked lost. Checked at a size where the two rules would disagree.
+      await tester.pumpWidget(
+        wrapWidget(
+          const Align(
+            child: AppAvatarGroup(
+              names: <String>['أحمد', 'سارة', 'خالد', 'نورة', 'محمد'],
+              max: 3,
+              size: 80,
+            ),
+          ),
+        ),
+      );
+
+      final double? count = tester
+          .widget<Text>(find.text('+2'))
+          .style
+          ?.fontSize;
+      final double? initials = tester
+          .widget<Text>(find.text(AppAvatar.initialsOf('أحمد')))
+          .style
+          ?.fontSize;
+
+      expect(count, isNotNull);
+      expect(count, initials);
+    });
+
     testWidgets('an empty group takes no room', (WidgetTester tester) async {
       await tester.pumpWidget(
         wrapWidget(const Align(child: AppAvatarGroup(names: <String>[]))),

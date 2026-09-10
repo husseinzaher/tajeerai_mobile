@@ -36,6 +36,14 @@ class AppAvatar extends StatelessWidget {
   /// passing both gets the badge, because a channel is the more specific fact.
   final Widget? badge;
 
+  /// How large initials are drawn, as a fraction of the circle.
+  ///
+  /// One constant, because it is not only this widget's: `AppAvatarGroup`
+  /// draws its "+N" count in the same row of circles and must answer to the
+  /// same rule. It used a fixed type step instead, which matched the initials
+  /// at the default 32px and looked lost beside 29px letters in an 80px circle.
+  static const double initialsScale = 0.36;
+
   /// At most two letters, taken from the first and last word.
   ///
   /// Works on Arabic and Latin alike because it slices whole characters rather
@@ -113,7 +121,7 @@ class AppAvatar extends StatelessWidget {
         style: TextStyle(
           fontFamily: TajeerTypography.sansFamily,
           fontFamilyFallback: TajeerTypography.sansFallback,
-          fontSize: size * 0.36,
+          fontSize: size * initialsScale,
           fontWeight: FontWeight.w500,
           color: context.colors.textMuted,
         ),

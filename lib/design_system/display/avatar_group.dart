@@ -81,7 +81,11 @@ class AppAvatarGroup extends StatelessWidget {
                         // Latin digits in both languages: the count is read
                         // against numbers everywhere else in the product.
                         '+$overflow',
+                        // Sized to the circle by the avatar's own rule, so
+                        // the count and the initials beside it are one size
+                        // at every avatar size, not only the default one.
                         style: context.type.labelSm.copyWith(
+                          fontSize: size * AppAvatar.initialsScale,
                           color: colors.textMuted,
                         ),
                       ),
