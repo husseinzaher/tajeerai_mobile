@@ -166,6 +166,61 @@ void main() {
       expect(find.text('+2'), findsOneWidget);
     });
 
+    testWidgets('has a definite width, and the ring is part of it', (
+      WidgetTester tester,
+    ) async {
+      // Every child is positioned, so without an explicit width the group
+      // took whatever its parent handed it — the full test surface here. And
+      // spacing by the bare avatar size ignored the 2px cutout, which is what
+      // made the faces crowd each other in the showcase capture.
+      const double size = 32;
+      const double diameter = size + 4;
+      const double step = diameter - size * 0.3;
+
+      await tester.pumpWidget(
+        wrapWidget(
+          const Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: AppAvatarGroup(
+              names: <String>['أحمد', 'سارة', 'خالد', 'نورة', 'محمد'],
+              max: 3,
+              size: size,
+            ),
+          ),
+        ),
+      );
+
+      // Three faces and a count: four slots.
+      expect(
+        tester.getSize(find.byType(AppAvatarGroup)).width,
+        moreOrLessEquals(step * 3 + diameter),
+      );
+
+      final List<double> centres =
+          tester
+              .widgetList<AppAvatar>(find.byType(AppAvatar))
+              .map(
+                (AppAvatar avatar) =>
+                    tester.getCenter(find.byWidget(avatar)).dx,
+              )
+              .toList()
+            ..sort();
+      for (int i = 1; i < centres.length; i++) {
+        expect(
+          centres[i] - centres[i - 1],
+          moreOrLessEquals(step),
+          reason: 'faces ${i - 1} and $i are not one step apart',
+        );
+      }
+    });
+
+    testWidgets('an empty group takes no room', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        wrapWidget(const Align(child: AppAvatarGroup(names: <String>[]))),
+      );
+      expect(tester.getSize(find.byType(AppAvatarGroup)), Size.zero);
+    });
+
     testWidgets('no count when everybody fits', (WidgetTester tester) async {
       await tester.pumpWidget(
         wrapWidget(const AppAvatarGroup(names: <String>['أحمد', 'سارة'])),

@@ -31,6 +31,7 @@ void main() {
   final List<ShowcaseSection> captured = <ShowcaseSection>[
     sections.firstWhere((ShowcaseSection s) => s.title == 'Foundations'),
     sections.firstWhere((ShowcaseSection s) => s.title == 'Forms'),
+    sections.firstWhere((ShowcaseSection s) => s.title == 'Display'),
   ];
 
   for (final ShowcaseSection section in captured) {

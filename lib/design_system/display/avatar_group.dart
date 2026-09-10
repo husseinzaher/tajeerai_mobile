@@ -23,23 +23,44 @@ class AppAvatarGroup extends StatelessWidget {
   /// How many faces before the rest become a number.
   final int max;
 
+  /// Width of the cutout drawn around each face.
+  static const double _ring = 2;
+
   @override
   Widget build(BuildContext context) {
     final TajeerColors colors = context.colors;
     final int shown = names.length <= max ? names.length : max;
     final int overflow = names.length - shown;
-    final double overlap = size * 0.3;
+    final int slots = shown + (overflow > 0 ? 1 : 0);
+
+    if (slots == 0) {
+      return const SizedBox.shrink();
+    }
+
+    // The ring is part of each circle's real footprint. Spacing the faces by
+    // `size` alone ignored it, so the drawn overlap was larger than the 30%
+    // this is meant to be and the initials crowded each other.
+    final double diameter = size + _ring * 2;
+    final double step = diameter - size * 0.3;
+
+    // An explicit width. Every child here is positioned, so without it the
+    // Stack takes whatever constraints it happens to be handed — the whole row
+    // in one parent, nothing at all in another — and the group's size would
+    // depend on where somebody dropped it.
+    final double width = step * (slots - 1) + diameter;
 
     return Semantics(
       label: names.join('، '),
       child: ExcludeSemantics(
         child: SizedBox(
-          height: size,
+          width: width,
+          height: diameter,
           child: Stack(
             children: <Widget>[
+              // Painted last-to-first so the first person named is on top.
               for (int i = shown - 1; i >= 0; i--)
                 PositionedDirectional(
-                  start: i * (size - overlap),
+                  start: i * step,
                   child: _ringed(
                     context,
                     AppAvatar(
@@ -51,7 +72,7 @@ class AppAvatarGroup extends StatelessWidget {
                 ),
               if (overflow > 0)
                 PositionedDirectional(
-                  start: shown * (size - overlap),
+                  start: shown * step,
                   child: _ringed(
                     context,
                     Container(
@@ -85,7 +106,7 @@ class AppAvatarGroup extends StatelessWidget {
     decoration: BoxDecoration(
       shape: BoxShape.circle,
       border: Border.fromBorderSide(
-        BorderSide(color: context.colors.surface, width: 2),
+        BorderSide(color: context.colors.surface, width: _ring),
       ),
     ),
     child: child,
