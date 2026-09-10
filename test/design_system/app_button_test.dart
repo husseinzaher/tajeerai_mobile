@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tajeerai_mobile/app/theme/theme.dart';
 import 'package:tajeerai_mobile/design_system/buttons/app_button.dart';
+import 'package:tajeerai_mobile/design_system/display/badge.dart';
+import 'package:tajeerai_mobile/design_system/primitives/pressable.dart';
 import 'package:tajeerai_mobile/design_system/loaders/spinner.dart';
 
 import '../support/widget_harness.dart';
@@ -203,6 +205,84 @@ void main() {
           reason: '${entry.key} should be at least ${entry.value}px tall',
         );
       }
+    });
+  });
+
+  group('badge and shape', () {
+    testWidgets('a badge sits at the top-end corner, which flips in Arabic', (
+      WidgetTester tester,
+    ) async {
+      // The reason there is no `NotificationButton`: it is this button with a
+      // badge. A `Positioned(right:)` would pin the marker to the same
+      // physical corner in both languages.
+      for (final direction in TextDirection.values) {
+        await tester.pumpWidget(
+          wrapWidget(
+            KeyedSubtree(
+              key: ValueKey<TextDirection>(direction),
+              child: AppButton.icon(
+                icon: const Icon(Icons.notifications),
+                semanticLabel: 'Notifications',
+                badge: const AppBadge(label: '3'),
+                onPressed: () {},
+              ),
+            ),
+            textDirection: direction,
+          ),
+        );
+        await tester.pump();
+
+        final double badgeX = tester.getCenter(find.text('3')).dx;
+        final double buttonX = tester.getCenter(find.byType(AppButton)).dx;
+
+        if (direction == TextDirection.ltr) {
+          expect(badgeX, greaterThan(buttonX), reason: 'ltr end = right');
+        } else {
+          expect(badgeX, lessThan(buttonX), reason: 'rtl end = left');
+        }
+      }
+    });
+
+    testWidgets('circle shape is fully rounded, rounded shape is not', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        wrapWidget(
+          AppButton.icon(
+            icon: const Icon(Icons.send),
+            semanticLabel: 'Send',
+            shape: AppButtonShape.circle,
+            onPressed: () {},
+          ),
+        ),
+      );
+
+      expect(
+        tester.widget<AppPressable>(find.byType(AppPressable)).borderRadius,
+        TajeerRadii.fullAll,
+      );
+    });
+
+    testWidgets('the soft variant reads as brand without being a fill', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        wrapWidget(
+          AppButton(
+            label: 'Quiet',
+            variant: AppButtonVariant.soft,
+            onPressed: () {},
+          ),
+        ),
+      );
+
+      final BoxDecoration decoration = tester
+          .widgetList<Container>(find.byType(Container))
+          .map((Container c) => c.decoration)
+          .whereType<BoxDecoration>()
+          .first;
+
+      expect(decoration.color, TajeerColors.tajeerLight.primarySoft);
     });
   });
 }

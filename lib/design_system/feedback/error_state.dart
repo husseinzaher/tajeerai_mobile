@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../localization/ds_localization.dart';
 import 'empty_state.dart';
 
 /// The "something went wrong" surface.
@@ -31,10 +32,12 @@ class AppErrorState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppEmptyState(
-      title: title ?? 'Something went wrong',
+      title: title ?? context.strings.somethingWentWrong,
       description: message,
       icon: LucideIcons.triangleAlert,
-      actionLabel: onRetry == null ? null : (retryLabel ?? 'Try again'),
+      actionLabel: onRetry == null
+          ? null
+          : (retryLabel ?? context.strings.tryAgain),
       onAction: onRetry,
       bordered: bordered,
     );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../app/theme/theme.dart';
+import '../localization/ds_localization.dart';
 
 /// The system's loading indicator.
 ///
@@ -35,7 +36,7 @@ class _SpinnerState extends State<AppSpinner>
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: widget.semanticLabel ?? 'Loading',
+      label: widget.semanticLabel ?? context.strings.loading,
       liveRegion: true,
       child: RotationTransition(
         turns: _controller,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../app/theme/theme.dart';
+import '../localization/ds_localization.dart';
 import '../buttons/app_button.dart';
 
 /// The system's modal.
@@ -59,24 +60,26 @@ class AppDialog extends StatelessWidget {
     required BuildContext context,
     required String title,
     required String message,
-    String confirmLabel = 'Confirm',
-    String cancelLabel = 'Cancel',
+    String? confirmLabel,
+    String? cancelLabel,
     bool destructive = false,
   }) async {
     final result = await show<bool>(
       context: context,
+      // The labels resolve inside the Builder, not in the signature: a const
+      // default cannot reach a BuildContext, which is why both are nullable.
       dialog: Builder(
         builder: (context) => AppDialog(
           title: title,
           description: message,
           actions: <Widget>[
             AppButton(
-              label: cancelLabel,
+              label: cancelLabel ?? context.strings.cancel,
               variant: AppButtonVariant.outline,
               onPressed: () => Navigator.of(context).pop(false),
             ),
             AppButton(
-              label: confirmLabel,
+              label: confirmLabel ?? context.strings.confirm,
               variant: destructive
                   ? AppButtonVariant.destructive
                   : AppButtonVariant.primary,

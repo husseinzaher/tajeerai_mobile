@@ -1,0 +1,47 @@
+import 'ds_messages.dart';
+
+/// Written for a Gulf business reader, not transliterated.
+///
+/// Arabic is the app's default locale, so this table is the one most people
+/// actually see — it is not a translation of an English original that happens
+/// to ship alongside it.
+const AppMessages appMessagesAr = AppMessages(
+  close: 'إغلاق',
+  loading: 'جارٍ التحميل',
+  more: 'المزيد',
+  dismiss: 'تجاهل',
+  cancel: 'إلغاء',
+  confirm: 'تأكيد',
+  back: 'رجوع',
+  menu: 'القائمة',
+  search: 'بحث',
+  clearSearch: 'مسح البحث',
+  noMatches: 'لا توجد نتائج',
+  select: 'اختيار',
+  showPassword: 'إظهار كلمة المرور',
+  hidePassword: 'إخفاء كلمة المرور',
+  required: 'مطلوب',
+  optional: 'اختياري',
+  tryAgain: 'حاول مرة أخرى',
+  somethingWentWrong: 'حدث خطأ ما',
+  retry: 'إعادة المحاولة',
+  discard: 'حذف',
+  send: 'إرسال',
+  attach: 'إرفاق',
+  recordVoice: 'تسجيل رسالة صوتية',
+  typing: 'يكتب الآن…',
+  today: 'اليوم',
+  yesterday: 'أمس',
+  queued: 'بانتظار الإرسال',
+  sending: 'جارٍ الإرسال',
+  notSent: 'لم تُرسل',
+  sent: 'أُرسلت',
+  delivered: 'وصلت',
+  readReceipt: 'تمت القراءة',
+  removed: 'تم حذف الرسالة',
+  unreadCount: '{count} غير مقروءة',
+  offline: 'غير متصل',
+  reconnecting: 'جارٍ إعادة الاتصال…',
+  syncing: 'جارٍ المزامنة…',
+  showingSaved: 'عرض الرسائل المحفوظة',
+);

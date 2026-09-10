@@ -7,6 +7,7 @@ import '../features/auth/presentation/controllers/auth_controller.dart';
 import 'bootstrap/dependencies.dart';
 import 'localization/locale_manager.dart';
 import 'router/app_router.dart';
+import '../design_system/design_system.dart';
 import 'theme/theme.dart';
 
 /// The application widget.
@@ -103,6 +104,7 @@ class _TajeerAppState extends ConsumerState<TajeerApp> {
       locale: locale.locale,
       supportedLocales: AppLocale.supported,
       localizationsDelegates: const <LocalizationsDelegate<Object>>[
+        AppDesignSystemLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,

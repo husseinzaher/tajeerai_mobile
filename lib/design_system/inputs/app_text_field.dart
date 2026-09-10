@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../app/theme/theme.dart';
+import 'field_scaffold.dart';
+import 'field_surface.dart';
 
-/// The system's text input, with the label/description/error scaffolding
-/// `field.tsx` wraps it in.
+/// The system's text input.
 ///
-/// `input.tsx` is `h-9 rounded-md border border-input bg-transparent px-3`,
-/// focus is a 1px `ring` rather than a thicker border, and the field is
-/// transparent so it takes the colour of whatever surface it sits on. The
-/// error state recolours the border and the ring to `destructive`, which is
-/// what `form.tsx` does through `aria-invalid`.
+/// Composed from [AppFieldScaffold] and [AppFieldSurface] rather than owning
+/// its own label column and border: those two are shared with every other
+/// control that has a label or an edge, which is what keeps a select, a
+/// checkbox and a text field looking like one family.
+///
+/// The field itself is transparent, so it takes the colour of whatever surface
+/// it was dropped onto.
 class AppTextField extends StatelessWidget {
   const AppTextField({
     this.controller,
@@ -20,6 +23,7 @@ class AppTextField extends StatelessWidget {
     this.errorText,
     this.obscureText = false,
     this.enabled = true,
+    this.readOnly = false,
     this.autofocus = false,
     this.keyboardType,
     this.textInputAction,
@@ -36,17 +40,45 @@ class AppTextField extends StatelessWidget {
     super.key,
   });
 
+  /// A field that grows with what is typed into it.
+  ///
+  /// There is no `AppTextarea`: a textarea *is* a text field with more lines,
+  /// and a second class would be a second set of borders to keep in step.
+  const AppTextField.multiline({
+    this.controller,
+    this.label,
+    this.hintText,
+    this.description,
+    this.errorText,
+    this.enabled = true,
+    this.readOnly = false,
+    this.autofocus = false,
+    this.onChanged,
+    this.focusNode,
+    this.minLines = 3,
+    this.maxLines = 6,
+    this.textCapitalization = TextCapitalization.sentences,
+    super.key,
+  }) : obscureText = false,
+       keyboardType = TextInputType.multiline,
+       textInputAction = null,
+       autofillHints = null,
+       onSubmitted = null,
+       leading = null,
+       trailing = null,
+       inputFormatters = null;
+
   final TextEditingController? controller;
   final String? label;
   final String? hintText;
 
-  /// Helper text under the field. Hidden while [errorText] is showing -- two
-  /// stacked messages is how a form starts shouting.
+  /// Helper text under the field. Hidden while [errorText] is showing.
   final String? description;
 
   final String? errorText;
   final bool obscureText;
   final bool enabled;
+  final bool readOnly;
   final bool autofocus;
   final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
@@ -65,124 +97,71 @@ class AppTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
+    final TajeerColors colors = context.colors;
+    final TextStyle style = context.type.bodyMd;
 
-    final baseStyle = TextStyle(
-      fontFamily: TajeerTypography.sansFamily,
-      fontFamilyFallback: TajeerTypography.sansFallback,
-      // `text-base md:text-sm`: 16 on a phone. Below 16 iOS zooms the field on
-      // focus, so the mobile step is the one to keep.
-      color: colors.textPrimary,
-    );
-
-    final borderColor = _invalid ? colors.dangerDefault : colors.border;
-    final ringColor = _invalid ? colors.dangerDefault : colors.focus;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      // `space-y-2` between label, control and message.
-      spacing: TajeerSpacing.xs,
-      children: <Widget>[
-        if (label != null)
-          Text(
-            label!,
-            style: context.text.labelLarge?.copyWith(
-              color: _invalid ? colors.dangerDefault : colors.textPrimary,
-            ),
-          ),
-        Opacity(
-          // `disabled:opacity-50`.
-          opacity: enabled ? 1 : 0.5,
-          child: TextField(
-            controller: controller,
-            focusNode: focusNode,
-            enabled: enabled,
-            autofocus: autofocus,
-            obscureText: obscureText,
-            keyboardType: keyboardType,
-            textInputAction: textInputAction,
-            autofillHints: autofillHints,
-            onSubmitted: onSubmitted,
-            onChanged: onChanged,
-            maxLines: obscureText ? 1 : maxLines,
-            minLines: minLines,
-            textCapitalization: textCapitalization,
-            inputFormatters: inputFormatters,
-            style: baseStyle,
-            cursorColor: colors.primary,
-            cursorWidth: 1.5,
-            decoration: InputDecoration(
-              isDense: true,
-              filled: false,
-              hintText: hintText,
-              hintStyle: baseStyle.copyWith(color: colors.textMuted),
-              // `px-3` with the height coming from the content box rather than
-              // a fixed `h-9`, so a multiline field grows.
-              contentPadding: const EdgeInsetsDirectional.symmetric(
-                horizontal: TajeerSpacing.sm,
-                vertical: TajeerSpacing.xs,
+    return AppFieldScaffold(
+      label: label,
+      description: description,
+      errorText: errorText,
+      child: AppFieldSurface(
+        invalid: _invalid,
+        enabled: enabled,
+        child: Row(
+          spacing: TajeerSpacing.xs,
+          children: <Widget>[
+            if (leading != null) _adornment(colors, leading!),
+            Expanded(
+              child: TextField(
+                controller: controller,
+                focusNode: focusNode,
+                enabled: enabled,
+                readOnly: readOnly,
+                autofocus: autofocus,
+                obscureText: obscureText,
+                keyboardType: keyboardType,
+                textInputAction: textInputAction,
+                autofillHints: autofillHints,
+                onSubmitted: onSubmitted,
+                onChanged: onChanged,
+                maxLines: obscureText ? 1 : maxLines,
+                minLines: minLines,
+                textCapitalization: textCapitalization,
+                inputFormatters: inputFormatters,
+                style: style,
+                cursorColor: colors.primary,
+                cursorWidth: 1.5,
+                decoration: InputDecoration(
+                  isDense: true,
+                  filled: false,
+                  hintText: hintText,
+                  hintStyle: style.copyWith(color: colors.textMuted),
+                  // The surface owns the border and the padding; the field
+                  // draws nothing of its own or the two would fight.
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  disabledBorder: InputBorder.none,
+                  errorBorder: InputBorder.none,
+                  focusedErrorBorder: InputBorder.none,
+                  contentPadding: const EdgeInsetsDirectional.symmetric(
+                    vertical: TajeerSpacing.sm,
+                  ),
+                  // The message renders below, in the scaffold, so its
+                  // typography comes from the system's scale.
+                  errorStyle: const TextStyle(height: 0, fontSize: 0),
+                ),
               ),
-              prefixIcon: leading == null
-                  ? null
-                  : Padding(
-                      padding: const EdgeInsetsDirectional.only(
-                        start: TajeerSpacing.sm,
-                        end: TajeerSpacing.xs,
-                      ),
-                      child: IconTheme(
-                        data: IconThemeData(color: colors.textMuted, size: 16),
-                        child: leading!,
-                      ),
-                    ),
-              prefixIconConstraints: const BoxConstraints(minWidth: 0),
-              suffixIcon: trailing == null
-                  ? null
-                  : Padding(
-                      padding: const EdgeInsetsDirectional.only(
-                        start: TajeerSpacing.xs,
-                        end: TajeerSpacing.sm,
-                      ),
-                      child: IconTheme(
-                        data: IconThemeData(color: colors.textMuted, size: 16),
-                        child: trailing!,
-                      ),
-                    ),
-              suffixIconConstraints: const BoxConstraints(minWidth: 0),
-              constraints: const BoxConstraints(minHeight: 36), // `h-9`
-              border: _border(borderColor),
-              enabledBorder: _border(borderColor),
-              disabledBorder: _border(borderColor),
-              // `focus-visible:ring-1` -- one pixel, not a heavier border.
-              focusedBorder: _border(ringColor, width: 2),
-              errorBorder: _border(colors.dangerDefault),
-              focusedErrorBorder: _border(colors.dangerDefault, width: 2),
-              // The message renders below rather than inside the decoration,
-              // so its typography comes from the system's scale.
-              errorStyle: const TextStyle(height: 0, fontSize: 0),
             ),
-          ),
+            if (trailing != null) _adornment(colors, trailing!),
+          ],
         ),
-        if (_invalid)
-          Text(
-            errorText!,
-            style: context.text.bodySmall?.copyWith(
-              color: colors.dangerDefault,
-            ),
-          )
-        else if (description != null)
-          Text(
-            description!,
-            style: context.text.bodySmall?.copyWith(color: colors.textMuted),
-          ),
-      ],
+      ),
     );
   }
 
-  OutlineInputBorder _border(Color color, {double width = 1}) {
-    return OutlineInputBorder(
-      borderRadius: TajeerRadii.mdAll,
-      borderSide: BorderSide(color: color, width: width),
-    );
-  }
+  Widget _adornment(TajeerColors colors, Widget child) => IconTheme(
+    data: IconThemeData(color: colors.textMuted, size: 18),
+    child: child,
+  );
 }

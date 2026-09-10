@@ -5,7 +5,26 @@ import '../primitives/pressable.dart';
 import '../loaders/spinner.dart';
 
 /// The six button variants, matching `button.tsx`'s `cva` set.
-enum AppButtonVariant { primary, destructive, outline, secondary, ghost, link }
+enum AppButtonVariant {
+  primary,
+  destructive,
+  outline,
+  secondary,
+
+  /// The brand at wash strength: a call to action that is *available* rather
+  /// than the one thing to do. Distinct from `secondary`, which is neutral —
+  /// this one still says "brand", quietly.
+  soft,
+
+  ghost,
+  link,
+}
+
+/// Whether the button is a rounded rectangle or a circle.
+///
+/// A circle is for a single glyph with nothing beside it — a composer's send,
+/// a floating action. It is a shape, not a variant, so any variant can wear it.
+enum AppButtonShape { rounded, circle }
 
 /// The four sizes: `default`, `sm`, `lg`, `icon`.
 enum AppButtonSize { medium, small, large, icon }
@@ -28,6 +47,8 @@ class AppButton extends StatelessWidget {
     this.loading = false,
     this.expand = false,
     this.semanticLabel,
+    this.shape = AppButtonShape.rounded,
+    this.badge,
     super.key,
   });
 
@@ -38,6 +59,8 @@ class AppButton extends StatelessWidget {
     this.onPressed,
     this.variant = AppButtonVariant.ghost,
     this.loading = false,
+    this.shape = AppButtonShape.rounded,
+    this.badge,
     super.key,
   }) : label = null,
        leading = icon,
@@ -58,6 +81,14 @@ class AppButton extends StatelessWidget {
 
   final bool expand;
   final String? semanticLabel;
+  final AppButtonShape shape;
+
+  /// A marker at the top-end corner — an unread dot on a notifications icon, a
+  /// count on a tab. Positioned directionally, so it sits top-left in Arabic.
+  ///
+  /// This is why there is no `NotificationButton`: it is this button with a
+  /// badge, and a separate class would be a second thing to restyle.
+  final Widget? badge;
 
   bool get _enabled => onPressed != null && !loading;
 
@@ -101,7 +132,7 @@ class AppButton extends StatelessWidget {
     final Widget surface = AnimatedOpacity(
       // `disabled:opacity-50`.
       opacity: _enabled ? 1 : 0.5,
-      duration: const Duration(milliseconds: 150),
+      duration: context.motion.fast,
       child: Container(
         constraints: BoxConstraints(minHeight: metrics.minHeight),
         width: size == AppButtonSize.icon ? metrics.minHeight : null,
@@ -110,7 +141,7 @@ class AppButton extends StatelessWidget {
             : EdgeInsetsDirectional.symmetric(horizontal: metrics.paddingX),
         decoration: BoxDecoration(
           color: style.background,
-          borderRadius: TajeerRadii.mdAll,
+          borderRadius: _radius,
           border: style.border == null
               ? null
               : Border.fromBorderSide(BorderSide(color: style.border!)),
@@ -126,10 +157,28 @@ class AppButton extends StatelessWidget {
       ),
     );
 
+    final Widget marked = badge == null
+        ? surface
+        : Stack(
+            clipBehavior: Clip.none,
+            children: <Widget>[
+              surface,
+              // Directional, so it lands top-left in Arabic. A `Positioned`
+              // with `right:` would pin it to the same physical corner in both
+              // languages, which is the corner it does not belong in for one
+              // of them.
+              PositionedDirectional(
+                top: -TajeerSpacing.xs2,
+                end: -TajeerSpacing.xs2,
+                child: badge!,
+              ),
+            ],
+          );
+
     return AppPressable(
       onTap: _enabled ? onPressed : null,
       enabled: _enabled,
-      borderRadius: TajeerRadii.mdAll,
+      borderRadius: _radius,
       semanticLabel: semanticLabel ?? label,
       excludeSemantics: semanticLabel != null,
       // The link variant is text, not a surface: washing it would tint the
@@ -141,9 +190,7 @@ class AppButton extends StatelessWidget {
           ? ElevateStep.none
           : ElevateStep.two,
       scaleOnPress: variant != AppButtonVariant.link,
-      child: expand
-          ? SizedBox(width: double.infinity, child: surface)
-          : surface,
+      child: expand ? SizedBox(width: double.infinity, child: marked) : marked,
     );
   }
 
@@ -182,6 +229,14 @@ class AppButton extends StatelessWidget {
         border: colors.border,
         shadow: const <BoxShadow>[],
       ),
+      AppButtonVariant.soft => _ButtonStyle(
+        background: colors.primarySoft,
+        // `focus`, not `primary`: in the light palette the accent is a fill and
+        // cannot carry text. See the `link` variant below.
+        foreground: colors.focus,
+        border: Colors.transparent,
+        shadow: const <BoxShadow>[],
+      ),
       AppButtonVariant.ghost => _ButtonStyle(
         background: Colors.transparent,
         foreground: colors.textPrimary,
@@ -199,6 +254,11 @@ class AppButton extends StatelessWidget {
       ),
     };
   }
+
+  BorderRadius get _radius => switch (shape) {
+    AppButtonShape.rounded => TajeerRadii.mdAll,
+    AppButtonShape.circle => TajeerRadii.fullAll,
+  };
 
   _ButtonMetrics _metrics() {
     return switch (size) {

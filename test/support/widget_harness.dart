@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:tajeerai_mobile/app/localization/locale_manager.dart';
 import 'package:tajeerai_mobile/app/theme/theme.dart';
+import 'package:tajeerai_mobile/design_system/design_system.dart';
 
 /// Wraps a widget in the app's real theme.
 ///
@@ -19,12 +22,25 @@ Widget wrapWidget(
   TajeerPreset preset = TajeerPreset.fallback,
   bool disableAnimations = false,
   TextScaler textScaler = TextScaler.noScaling,
+  Locale locale = const Locale('en'),
 }) {
   return MaterialApp(
     // Off, or every golden carries a red ribbon across its top corner and the
     // first thing anybody reviewing one sees is the banner.
     debugShowCheckedModeBanner: false,
     theme: AppTheme.of(preset, brightness),
+    // The delegates are mounted so a component reads the same copy it will in
+    // production. `AppDesignSystemLocalizations` falls back to English without
+    // them, which is what keeps a bare pump working -- but a test that asserts
+    // on Arabic copy needs them present.
+    locale: locale,
+    supportedLocales: AppLocale.supported,
+    localizationsDelegates: const <LocalizationsDelegate<Object>>[
+      AppDesignSystemLocalizations.delegate,
+      GlobalMaterialLocalizations.delegate,
+      GlobalWidgetsLocalizations.delegate,
+      GlobalCupertinoLocalizations.delegate,
+    ],
     home: Directionality(
       textDirection: textDirection,
       child: MediaQuery(
@@ -47,6 +63,7 @@ Widget scoped(
   TextDirection textDirection = TextDirection.ltr,
   Size size = const Size(400, 800),
   TajeerPreset preset = TajeerPreset.fallback,
+  Locale locale = const Locale('en'),
 }) {
   return ProviderScope(
     child: wrapWidget(
@@ -55,6 +72,7 @@ Widget scoped(
       textDirection: textDirection,
       size: size,
       preset: preset,
+      locale: locale,
     ),
   );
 }
