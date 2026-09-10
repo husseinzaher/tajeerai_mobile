@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tajeerai_mobile/app/theme/theme.dart';
 import 'package:tajeerai_mobile/design_system/display/avatar.dart';
@@ -8,6 +9,7 @@ import 'package:tajeerai_mobile/design_system/display/chip.dart';
 import 'package:tajeerai_mobile/design_system/display/list_item.dart';
 import 'package:tajeerai_mobile/design_system/display/list_section.dart';
 import 'package:tajeerai_mobile/design_system/display/segmented_control.dart';
+import 'package:tajeerai_mobile/design_system/display/separator.dart';
 import 'package:tajeerai_mobile/design_system/display/status_dot.dart';
 import 'package:tajeerai_mobile/design_system/display/tabs.dart';
 
@@ -192,11 +194,10 @@ void main() {
         ),
       );
 
-      await tester.tap(find.text('غير مقروءة'));
+      await tester.tap(find.byType(AppChip));
       expect(selected, 1);
       expect(removed, 0);
 
-      await tester.tap(find.byIcon(Icons.close), warnIfMissed: false);
       await tester.tap(find.bySemanticsLabel('Dismiss'));
       expect(removed, 1);
       expect(selected, 1, reason: 'removing must not also select');
@@ -209,8 +210,20 @@ void main() {
         wrapWidget(AppChip(label: 'الكل', selected: true, onTap: () {})),
       );
 
-      final SemanticsNode node = tester.getSemantics(find.byType(AppChip));
-      expect(node.getSemanticsData().flagsCollection.isSelected, isTrue);
+      // Found by label rather than by type: `getSemantics` on a widget walks
+      // up to the nearest node, which here is the pressable's, not the chip's
+      // own container.
+      // `isSelected` is a Tristate, not a bool, and deliberately so: a control
+      // that cannot be selected at all is a different fact from one that is
+      // selectable and currently is not.
+      expect(
+        tester
+            .getSemantics(find.bySemanticsLabel('الكل'))
+            .getSemanticsData()
+            .flagsCollection
+            .isSelected,
+        Tristate.isTrue,
+      );
     });
   });
 
@@ -331,7 +344,7 @@ void main() {
       // Three rows, two rules between them. A trailing separator inside a
       // bordered group draws a line on top of the group's own edge.
       expect(find.byType(AppListItem), findsNWidgets(3));
-      expect(find.byType(Divider), findsNWidgets(2));
+      expect(find.byType(AppSeparator), findsNWidgets(2));
     });
   });
 

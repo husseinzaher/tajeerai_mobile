@@ -49,64 +49,72 @@ class AppChip extends StatelessWidget {
     return Opacity(
       opacity: enabled ? 1 : 0.5,
       child: Semantics(
+        // `container: true` or there is no node at all: the child is excluded,
+        // so this annotation has nothing to merge into and Flutter drops it.
+        // The flag then silently never reaches a screen reader.
+        container: true,
         button: onTap != null,
         selected: selected,
         enabled: enabled,
         label: label,
-        child: ExcludeSemantics(
-          child: AppPressable(
-            onTap: enabled ? onTap : null,
-            enabled: enabled && onTap != null,
-            borderRadius: TajeerRadii.fullAll,
-            child: Container(
-              constraints: const BoxConstraints(minHeight: 36),
-              padding: EdgeInsetsDirectional.only(
-                start: TajeerSpacing.sm,
-                end: onRemove == null ? TajeerSpacing.sm : TajeerSpacing.xs2,
-              ),
-              decoration: BoxDecoration(
-                color: background,
-                borderRadius: TajeerRadii.fullAll,
-                border: Border.fromBorderSide(BorderSide(color: border)),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                spacing: TajeerSpacing.xs2,
-                children: <Widget>[
-                  if (leading != null)
-                    IconTheme.merge(
-                      data: IconThemeData(color: foreground, size: 14),
-                      child: leading!,
-                    ),
-                  Text(
+        // NOT ExcludeSemantics around the whole chip. The remove affordance is
+        // its own button with its own label, and excluding the subtree would
+        // silence it — leaving a control a screen reader cannot describe, on
+        // the one action in here that destroys something.
+        child: AppPressable(
+          onTap: enabled ? onTap : null,
+          enabled: enabled && onTap != null,
+          borderRadius: TajeerRadii.fullAll,
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 36),
+            padding: EdgeInsetsDirectional.only(
+              start: TajeerSpacing.sm,
+              end: onRemove == null ? TajeerSpacing.sm : TajeerSpacing.xs2,
+            ),
+            decoration: BoxDecoration(
+              color: background,
+              borderRadius: TajeerRadii.fullAll,
+              border: Border.fromBorderSide(BorderSide(color: border)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              spacing: TajeerSpacing.xs2,
+              children: <Widget>[
+                if (leading != null)
+                  IconTheme.merge(
+                    data: IconThemeData(color: foreground, size: 14),
+                    child: leading!,
+                  ),
+                ExcludeSemantics(
+                  child: Text(
                     label,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: context.type.labelMd.copyWith(color: foreground),
                   ),
-                  if (onRemove != null)
-                    Semantics(
-                      button: true,
-                      label: removeLabel ?? context.strings.dismiss,
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onTap: enabled ? onRemove : null,
-                        // Its own target inside the chip: removing a filter and
-                        // toggling it must not be the same tap.
-                        child: SizedBox.square(
-                          dimension: 32,
-                          child: Center(
-                            child: Icon(
-                              LucideIcons.x,
-                              size: 14,
-                              color: foreground,
-                            ),
+                ),
+                if (onRemove != null)
+                  Semantics(
+                    button: true,
+                    label: removeLabel ?? context.strings.dismiss,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: enabled ? onRemove : null,
+                      // Its own target inside the chip: removing a filter and
+                      // toggling it must not be the same tap.
+                      child: SizedBox.square(
+                        dimension: 32,
+                        child: Center(
+                          child: Icon(
+                            LucideIcons.x,
+                            size: 14,
+                            color: foreground,
                           ),
                         ),
                       ),
                     ),
-                ],
-              ),
+                  ),
+              ],
             ),
           ),
         ),
