@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../app/theme/app_theme.dart';
-import '../../app/theme/radii.dart';
-import '../../app/theme/spacing.dart';
+import '../../app/theme/theme.dart';
 
 /// The system's bottom sheet.
 ///
@@ -61,11 +59,11 @@ class AppBottomSheet extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.all(TajeerSpacing.x6), // `p-6`
+          padding: const EdgeInsets.all(TajeerSpacing.lg), // `p-6`
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
-            spacing: TajeerSpacing.x4, // `gap-4`
+            spacing: TajeerSpacing.md, // `gap-4`
             children: <Widget>[
               if (showHandle)
                 Center(
@@ -82,7 +80,7 @@ class AppBottomSheet extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
-                  spacing: TajeerSpacing.x1_5,
+                  spacing: TajeerSpacing.xs,
                   children: <Widget>[
                     Text(
                       title!,
@@ -94,7 +92,7 @@ class AppBottomSheet extends StatelessWidget {
                       Text(
                         description!,
                         style: context.text.bodyMedium?.copyWith(
-                          color: colors.mutedForeground,
+                          color: colors.textMuted,
                         ),
                       ),
                   ],

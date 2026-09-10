@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../app/theme/app_theme.dart';
-import '../../app/theme/motion.dart';
-import '../../app/theme/radii.dart';
-import '../../app/theme/spacing.dart';
+import '../../app/theme/theme.dart';
 import '../buttons/app_button.dart';
 
 /// The system's modal.
@@ -37,12 +34,12 @@ class AppDialog extends StatelessWidget {
       barrierDismissible: barrierDismissible,
       barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
       barrierColor: const Color(0xCC000000), // `bg-black/80`
-      transitionDuration: TajeerMotion.duration,
+      transitionDuration: context.motion.fast,
       pageBuilder: (context, animation, secondary) => dialog,
       transitionBuilder: (context, animation, secondary, child) {
         final curved = CurvedAnimation(
           parent: animation,
-          curve: TajeerMotion.easing,
+          curve: context.motion.emphasized,
         );
 
         // `zoom-in-95` + `fade-in-0`.
@@ -99,14 +96,14 @@ class AppDialog extends StatelessWidget {
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(TajeerSpacing.x6),
+        padding: const EdgeInsets.all(TajeerSpacing.lg),
         child: ConstrainedBox(
           // `w-full max-w-lg`.
           constraints: const BoxConstraints(maxWidth: 512),
           child: Material(
             type: MaterialType.transparency,
             child: Container(
-              padding: const EdgeInsets.all(TajeerSpacing.x6), // `p-6`
+              padding: const EdgeInsets.all(TajeerSpacing.lg), // `p-6`
               decoration: BoxDecoration(
                 color: colors.background,
                 borderRadius: TajeerRadii.lgAll, // `sm:rounded-lg`
@@ -122,12 +119,12 @@ class AppDialog extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
-                spacing: TajeerSpacing.x4, // `gap-4`
+                spacing: TajeerSpacing.md, // `gap-4`
                 children: <Widget>[
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
-                    spacing: TajeerSpacing.x1_5, // `space-y-1.5`
+                    spacing: TajeerSpacing.xs, // `space-y-1.5`
                     children: <Widget>[
                       Text(
                         title,
@@ -139,7 +136,7 @@ class AppDialog extends StatelessWidget {
                         Text(
                           description!,
                           style: context.text.bodyMedium?.copyWith(
-                            color: colors.mutedForeground,
+                            color: colors.textMuted,
                           ),
                         ),
                     ],
@@ -148,7 +145,7 @@ class AppDialog extends StatelessWidget {
                   if (actions.isNotEmpty)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
-                      spacing: TajeerSpacing.x2,
+                      spacing: TajeerSpacing.xs,
                       children: actions,
                     ),
                 ],

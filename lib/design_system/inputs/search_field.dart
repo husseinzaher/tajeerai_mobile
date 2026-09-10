@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../app/theme/app_theme.dart';
 import 'app_text_field.dart';
+
+import '../../app/theme/theme.dart';
 
 /// A text field pre-composed for search.
 ///
@@ -75,10 +76,7 @@ class _SearchFieldState extends State<SearchField> {
               child: Semantics(
                 button: true,
                 label: MaterialLocalizations.of(context).deleteButtonTooltip,
-                child: Icon(
-                  LucideIcons.x,
-                  color: context.colors.mutedForeground,
-                ),
+                child: Icon(LucideIcons.x, color: context.colors.textMuted),
               ),
             )
           : null,

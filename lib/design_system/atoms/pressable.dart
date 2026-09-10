@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../app/theme/app_theme.dart';
-import '../../app/theme/motion.dart';
+import '../../app/theme/theme.dart';
 
 /// How strongly a press or hover washes the surface underneath.
 ///
@@ -93,8 +92,8 @@ class _PressableState extends State<Pressable> {
 
     return switch (step) {
       ElevateStep.none => const Color(0x00000000),
-      ElevateStep.one => colors.elevate1,
-      ElevateStep.two => colors.elevate2,
+      ElevateStep.one => colors.overlayHover,
+      ElevateStep.two => colors.overlayPressed,
     };
   }
 
@@ -105,10 +104,10 @@ class _PressableState extends State<Pressable> {
 
     Widget content = AnimatedScale(
       scale: _pressed && widget.scaleOnPress && interactive
-          ? TajeerMotion.pressScale
+          ? context.motion.pressScale
           : 1,
-      duration: TajeerMotion.duration,
-      curve: TajeerMotion.easing,
+      duration: context.motion.fast,
+      curve: context.motion.emphasized,
       child: Stack(
         children: <Widget>[
           widget.child,
@@ -117,8 +116,8 @@ class _PressableState extends State<Pressable> {
           Positioned.fill(
             child: IgnorePointer(
               child: AnimatedContainer(
-                duration: TajeerMotion.duration,
-                curve: TajeerMotion.easing,
+                duration: context.motion.fast,
+                curve: context.motion.emphasized,
                 decoration: BoxDecoration(
                   color: interactive
                       ? _overlay(context)
@@ -139,7 +138,7 @@ class _PressableState extends State<Pressable> {
         decoration: BoxDecoration(
           borderRadius: radius,
           boxShadow: <BoxShadow>[
-            BoxShadow(color: context.colors.ring, spreadRadius: 2),
+            BoxShadow(color: context.colors.focus, spreadRadius: 2),
           ],
         ),
         child: content,

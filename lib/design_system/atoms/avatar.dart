@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../app/theme/app_theme.dart';
-import '../../app/theme/typography.dart';
+import '../../app/theme/theme.dart';
 
 /// A round identity image with an initials fallback.
 ///
@@ -51,7 +50,10 @@ class AppAvatar extends StatelessWidget {
         width: size,
         height: size,
         clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(color: colors.muted, shape: BoxShape.circle),
+        decoration: BoxDecoration(
+          color: colors.surfaceMuted,
+          shape: BoxShape.circle,
+        ),
         child: imageUrl == null || imageUrl!.isEmpty
             ? _fallback(context)
             : Image.network(
@@ -72,8 +74,8 @@ class AppAvatar extends StatelessWidget {
           fontFamily: TajeerTypography.sansFamily,
           fontFamilyFallback: TajeerTypography.sansFallback,
           fontSize: size * 0.36,
-          fontWeight: TajeerTypography.medium,
-          color: context.colors.mutedForeground,
+          fontWeight: FontWeight.w500,
+          color: context.colors.textMuted,
         ),
       ),
     );

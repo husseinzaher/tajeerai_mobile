@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../app/theme/app_theme.dart';
+import '../../app/theme/theme.dart';
 
 /// The screen shell.
 ///
@@ -59,7 +59,7 @@ class AppScaffold extends StatelessWidget {
               leading:
                   leading ??
                   (showBack
-                      ? BackButton(color: colors.foreground, onPressed: onBack)
+                      ? BackButton(color: colors.textPrimary, onPressed: onBack)
                       : null),
               title:
                   titleWidget ??

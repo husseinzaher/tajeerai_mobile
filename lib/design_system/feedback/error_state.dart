@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../app/theme/app_theme.dart';
 import 'empty_state.dart';
+
+import '../../app/theme/theme.dart';
 
 /// The "something went wrong" surface.
 ///
@@ -66,7 +67,7 @@ class InlineError extends StatelessWidget {
         borderRadius: BorderRadius.circular(11.2),
         border: Border.fromBorderSide(
           // `border-destructive/50`.
-          BorderSide(color: colors.destructive.withValues(alpha: 0.5)),
+          BorderSide(color: colors.dangerDefault.withValues(alpha: 0.5)),
         ),
       ),
       child: Row(
@@ -76,13 +77,13 @@ class InlineError extends StatelessWidget {
           Icon(
             icon ?? LucideIcons.circleAlert,
             size: 16,
-            color: colors.destructive,
+            color: colors.dangerDefault,
           ),
           Expanded(
             child: Text(
               message,
               style: context.text.bodyMedium?.copyWith(
-                color: colors.destructive,
+                color: colors.dangerDefault,
               ),
             ),
           ),
@@ -114,9 +115,9 @@ class StatusBanner extends StatelessWidget {
     final colors = context.colors;
 
     final (background, foreground) = switch (tone) {
-      StatusTone.warning => (colors.warning, colors.warningForeground),
-      StatusTone.success => (colors.success, colors.successForeground),
-      StatusTone.neutral => (colors.muted, colors.mutedForeground),
+      StatusTone.warning => (colors.warningDefault, colors.textInverse),
+      StatusTone.success => (colors.successDefault, colors.textInverse),
+      StatusTone.neutral => (colors.surfaceMuted, colors.textMuted),
     };
 
     return Container(

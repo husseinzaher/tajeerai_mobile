@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:tajeerai_mobile/app/theme/colors.dart';
+import 'package:tajeerai_mobile/app/theme/theme.dart';
 import 'package:tajeerai_mobile/design_system/feedback/empty_state.dart';
 import 'package:tajeerai_mobile/design_system/feedback/error_state.dart';
 import 'package:tajeerai_mobile/design_system/loaders/skeleton.dart';
@@ -96,7 +96,7 @@ void main() {
 
       final text = tester.widget<Text>(find.text('Check your details.'));
 
-      expect(text.style!.color, TajeerColors.light.destructive);
+      expect(text.style!.color, TajeerColors.tajeerLight.dangerDefault);
     });
 
     testWidgets('uses the dark destructive token in dark mode', (tester) async {
@@ -109,7 +109,7 @@ void main() {
 
       final text = tester.widget<Text>(find.text('Check your details.'));
 
-      expect(text.style!.color, TajeerColors.dark.destructive);
+      expect(text.style!.color, TajeerColors.tajeerDark.dangerDefault);
     });
   });
 

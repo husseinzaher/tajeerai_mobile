@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 
-import '../../app/theme/app_theme.dart';
+import '../../app/theme/theme.dart';
 
 /// A hairline rule.
 ///

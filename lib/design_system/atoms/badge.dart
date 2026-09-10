@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../app/theme/app_theme.dart';
-import '../../app/theme/radii.dart';
-import '../../app/theme/spacing.dart';
-import '../../app/theme/typography.dart';
+import '../../app/theme/theme.dart';
 
 /// The four badge variants from `badge.tsx`.
 enum AppBadgeVariant { primary, secondary, destructive, outline, success }
@@ -37,31 +34,31 @@ class AppBadge extends StatelessWidget {
         Colors.transparent,
       ),
       AppBadgeVariant.secondary => (
-        colors.secondary,
-        colors.secondaryForeground,
+        colors.surfaceMuted,
+        colors.textPrimary,
         Colors.transparent,
       ),
       AppBadgeVariant.destructive => (
-        colors.destructive,
-        colors.destructiveForeground,
+        colors.dangerDefault,
+        colors.textInverse,
         Colors.transparent,
       ),
       AppBadgeVariant.outline => (
         Colors.transparent,
-        colors.foreground,
-        colors.badgeOutline,
+        colors.textPrimary,
+        colors.borderSubtle,
       ),
       AppBadgeVariant.success => (
-        colors.success,
-        colors.successForeground,
+        colors.successDefault,
+        colors.textInverse,
         Colors.transparent,
       ),
     };
 
     return Container(
       padding: const EdgeInsetsDirectional.symmetric(
-        horizontal: TajeerSpacing.x2_5, // `px-2.5`
-        vertical: TajeerSpacing.x0_5, // `py-0.5`
+        horizontal: TajeerSpacing.sm, // `px-2.5`
+        vertical: TajeerSpacing.xs2, // `py-0.5`
       ),
       decoration: BoxDecoration(
         color: background,
@@ -70,7 +67,7 @@ class AppBadge extends StatelessWidget {
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
-        spacing: TajeerSpacing.x1,
+        spacing: TajeerSpacing.xs2,
         children: <Widget>[
           if (leading != null)
             IconTheme.merge(
@@ -82,12 +79,9 @@ class AppBadge extends StatelessWidget {
             maxLines: 1,
             softWrap: false, // `whitespace-nowrap`
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
+            style: context.type.labelSm.copyWith(
               fontFamily: TajeerTypography.sansFamily,
               fontFamilyFallback: TajeerTypography.sansFallback,
-              fontSize: TajeerTypography.xs,
-              height: 16 / TajeerTypography.xs,
-              fontWeight: TajeerTypography.semibold,
               color: foreground,
             ),
           ),

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../app/theme/app_theme.dart';
 import 'spinner.dart';
+
+import '../../app/theme/theme.dart';
 
 /// The screen shown while the session is being resolved.
 ///

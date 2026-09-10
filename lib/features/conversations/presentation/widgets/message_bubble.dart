@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../../../app/theme/app_theme.dart';
-import '../../../../app/theme/radii.dart';
-import '../../../../app/theme/spacing.dart';
+import '../../../../app/theme/theme.dart';
 import '../../../../design_system/loaders/spinner.dart';
 import '../../domain/entities/message.dart';
 
@@ -34,10 +32,10 @@ class MessageBubble extends StatelessWidget {
     final colors = context.colors;
     final isOutbound = message.isOutbound;
 
-    final background = isOutbound ? colors.primary : colors.muted;
+    final background = isOutbound ? colors.primary : colors.surfaceMuted;
     final foreground = isOutbound
         ? colors.primaryForeground
-        : colors.foreground;
+        : colors.textPrimary;
 
     return Align(
       alignment: isOutbound
@@ -54,12 +52,12 @@ class MessageBubble extends StatelessWidget {
               ? CrossAxisAlignment.end
               : CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
-          spacing: TajeerSpacing.x1,
+          spacing: TajeerSpacing.xs2,
           children: <Widget>[
             Container(
               padding: const EdgeInsetsDirectional.symmetric(
-                horizontal: TajeerSpacing.x3,
-                vertical: TajeerSpacing.x2,
+                horizontal: TajeerSpacing.sm,
+                vertical: TajeerSpacing.xs,
               ),
               decoration: BoxDecoration(
                 color: background,
@@ -77,7 +75,7 @@ class MessageBubble extends StatelessWidget {
                 // attention even before its status line is read.
                 border: message.state == MessageState.failed
                     ? Border.fromBorderSide(
-                        BorderSide(color: colors.destructive),
+                        BorderSide(color: colors.dangerDefault),
                       )
                     : null,
               ),
@@ -91,7 +89,7 @@ class MessageBubble extends StatelessWidget {
                 (onRetry != null || onDiscard != null))
               Row(
                 mainAxisSize: MainAxisSize.min,
-                spacing: TajeerSpacing.x3,
+                spacing: TajeerSpacing.sm,
                 children: <Widget>[
                   if (onRetry != null)
                     _InlineAction(label: 'Retry', onTap: onRetry!),
@@ -134,37 +132,31 @@ class _StatusLine extends StatelessWidget {
       MessageState.pending => (
         LucideIcons.clock,
         'Waiting to send',
-        colors.mutedForeground,
+        colors.textMuted,
       ),
-      MessageState.sending => (null, 'Sending', colors.mutedForeground),
+      MessageState.sending => (null, 'Sending', colors.textMuted),
       MessageState.failed => (
         LucideIcons.circleAlert,
         'Not sent',
-        colors.destructive,
+        colors.dangerDefault,
       ),
-      MessageState.sent => (LucideIcons.check, null, colors.mutedForeground),
+      MessageState.sent => (LucideIcons.check, null, colors.textMuted),
       MessageState.delivered => (
         LucideIcons.checkCheck,
         null,
-        colors.mutedForeground,
+        colors.textMuted,
       ),
-      MessageState.read => (LucideIcons.checkCheck, null, colors.accent),
-      MessageState.discarded => (
-        LucideIcons.ban,
-        'Removed',
-        colors.mutedForeground,
-      ),
+      MessageState.read => (LucideIcons.checkCheck, null, colors.infoDefault),
+      MessageState.discarded => (LucideIcons.ban, 'Removed', colors.textMuted),
     };
 
     return Row(
       mainAxisSize: MainAxisSize.min,
-      spacing: TajeerSpacing.x1,
+      spacing: TajeerSpacing.xs2,
       children: <Widget>[
         Text(
           DateFormat.jm().format(message.createdAt.toLocal()),
-          style: context.text.bodySmall?.copyWith(
-            color: colors.mutedForeground,
-          ),
+          style: context.text.bodySmall?.copyWith(color: colors.textMuted),
         ),
         if (message.isOutbound) ...<Widget>[
           if (message.state == MessageState.sending)
@@ -202,10 +194,12 @@ class _InlineAction extends StatelessWidget {
         child: Text(
           label,
           style: context.text.bodySmall?.copyWith(
-            color: destructive ? colors.destructive : colors.primary,
+            color: destructive ? colors.dangerDefault : colors.primary,
             fontWeight: FontWeight.w500,
             decoration: TextDecoration.underline,
-            decorationColor: destructive ? colors.destructive : colors.primary,
+            decorationColor: destructive
+                ? colors.dangerDefault
+                : colors.primary,
           ),
         ),
       ),

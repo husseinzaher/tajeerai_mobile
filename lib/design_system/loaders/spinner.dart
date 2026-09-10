@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../app/theme/app_theme.dart';
+import '../../app/theme/theme.dart';
 
 /// The system's loading indicator.
 ///
@@ -41,7 +41,7 @@ class _SpinnerState extends State<Spinner> with SingleTickerProviderStateMixin {
         child: Icon(
           LucideIcons.loaderCircle,
           size: widget.size,
-          color: widget.color ?? context.colors.mutedForeground,
+          color: widget.color ?? context.colors.textMuted,
         ),
       ),
     );

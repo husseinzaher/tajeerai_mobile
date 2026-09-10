@@ -3,8 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../../../app/theme/app_theme.dart';
-import '../../../../app/theme/spacing.dart';
+import '../../../../app/theme/theme.dart';
 import '../../../../design_system/atoms/avatar.dart';
 import '../../../../design_system/feedback/empty_state.dart';
 import '../../../../design_system/feedback/error_state.dart';
@@ -105,10 +104,10 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
                   // pinned to the latest message, and older history loads
                   // as the reader scrolls up.
                   reverse: true,
-                  padding: const EdgeInsets.all(TajeerSpacing.x4),
+                  padding: const EdgeInsets.all(TajeerSpacing.md),
                   itemCount: items.length,
                   separatorBuilder: (context, index) =>
-                      const SizedBox(height: TajeerSpacing.x2),
+                      const SizedBox(height: TajeerSpacing.xs),
                   itemBuilder: (context, index) {
                     final message = items[items.length - 1 - index];
 
@@ -170,7 +169,7 @@ class _ThreadTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      spacing: TajeerSpacing.x3,
+      spacing: TajeerSpacing.sm,
       children: <Widget>[
         AppAvatar(
           name: conversation.displayName,
@@ -196,13 +195,13 @@ class _ThreadSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
-      padding: const EdgeInsets.all(TajeerSpacing.x4),
+      padding: const EdgeInsets.all(TajeerSpacing.md),
       itemCount: 6,
       itemBuilder: (context, index) {
         final isOutbound = index.isEven;
 
         return Padding(
-          padding: const EdgeInsets.symmetric(vertical: TajeerSpacing.x2),
+          padding: const EdgeInsets.symmetric(vertical: TajeerSpacing.xs),
           child: Align(
             alignment: isOutbound
                 ? AlignmentDirectional.centerEnd

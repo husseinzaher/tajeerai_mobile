@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../../../app/theme/app_theme.dart';
-import '../../../../app/theme/radii.dart';
-import '../../../../app/theme/spacing.dart';
+import '../../../../app/theme/theme.dart';
 import '../../../../design_system/atoms/avatar.dart';
 import '../../../../design_system/atoms/badge.dart';
 import '../../../../design_system/atoms/pressable.dart';
@@ -41,16 +39,16 @@ class ConversationTile extends StatelessWidget {
       excludeSemantics: true,
       child: Container(
         padding: const EdgeInsets.symmetric(
-          horizontal: TajeerSpacing.x4,
-          vertical: TajeerSpacing.x3,
+          horizontal: TajeerSpacing.md,
+          vertical: TajeerSpacing.sm,
         ),
         decoration: BoxDecoration(
-          color: isSelected ? colors.primaryMuted : Colors.transparent,
+          color: isSelected ? colors.primarySoft : Colors.transparent,
           borderRadius: TajeerRadii.lgAll,
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: TajeerSpacing.x3,
+          spacing: TajeerSpacing.sm,
           children: <Widget>[
             AppAvatar(
               name: conversation.displayName,
@@ -60,16 +58,16 @@ class ConversationTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
-                spacing: TajeerSpacing.x1,
+                spacing: TajeerSpacing.xs2,
                 children: <Widget>[
                   Row(
-                    spacing: TajeerSpacing.x2,
+                    spacing: TajeerSpacing.xs,
                     children: <Widget>[
                       if (conversation.isPinned)
                         Icon(
                           LucideIcons.pin,
                           size: 12,
-                          color: colors.mutedForeground,
+                          color: colors.textMuted,
                         ),
                       Expanded(
                         child: Text(
@@ -82,7 +80,7 @@ class ConversationTile extends StatelessWidget {
                             fontWeight: unread
                                 ? FontWeight.w600
                                 : FontWeight.w500,
-                            color: colors.foreground,
+                            color: colors.textPrimary,
                           ),
                         ),
                       ),
@@ -91,16 +89,14 @@ class ConversationTile extends StatelessWidget {
                           conversation.lastMessageAt ?? conversation.createdAt,
                         ),
                         style: context.text.bodySmall?.copyWith(
-                          color: unread
-                              ? colors.primary
-                              : colors.mutedForeground,
+                          color: unread ? colors.primary : colors.textMuted,
                         ),
                       ),
                     ],
                   ),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
-                    spacing: TajeerSpacing.x2,
+                    spacing: TajeerSpacing.xs,
                     children: <Widget>[
                       Expanded(
                         child: Text(
@@ -108,7 +104,7 @@ class ConversationTile extends StatelessWidget {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: context.text.bodyMedium?.copyWith(
-                            color: colors.mutedForeground,
+                            color: colors.textMuted,
                           ),
                         ),
                       ),
@@ -118,7 +114,7 @@ class ConversationTile extends StatelessWidget {
                         Icon(
                           LucideIcons.bellOff,
                           size: 12,
-                          color: colors.mutedForeground,
+                          color: colors.textMuted,
                         ),
                     ],
                   ),

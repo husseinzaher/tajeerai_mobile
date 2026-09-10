@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../../../app/theme/app_theme.dart';
-import '../../../../app/theme/spacing.dart';
+import '../../../../app/theme/theme.dart';
 import '../../../../design_system/buttons/app_button.dart';
 import '../../../../design_system/feedback/error_state.dart';
 import '../../../../design_system/inputs/app_text_field.dart';
@@ -56,7 +55,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
-        spacing: TajeerSpacing.x4,
+        spacing: TajeerSpacing.md,
         children: <Widget>[
           if (state.errorMessage != null)
             InlineError(message: state.errorMessage!),
@@ -143,7 +142,7 @@ class _RememberRow extends StatelessWidget {
             behavior: HitTestBehavior.opaque,
             onTap: enabled ? () => onChanged(!value) : null,
             child: Row(
-              spacing: TajeerSpacing.x2,
+              spacing: TajeerSpacing.xs,
               children: <Widget>[
                 Checkbox(
                   value: value,
@@ -152,14 +151,14 @@ class _RememberRow extends StatelessWidget {
                       : null,
                   activeColor: colors.primary,
                   checkColor: colors.primaryForeground,
-                  side: BorderSide(color: colors.input),
+                  side: BorderSide(color: colors.border),
                   visualDensity: VisualDensity.compact,
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
                 Text(
                   'Keep me signed in',
                   style: context.text.bodyMedium?.copyWith(
-                    color: colors.mutedForeground,
+                    color: colors.textMuted,
                   ),
                 ),
               ],

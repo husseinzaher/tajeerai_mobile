@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../app/theme/app_theme.dart';
-import '../../app/theme/radii.dart';
-import '../../app/theme/spacing.dart';
-import '../../app/theme/typography.dart';
+import '../../app/theme/theme.dart';
 
 /// The system's text input, with the label/description/error scaffolding
 /// `field.tsx` wraps it in.
@@ -75,25 +72,23 @@ class AppTextField extends StatelessWidget {
       fontFamilyFallback: TajeerTypography.sansFallback,
       // `text-base md:text-sm`: 16 on a phone. Below 16 iOS zooms the field on
       // focus, so the mobile step is the one to keep.
-      fontSize: TajeerTypography.base,
-      height: 24 / TajeerTypography.base,
-      color: colors.foreground,
+      color: colors.textPrimary,
     );
 
-    final borderColor = _invalid ? colors.destructive : colors.input;
-    final ringColor = _invalid ? colors.destructive : colors.ring;
+    final borderColor = _invalid ? colors.dangerDefault : colors.border;
+    final ringColor = _invalid ? colors.dangerDefault : colors.focus;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       // `space-y-2` between label, control and message.
-      spacing: TajeerSpacing.x2,
+      spacing: TajeerSpacing.xs,
       children: <Widget>[
         if (label != null)
           Text(
             label!,
             style: context.text.labelLarge?.copyWith(
-              color: _invalid ? colors.destructive : colors.foreground,
+              color: _invalid ? colors.dangerDefault : colors.textPrimary,
             ),
           ),
         Opacity(
@@ -121,25 +116,22 @@ class AppTextField extends StatelessWidget {
               isDense: true,
               filled: false,
               hintText: hintText,
-              hintStyle: baseStyle.copyWith(color: colors.mutedForeground),
+              hintStyle: baseStyle.copyWith(color: colors.textMuted),
               // `px-3` with the height coming from the content box rather than
               // a fixed `h-9`, so a multiline field grows.
               contentPadding: const EdgeInsetsDirectional.symmetric(
-                horizontal: TajeerSpacing.x3,
-                vertical: TajeerSpacing.x2,
+                horizontal: TajeerSpacing.sm,
+                vertical: TajeerSpacing.xs,
               ),
               prefixIcon: leading == null
                   ? null
                   : Padding(
                       padding: const EdgeInsetsDirectional.only(
-                        start: TajeerSpacing.x3,
-                        end: TajeerSpacing.x2,
+                        start: TajeerSpacing.sm,
+                        end: TajeerSpacing.xs,
                       ),
                       child: IconTheme(
-                        data: IconThemeData(
-                          color: colors.mutedForeground,
-                          size: 16,
-                        ),
+                        data: IconThemeData(color: colors.textMuted, size: 16),
                         child: leading!,
                       ),
                     ),
@@ -148,14 +140,11 @@ class AppTextField extends StatelessWidget {
                   ? null
                   : Padding(
                       padding: const EdgeInsetsDirectional.only(
-                        start: TajeerSpacing.x2,
-                        end: TajeerSpacing.x3,
+                        start: TajeerSpacing.xs,
+                        end: TajeerSpacing.sm,
                       ),
                       child: IconTheme(
-                        data: IconThemeData(
-                          color: colors.mutedForeground,
-                          size: 16,
-                        ),
+                        data: IconThemeData(color: colors.textMuted, size: 16),
                         child: trailing!,
                       ),
                     ),
@@ -166,8 +155,8 @@ class AppTextField extends StatelessWidget {
               disabledBorder: _border(borderColor),
               // `focus-visible:ring-1` -- one pixel, not a heavier border.
               focusedBorder: _border(ringColor, width: 2),
-              errorBorder: _border(colors.destructive),
-              focusedErrorBorder: _border(colors.destructive, width: 2),
+              errorBorder: _border(colors.dangerDefault),
+              focusedErrorBorder: _border(colors.dangerDefault, width: 2),
               // The message renders below rather than inside the decoration,
               // so its typography comes from the system's scale.
               errorStyle: const TextStyle(height: 0, fontSize: 0),
@@ -177,14 +166,14 @@ class AppTextField extends StatelessWidget {
         if (_invalid)
           Text(
             errorText!,
-            style: context.text.bodySmall?.copyWith(color: colors.destructive),
+            style: context.text.bodySmall?.copyWith(
+              color: colors.dangerDefault,
+            ),
           )
         else if (description != null)
           Text(
             description!,
-            style: context.text.bodySmall?.copyWith(
-              color: colors.mutedForeground,
-            ),
+            style: context.text.bodySmall?.copyWith(color: colors.textMuted),
           ),
       ],
     );

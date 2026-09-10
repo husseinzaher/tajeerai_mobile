@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:tajeerai_mobile/app/theme/colors.dart';
+import 'package:tajeerai_mobile/app/theme/theme.dart';
 import 'package:tajeerai_mobile/features/conversations/domain/entities/message.dart';
 import 'package:tajeerai_mobile/features/conversations/presentation/widgets/message_bubble.dart';
 
@@ -51,7 +51,7 @@ void main() {
 
       expect(
         (container.decoration! as BoxDecoration).color,
-        TajeerColors.light.primary,
+        TajeerColors.tajeerLight.primary,
       );
 
       await tester.pumpWidget(
@@ -71,7 +71,7 @@ void main() {
 
       expect(
         (container.decoration! as BoxDecoration).color,
-        TajeerColors.light.muted,
+        TajeerColors.tajeerLight.surfaceMuted,
       );
     });
 
@@ -155,7 +155,7 @@ void main() {
 
       final icon = tester.widget<Icon>(find.byIcon(LucideIcons.checkCheck));
 
-      expect(icon.color, TajeerColors.light.accent);
+      expect(icon.color, TajeerColors.tajeerLight.infoDefault);
     });
 
     testWidgets('an inbound message shows no delivery state', (tester) async {

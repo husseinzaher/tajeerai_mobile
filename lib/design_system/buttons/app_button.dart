@@ -1,11 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../app/theme/app_theme.dart';
-import '../../app/theme/colors.dart';
-import '../../app/theme/radii.dart';
-import '../../app/theme/spacing.dart';
-import '../../app/theme/shadows.dart';
-import '../../app/theme/typography.dart';
+import '../../app/theme/theme.dart';
 import '../atoms/pressable.dart';
 import '../loaders/spinner.dart';
 
@@ -69,7 +64,7 @@ class AppButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final style = _style(colors);
+    final style = _style(colors, context.elevation);
     final metrics = _metrics();
 
     final content = <Widget>[
@@ -87,12 +82,7 @@ class AppButton extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             softWrap: false,
-            style: TextStyle(
-              fontFamily: TajeerTypography.sansFamily,
-              fontFamilyFallback: TajeerTypography.sansFallback,
-              fontSize: metrics.fontSize,
-              height: metrics.lineHeight / metrics.fontSize,
-              fontWeight: TajeerTypography.medium,
+            style: _label(context).copyWith(
               color: style.foreground,
               decoration: variant == AppButtonVariant.link
                   ? TextDecoration.underline
@@ -130,7 +120,7 @@ class AppButton extends StatelessWidget {
           mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
-          spacing: TajeerSpacing.x2, // `gap-2`
+          spacing: TajeerSpacing.xs, // `gap-2`
           children: content,
         ),
       ),
@@ -157,79 +147,80 @@ class AppButton extends StatelessWidget {
     );
   }
 
-  _ButtonStyle _style(TajeerColors colors) {
+  /// The label step for this size. Control labels are the `label*` family:
+  /// tighter leading than body, because a button label is one line by design.
+  TextStyle _label(BuildContext context) => switch (size) {
+    AppButtonSize.small => context.type.labelMd,
+    _ => context.type.labelLg,
+  };
+
+  _ButtonStyle _style(TajeerColors colors, TajeerElevations elevations) {
     return switch (variant) {
       AppButtonVariant.primary => _ButtonStyle(
         background: colors.primary,
         foreground: colors.primaryForeground,
-        border: colors.opaqueBorderFor(colors.primary),
-        shadow: TajeerShadows.none,
+        border: colors.primaryBorder,
+        shadow: const <BoxShadow>[],
       ),
       AppButtonVariant.destructive => _ButtonStyle(
-        background: colors.destructive,
-        foreground: colors.destructiveForeground,
-        border: colors.opaqueBorderFor(colors.destructive),
-        shadow: TajeerShadows.xs,
+        background: colors.dangerDefault,
+        foreground: colors.textInverse,
+        border: colors.dangerDefault,
+        shadow: elevations.subtle.shadow,
       ),
       // `outline` deliberately has no background: it shows whatever card or
       // sidebar surface it was dropped onto, and inherits the text colour.
       AppButtonVariant.outline => _ButtonStyle(
         background: Colors.transparent,
-        foreground: colors.foreground,
-        border: colors.buttonOutline,
-        shadow: TajeerShadows.xs,
+        foreground: colors.textPrimary,
+        border: colors.border,
+        shadow: elevations.subtle.shadow,
       ),
       AppButtonVariant.secondary => _ButtonStyle(
-        background: colors.secondary,
-        foreground: colors.secondaryForeground,
-        border: colors.opaqueBorderFor(colors.secondary),
-        shadow: TajeerShadows.none,
+        background: colors.surfaceMuted,
+        foreground: colors.textPrimary,
+        border: colors.border,
+        shadow: const <BoxShadow>[],
       ),
       AppButtonVariant.ghost => _ButtonStyle(
         background: Colors.transparent,
-        foreground: colors.foreground,
+        foreground: colors.textPrimary,
         border: Colors.transparent,
-        shadow: TajeerShadows.none,
+        shadow: const <BoxShadow>[],
       ),
+      // `focus`, not `primary`. In the Tajeer light palette the brand yellow
+      // is 1.53:1 on white -- it is a fill, and there is no legal way to draw
+      // text in it. `focus` is the brand-family colour that carries text.
       AppButtonVariant.link => _ButtonStyle(
         background: Colors.transparent,
-        foreground: colors.primary,
+        foreground: colors.focus,
         border: null,
-        shadow: TajeerShadows.none,
+        shadow: const <BoxShadow>[],
       ),
     };
   }
 
   _ButtonMetrics _metrics() {
     return switch (size) {
-      // `min-h-9 px-4`, `text-sm`.
+      // Every height here is a MINIMUM, never a fixed height: the label grows
+      // with the OS text size, and a control that clips scaled text is an
+      // accessibility bug. 44 is the platform touch-target floor, which the
+      // previous 36 and 32 did not meet.
       AppButtonSize.medium => const _ButtonMetrics(
-        minHeight: 36,
-        paddingX: TajeerSpacing.x4,
-        fontSize: TajeerTypography.sm,
-        lineHeight: 20,
+        minHeight: 44,
+        paddingX: TajeerSpacing.md,
       ),
-      // `min-h-8 px-3 text-xs`.
       AppButtonSize.small => const _ButtonMetrics(
-        minHeight: 32,
-        paddingX: TajeerSpacing.x3,
-        fontSize: TajeerTypography.xs,
-        lineHeight: 16,
-      ),
-      // `min-h-10 px-8`.
-      AppButtonSize.large => const _ButtonMetrics(
-        minHeight: 40,
-        paddingX: TajeerSpacing.x8,
-        fontSize: TajeerTypography.sm,
-        lineHeight: 20,
-      ),
-      // `h-9 w-9`.
-      AppButtonSize.icon => const _ButtonMetrics(
         minHeight: 36,
-        paddingX: 0,
-        fontSize: TajeerTypography.sm,
-        lineHeight: 20,
+        paddingX: TajeerSpacing.sm,
       ),
+      // The reference draws the primary call to action taller than a default
+      // control, and gives it the full width of its column.
+      AppButtonSize.large => const _ButtonMetrics(
+        minHeight: 52,
+        paddingX: TajeerSpacing.xl,
+      ),
+      AppButtonSize.icon => const _ButtonMetrics(minHeight: 44, paddingX: 0),
     };
   }
 }
@@ -251,15 +242,9 @@ class _ButtonStyle {
 
 @immutable
 class _ButtonMetrics {
-  const _ButtonMetrics({
-    required this.minHeight,
-    required this.paddingX,
-    required this.fontSize,
-    required this.lineHeight,
-  });
+  const _ButtonMetrics({required this.minHeight, required this.paddingX});
 
+  /// A minimum, never a fixed height: the label grows with the OS text size.
   final double minHeight;
   final double paddingX;
-  final double fontSize;
-  final double lineHeight;
 }

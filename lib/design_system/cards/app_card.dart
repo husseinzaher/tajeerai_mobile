@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../app/theme/app_theme.dart';
-import '../../app/theme/radii.dart';
-import '../../app/theme/shadows.dart';
-import '../../app/theme/spacing.dart';
+import '../../app/theme/theme.dart';
 import '../atoms/pressable.dart';
 
 /// The system's surface container.
@@ -15,7 +12,7 @@ import '../atoms/pressable.dart';
 class AppCard extends StatelessWidget {
   const AppCard({
     required this.child,
-    this.padding = const EdgeInsets.all(TajeerSpacing.x6),
+    this.padding = const EdgeInsets.all(TajeerSpacing.lg),
     this.onTap,
     this.selected = false,
     this.semanticLabel,
@@ -39,15 +36,15 @@ class AppCard extends StatelessWidget {
     final surface = Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: selected ? colors.primaryMuted : colors.card,
+        color: selected ? colors.primarySoft : colors.surface,
         borderRadius: TajeerRadii.xlAll,
         border: Border.fromBorderSide(
           BorderSide(color: selected ? colors.primary : colors.border),
         ),
-        boxShadow: TajeerShadows.base,
+        boxShadow: context.elevation.card.shadow,
       ),
       child: DefaultTextStyle.merge(
-        style: TextStyle(color: colors.cardForeground),
+        style: TextStyle(color: colors.textPrimary),
         child: child,
       ),
     );
@@ -91,7 +88,7 @@ class AppCardHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
-            spacing: TajeerSpacing.x1_5, // `space-y-1.5`
+            spacing: TajeerSpacing.xs, // `space-y-1.5`
             children: <Widget>[
               Text(
                 title,
@@ -99,14 +96,14 @@ class AppCardHeader extends StatelessWidget {
                 style: context.text.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                   letterSpacing: -0.2,
-                  color: colors.cardForeground,
+                  color: colors.textPrimary,
                 ),
               ),
               if (description != null)
                 Text(
                   description!,
                   style: context.text.bodyMedium?.copyWith(
-                    color: colors.mutedForeground,
+                    color: colors.textMuted,
                   ),
                 ),
             ],

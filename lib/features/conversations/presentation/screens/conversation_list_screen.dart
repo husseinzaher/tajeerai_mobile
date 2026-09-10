@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../app/theme/theme.dart';
 import '../../../../app/router/routes.dart';
-import '../../../../app/theme/spacing.dart';
 import '../../../../design_system/buttons/app_button.dart';
 import '../../../../design_system/feedback/empty_state.dart';
 import '../../../../design_system/feedback/error_state.dart';
@@ -65,7 +65,7 @@ class _ConversationListScreenState
           onPressed: () =>
               ref.read(conversationListControllerProvider).signOut(),
         ),
-        const SizedBox(width: TajeerSpacing.x2),
+        const SizedBox(width: TajeerSpacing.xs),
       ],
       banner: switch (sync.value) {
         null => null,
@@ -74,7 +74,7 @@ class _ConversationListScreenState
       body: Column(
         children: <Widget>[
           Padding(
-            padding: const EdgeInsets.all(TajeerSpacing.x4),
+            padding: const EdgeInsets.all(TajeerSpacing.md),
             child: SearchField(
               controller: _search,
               hintText: 'Search conversations',
@@ -111,8 +111,8 @@ class _ConversationListScreenState
                       ref.read(conversationListControllerProvider).refresh(),
                   child: ListView.builder(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: TajeerSpacing.x2,
-                      vertical: TajeerSpacing.x1,
+                      horizontal: TajeerSpacing.xs,
+                      vertical: TajeerSpacing.xs2,
                     ),
                     itemCount: items.length,
                     itemBuilder: (context, index) {
@@ -185,21 +185,21 @@ class _ConversationListSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView.builder(
       padding: const EdgeInsets.symmetric(
-        horizontal: TajeerSpacing.x4,
-        vertical: TajeerSpacing.x2,
+        horizontal: TajeerSpacing.md,
+        vertical: TajeerSpacing.xs,
       ),
       itemCount: 8,
       itemBuilder: (context, index) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: TajeerSpacing.x3),
+        padding: const EdgeInsets.symmetric(vertical: TajeerSpacing.sm),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: TajeerSpacing.x3,
+          spacing: TajeerSpacing.sm,
           children: <Widget>[
             const Skeleton.circle(),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                spacing: TajeerSpacing.x2,
+                spacing: TajeerSpacing.xs,
                 children: const <Widget>[
                   Skeleton.text(width: 140),
                   Skeleton.text(width: double.infinity),

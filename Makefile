@@ -2,8 +2,9 @@
 #
 # Flutter is invoked by name; ensure it is on your PATH.
 
-.PHONY: help setup generate watch arch format format-check analyze test coverage verify clean \
-        run run-staging run-prod build-prod build-staging
+.PHONY: help setup tokens tokens-check generate watch arch format format-check analyze \
+        test golden golden-update coverage verify clean run run-staging run-prod \
+        build-prod build-staging
 
 # Build configuration comes from a .env file, read natively by Flutter's
 # --dart-define-from-file. A local `.env` (gitignored) wins when present, so a
@@ -13,7 +14,9 @@ ENV_FILE ?= $(firstword $(wildcard .env) .env.development)
 
 help:
 	@echo "setup         Install dependencies and generate code"
-	@echo "generate      Regenerate drift, Riverpod and JSON sources"
+	@echo "tokens        Regenerate the theme from design/tokens.json"
+	@echo "tokens-check  Fail if the generated theme is stale"
+	@echo "generate      Regenerate the theme, drift, Riverpod and JSON sources"
 	@echo "watch         Regenerate continuously while developing"
 	@echo "run           Run against $(ENV_FILE)"
 	@echo "run-staging   Run against .env.staging"
@@ -23,14 +26,26 @@ help:
 	@echo "format        Format lib, test and tool"
 	@echo "analyze       Static analysis (infos and warnings fatal)"
 	@echo "test          Run the test suite with coverage"
+	@echo "golden        Run only the pixel comparisons"
+	@echo "golden-update Re-bless the pixel comparisons"
 	@echo "coverage      Check coverage thresholds"
 	@echo "verify        Everything CI runs, in CI's order"
 
 setup:
 	flutter pub get
-	dart run build_runner build --delete-conflicting-outputs
+	$(MAKE) generate
 
-generate:
+# The design system's foundation. `design/tokens.json` is the single source of
+# truth for every colour, type step, spacing step, radius, elevation and motion
+# value; this writes lib/app/theme/tokens.g.dart from it. Nothing else compiles
+# without it, which is why it runs before build_runner.
+tokens:
+	dart run tool/build_tokens.dart
+
+tokens-check:
+	dart run tool/build_tokens.dart --check
+
+generate: tokens
 	dart run build_runner build --delete-conflicting-outputs
 
 watch:
@@ -65,6 +80,18 @@ analyze:
 
 test:
 	flutter test --coverage
+
+# The pixel comparisons. They are the only tests whose result depends on how
+# the machine rasterises a font, so an environment that cannot reproduce the
+# reference rendering runs `flutter test --exclude-tags golden` instead of
+# blessing a diff.
+golden:
+	flutter test --tags golden
+
+# Deliberate, never a reflex: a regenerated image is a design change, and the
+# point of having only a handful of them is that a human can review each one.
+golden-update:
+	flutter test --tags golden --update-goldens
 
 coverage:
 	dart run tool/check_coverage.dart

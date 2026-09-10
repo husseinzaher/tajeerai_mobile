@@ -1,51 +1,65 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import 'colors.dart';
-import 'motion.dart';
-import 'radii.dart';
+import 'tokens.g.dart';
 import 'typography.dart';
 
-/// Builds the two [ThemeData]s from the token set.
+/// Builds a [ThemeData] for one preset in one brightness.
 ///
-/// Material's own component themes are pointed at the same semantic names the
-/// design system uses, so a stock widget that slips into a screen inherits the
-/// product's surfaces instead of Material's purple defaults. Widgets in
-/// `design_system/` read [TajeerColors] directly rather than going through
-/// [ColorScheme]; the scheme exists for the Material widgets underneath them.
+/// Four combinations today — two presets, two brightnesses — and no component
+/// knows which one it is in. Material's own component themes are pointed at the
+/// same semantic names the design system uses, so a stock widget that slips
+/// into a screen inherits the product's surfaces rather than Material's purple
+/// defaults. Design-system widgets read [TajeerColors] and the other extensions
+/// directly; the [ColorScheme] exists for the Material widgets underneath them.
 abstract final class AppTheme {
-  static ThemeData light() => _build(TajeerColors.light, Brightness.light);
+  static ThemeData light({TajeerPreset preset = TajeerPreset.fallback}) =>
+      _build(preset, Brightness.light);
 
-  static ThemeData dark() => _build(TajeerColors.dark, Brightness.dark);
+  static ThemeData dark({TajeerPreset preset = TajeerPreset.fallback}) =>
+      _build(preset, Brightness.dark);
 
-  static ThemeData _build(TajeerColors colors, Brightness brightness) {
-    final scheme = ColorScheme(
+  /// The one entry point that takes both axes, for a caller that already holds
+  /// a resolved brightness — the showcase, and any test pumping a matrix.
+  static ThemeData of(TajeerPreset preset, Brightness brightness) =>
+      _build(preset, brightness);
+
+  static ThemeData _build(TajeerPreset preset, Brightness brightness) {
+    final TajeerPalette palette = TajeerPalette.of(preset, brightness);
+    final TajeerColors colors = palette.colors;
+    final TajeerElevations elevations = palette.elevations;
+    final TajeerTypeScale type = palette.type;
+    final TajeerChannelColors channels = brightness == Brightness.dark
+        ? TajeerChannelColors.dark
+        : TajeerChannelColors.light;
+
+    final ColorScheme scheme = ColorScheme(
       brightness: brightness,
       primary: colors.primary,
       onPrimary: colors.primaryForeground,
-      primaryContainer: colors.primaryMuted,
-      onPrimaryContainer: colors.foreground,
-      secondary: colors.secondary,
-      onSecondary: colors.secondaryForeground,
-      tertiary: colors.accent,
-      onTertiary: colors.accentForeground,
-      error: colors.destructive,
-      onError: colors.destructiveForeground,
+      primaryContainer: colors.primarySoft,
+      onPrimaryContainer: colors.textPrimary,
+      secondary: colors.surfaceMuted,
+      onSecondary: colors.textPrimary,
+      tertiary: colors.infoDefault,
+      onTertiary: colors.textInverse,
+      error: colors.dangerDefault,
+      onError: colors.textInverse,
       surface: colors.background,
-      onSurface: colors.foreground,
-      surfaceContainerHighest: colors.muted,
-      onSurfaceVariant: colors.mutedForeground,
+      onSurface: colors.textPrimary,
+      surfaceContainerHighest: colors.surfaceMuted,
+      onSurfaceVariant: colors.textMuted,
       outline: colors.border,
-      outlineVariant: colors.border,
+      outlineVariant: colors.borderSubtle,
     );
 
-    final textTheme = TajeerTypography.textTheme(colors.foreground);
+    final TextTheme textTheme = TajeerTypography.textTheme(type);
 
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
       colorScheme: scheme,
-      extensions: <ThemeExtension<dynamic>>[colors],
+      extensions: <ThemeExtension<dynamic>>[colors, channels, type, elevations],
       scaffoldBackgroundColor: colors.background,
       canvasColor: colors.background,
       dividerColor: colors.border,
@@ -53,12 +67,12 @@ abstract final class AppTheme {
       fontFamily: TajeerTypography.sansFamily,
       fontFamilyFallback: TajeerTypography.sansFallback,
       splashFactory: NoSplash.splashFactory,
-      // The web theme expresses press feedback as the `elevate` overlay plus a
-      // scale, and both live in `Pressable`. Material's ink ripple on top of
-      // that would be a second, different press animation.
+      // Press feedback is the overlay plus a scale, and both live in
+      // `Pressable`. Material's ink ripple on top would be a second, different
+      // press animation.
       highlightColor: Colors.transparent,
-      hoverColor: colors.elevate1,
-      focusColor: colors.ring.withValues(alpha: 0.4),
+      hoverColor: colors.overlayHover,
+      focusColor: colors.focus.withValues(alpha: 0.4),
       dividerTheme: DividerThemeData(
         color: colors.border,
         thickness: 1,
@@ -66,7 +80,7 @@ abstract final class AppTheme {
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: colors.background,
-        foregroundColor: colors.foreground,
+        foregroundColor: colors.textPrimary,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -74,54 +88,51 @@ abstract final class AppTheme {
         titleTextStyle: textTheme.titleLarge,
       ),
       cardTheme: CardThemeData(
-        color: colors.card,
+        color: elevations.card.tone,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
-          borderRadius: TajeerRadii.xlAll,
-          side: BorderSide(color: colors.border),
+          borderRadius: TajeerRadii.lgAll,
+          side: BorderSide(color: elevations.card.hairline),
         ),
       ),
       dialogTheme: DialogThemeData(
-        backgroundColor: colors.background,
+        backgroundColor: elevations.modal.tone,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: TajeerRadii.lgAll,
-          side: BorderSide(color: colors.border),
+          borderRadius: TajeerRadii.xlAll,
+          side: BorderSide(color: elevations.modal.hairline),
         ),
       ),
       bottomSheetTheme: BottomSheetThemeData(
-        backgroundColor: colors.background,
+        backgroundColor: elevations.modal.tone,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        modalBarrierColor: const Color(0xCC000000), // bg-black/80
+        modalBarrierColor: colors.surfaceOverlay,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(
-            top: Radius.circular(TajeerRadii.lg),
+            top: Radius.circular(TajeerRadii.xl),
           ),
         ),
       ),
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: colors.popover,
-        contentTextStyle: textTheme.bodyMedium?.copyWith(
-          color: colors.popoverForeground,
-        ),
+        backgroundColor: elevations.popover.tone,
+        contentTextStyle: textTheme.bodyMedium,
         behavior: SnackBarBehavior.floating,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: TajeerRadii.lgAll,
-          side: BorderSide(color: colors.border),
+          side: BorderSide(color: elevations.popover.hairline),
         ),
       ),
       progressIndicatorTheme: ProgressIndicatorThemeData(
         color: colors.primary,
-        linearTrackColor: colors.muted,
+        linearTrackColor: colors.surfaceMuted,
         circularTrackColor: Colors.transparent,
       ),
-      iconTheme: IconThemeData(color: colors.foreground, size: 16),
-      // `[&_svg]:size-4` -- lucide icons render at 16px inside controls.
+      iconTheme: IconThemeData(color: colors.textPrimary, size: 20),
       textSelectionTheme: TextSelectionThemeData(
         cursorColor: colors.primary,
         selectionColor: colors.primary.withValues(alpha: 0.25),
@@ -137,17 +148,34 @@ abstract final class AppTheme {
       visualDensity: VisualDensity.standard,
     );
   }
-
-  /// Default transition timing for anything animating outside a component.
-  static const Duration transition = TajeerMotion.duration;
 }
 
-/// Reaches the palette without spelling out the extension lookup at every call
-/// site. `context.colors.primary` is the Flutter spelling of `bg-primary`.
+/// Reaches the theme's extensions without spelling out the lookup at every call
+/// site. `context.colors.primary` is this codebase's `bg-primary`.
+///
+/// Each getter falls back to the default preset's light values rather than
+/// throwing, so a widget pumped in a bare test tree still renders.
 extension TajeerThemeContext on BuildContext {
   TajeerColors get colors =>
-      Theme.of(this).extension<TajeerColors>() ?? TajeerColors.light;
+      Theme.of(this).extension<TajeerColors>() ?? TajeerColors.tajeerLight;
 
+  /// The fourteen-step scale, ink already applied.
+  TajeerTypeScale get type =>
+      Theme.of(this).extension<TajeerTypeScale>() ??
+      TajeerTypeScale.tajeerLight;
+
+  /// The six depth levels: tone, hairline and shadow together.
+  TajeerElevations get elevation =>
+      Theme.of(this).extension<TajeerElevations>() ??
+      TajeerElevations.tajeerLight;
+
+  /// The named channel identities, shared by every preset.
+  TajeerChannelColors get channels =>
+      Theme.of(this).extension<TajeerChannelColors>() ??
+      TajeerChannelColors.light;
+
+  /// Material's own text theme. Prefer [type]: it is the product's scale, and
+  /// this is what Material widgets underneath it read.
   TextTheme get text => Theme.of(this).textTheme;
 
   bool get isDark => Theme.of(this).brightness == Brightness.dark;

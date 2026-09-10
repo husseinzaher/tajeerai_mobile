@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../app/theme/app_theme.dart';
-import '../../app/theme/radii.dart';
-import '../../app/theme/spacing.dart';
+import '../../app/theme/theme.dart';
 import '../buttons/app_button.dart';
 
 /// The "nothing here" surface.
@@ -38,7 +36,7 @@ class EmptyState extends StatelessWidget {
 
     return Center(
       child: Container(
-        padding: const EdgeInsets.all(TajeerSpacing.x6), // `p-6`
+        padding: const EdgeInsets.all(TajeerSpacing.lg), // `p-6`
         decoration: bordered
             ? BoxDecoration(
                 borderRadius: TajeerRadii.lgAll,
@@ -48,21 +46,21 @@ class EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
-          spacing: TajeerSpacing.x6, // `gap-6`
+          spacing: TajeerSpacing.lg, // `gap-6`
           children: <Widget>[
             Column(
               mainAxisSize: MainAxisSize.min,
-              spacing: TajeerSpacing.x2, // `gap-2`
+              spacing: TajeerSpacing.xs, // `gap-2`
               children: <Widget>[
                 if (icon != null)
                   Container(
                     width: 40, // `size-10`
                     height: 40,
                     decoration: BoxDecoration(
-                      color: colors.muted,
+                      color: colors.surfaceMuted,
                       borderRadius: TajeerRadii.lgAll,
                     ),
-                    child: Icon(icon, size: 24, color: colors.foreground),
+                    child: Icon(icon, size: 24, color: colors.textPrimary),
                   ),
                 Text(
                   title,
@@ -82,7 +80,7 @@ class EmptyState extends StatelessWidget {
                       description!,
                       textAlign: TextAlign.center,
                       style: context.text.bodyMedium?.copyWith(
-                        color: colors.mutedForeground,
+                        color: colors.textMuted,
                       ),
                     ),
                   ),

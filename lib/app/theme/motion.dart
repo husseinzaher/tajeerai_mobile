@@ -1,22 +1,69 @@
-import 'package:flutter/animation.dart';
+import 'package:flutter/material.dart';
 
-/// Press, hover and panel timing, from `tokens.json`'s `motion` group.
+import 'tokens.g.dart';
+
+/// The motion the app is currently allowed to use.
 ///
-/// One duration and one curve for the whole product is the point of the token:
-/// a screen that picks its own easing reads as a different app even when every
-/// colour matches.
-abstract final class TajeerMotion {
-  /// `motion.duration` -- long enough to read as motion, short enough that a
-  /// rapid tapper never waits on it.
-  static const Duration duration = Duration(milliseconds: 150);
+/// Two sets, and a component never chooses between them: it reads
+/// `context.motion`, which returns the zeroed set when the platform asks for
+/// reduced motion. That is the same discipline as no component checking whether
+/// the theme is dark, applied to a second axis — and reading it through
+/// `MediaQuery` also registers the dependency, so a widget rebuilds when
+/// somebody changes the setting without leaving the app.
+@immutable
+class TajeerMotion {
+  const TajeerMotion({
+    required this.fast,
+    required this.normal,
+    required this.slow,
+    required this.standard,
+    required this.emphasized,
+    required this.pressScale,
+  });
 
-  /// `motion.easing` -- cubic-bezier(0.32, 0.72, 0, 1).
-  static const Curve easing = Cubic(0.32, 0.72, 0, 1);
+  /// A press, a ripple, a checkbox.
+  final Duration fast;
 
-  /// `motion.pressScale` -- what a pressable drops to while held.
-  static const double pressScale = 0.98;
+  /// A theme crossfade, a banner, a state change.
+  final Duration normal;
 
-  /// Panels (sheets, dialogs) run slower than a press, matching the web
-  /// theme's 300/500ms sheet transitions.
-  static const Duration panelDuration = Duration(milliseconds: 300);
+  /// A sheet, a drawer, a page.
+  final Duration slow;
+
+  final Curve standard;
+  final Curve emphasized;
+
+  /// What a pressable drops to while held.
+  final double pressScale;
+
+  static const TajeerMotion standardSet = TajeerMotion(
+    fast: TajeerMotionTokens.durationFast,
+    normal: TajeerMotionTokens.durationNormal,
+    slow: TajeerMotionTokens.durationSlow,
+    standard: TajeerMotionTokens.easingStandard,
+    emphasized: TajeerMotionTokens.easingEmphasized,
+    pressScale: TajeerMotionTokens.pressScale,
+  );
+
+  /// Zero durations and no scale.
+  ///
+  /// The curves are kept rather than nulled: at `Duration.zero` an animation
+  /// jumps rather than tweens, so the curve is inert, and keeping them means
+  /// every call site stays type-identical between the two sets.
+  static const TajeerMotion reducedSet = TajeerMotion(
+    fast: Duration.zero,
+    normal: Duration.zero,
+    slow: Duration.zero,
+    standard: TajeerMotionTokens.easingStandard,
+    emphasized: TajeerMotionTokens.easingEmphasized,
+    pressScale: 1,
+  );
+}
+
+extension TajeerMotionContext on BuildContext {
+  /// The motion set this subtree may use.
+  TajeerMotion get motion =>
+      (MediaQuery.maybeDisableAnimationsOf(this) ?? false)
+      ? TajeerMotion.reducedSet
+      : TajeerMotion.standardSet;
 }

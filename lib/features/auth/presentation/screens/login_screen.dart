@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../app/theme/app_theme.dart';
-import '../../../../app/theme/spacing.dart';
+import '../../../../app/theme/theme.dart';
 import '../../../../design_system/layouts/app_scaffold.dart';
 import '../../../../design_system/layouts/responsive.dart';
 import '../widgets/login_form.dart';
@@ -21,7 +20,7 @@ class LoginScreen extends ConsumerWidget {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(TajeerSpacing.x6),
+            padding: const EdgeInsets.all(TajeerSpacing.lg),
             child: ConstrainedBox(
               // `max-w-sm`, the width the web's auth card uses.
               constraints: BoxConstraints(
@@ -32,7 +31,7 @@ class LoginScreen extends ConsumerWidget {
               child: const Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
-                spacing: TajeerSpacing.x8,
+                spacing: TajeerSpacing.xl,
                 children: <Widget>[_Header(), LoginForm()],
               ),
             ),
@@ -51,13 +50,13 @@ class _Header extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
-      spacing: TajeerSpacing.x2,
+      spacing: TajeerSpacing.xs,
       children: <Widget>[
         Text('Sign in', style: context.text.displaySmall),
         Text(
           'Use your Tajeer AI workspace account.',
           style: context.text.bodyLarge?.copyWith(
-            color: context.colors.mutedForeground,
+            color: context.colors.textMuted,
           ),
         ),
       ],

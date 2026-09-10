@@ -7,7 +7,7 @@ import '../features/auth/presentation/controllers/auth_controller.dart';
 import 'bootstrap/dependencies.dart';
 import 'localization/locale_manager.dart';
 import 'router/app_router.dart';
-import 'theme/app_theme.dart';
+import 'theme/theme.dart';
 
 /// The application widget.
 ///
@@ -79,16 +79,27 @@ class _TajeerAppState extends ConsumerState<TajeerApp> {
   Widget build(BuildContext context) {
     final router = ref.watch(appRouterProvider);
     final locale = ref.watch(localeProvider);
+    final theme = ref.watch(themeSelectionProvider);
 
     return MaterialApp.router(
       title: 'Tajeer AI',
       debugShowCheckedModeBanner: false,
       routerConfig: router,
-      theme: AppTheme.light(),
-      darkTheme: AppTheme.dark(),
-      // The OS decides. Both themes are complete, so following the system is
-      // the correct default rather than a placeholder.
-      themeMode: ThemeMode.system,
+      theme: AppTheme.light(preset: theme.preset),
+      darkTheme: AppTheme.dark(preset: theme.preset),
+      // Both palettes of every preset are complete, so following the system is
+      // a real default rather than a placeholder. The member can override it.
+      themeMode: theme.mode.mode,
+      // One ceiling for the whole app. Past 2x a conversation list stops being
+      // a list -- two rows fill the screen and the rail no longer answers the
+      // question it exists for. Controls that cannot grow carry a tighter
+      // clamp of their own; dense rows carry none and simply get taller.
+      builder: (BuildContext context, Widget? child) =>
+          MediaQuery.withClampedTextScaling(
+            minScaleFactor: 1,
+            maxScaleFactor: TajeerTypography.maxTextScale,
+            child: child!,
+          ),
       locale: locale.locale,
       supportedLocales: AppLocale.supported,
       localizationsDelegates: const <LocalizationsDelegate<Object>>[

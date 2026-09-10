@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../../../app/theme/app_theme.dart';
-import '../../../../app/theme/radii.dart';
-import '../../../../app/theme/spacing.dart';
+import '../../../../app/theme/theme.dart';
 import '../../../../design_system/buttons/app_button.dart';
 import '../../../../design_system/inputs/app_text_field.dart';
 
@@ -89,17 +87,15 @@ class _MessageComposerState extends State<MessageComposer> {
     if (!widget.enabled) {
       return Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(TajeerSpacing.x4),
+        padding: const EdgeInsets.all(TajeerSpacing.md),
         decoration: BoxDecoration(
-          color: colors.muted,
+          color: colors.surfaceMuted,
           border: Border(top: BorderSide(color: colors.border)),
         ),
         child: Text(
           widget.disabledReason ?? 'This conversation is read-only.',
           textAlign: TextAlign.center,
-          style: context.text.bodyMedium?.copyWith(
-            color: colors.mutedForeground,
-          ),
+          style: context.text.bodyMedium?.copyWith(color: colors.textMuted),
         ),
       );
     }
@@ -107,7 +103,7 @@ class _MessageComposerState extends State<MessageComposer> {
     final hasText = _controller.text.trim().isNotEmpty;
 
     return Container(
-      padding: const EdgeInsets.all(TajeerSpacing.x3),
+      padding: const EdgeInsets.all(TajeerSpacing.sm),
       decoration: BoxDecoration(
         color: colors.background,
         border: Border(top: BorderSide(color: colors.border)),
@@ -116,7 +112,7 @@ class _MessageComposerState extends State<MessageComposer> {
         top: false,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.end,
-          spacing: TajeerSpacing.x2,
+          spacing: TajeerSpacing.xs,
           children: <Widget>[
             Expanded(
               child: AppTextField(
@@ -166,25 +162,23 @@ class TypingIndicator extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsetsDirectional.symmetric(
-        horizontal: TajeerSpacing.x4,
-        vertical: TajeerSpacing.x2,
+        horizontal: TajeerSpacing.md,
+        vertical: TajeerSpacing.xs,
       ),
       child: Row(
-        spacing: TajeerSpacing.x2,
+        spacing: TajeerSpacing.xs,
         children: <Widget>[
           Container(
             width: 6,
             height: 6,
             decoration: BoxDecoration(
-              color: colors.accent,
+              color: colors.infoDefault,
               borderRadius: TajeerRadii.fullAll,
             ),
           ),
           Text(
             label,
-            style: context.text.bodySmall?.copyWith(
-              color: colors.mutedForeground,
-            ),
+            style: context.text.bodySmall?.copyWith(color: colors.textMuted),
           ),
         ],
       ),

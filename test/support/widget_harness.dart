@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/app/theme/app_theme.dart';
+import 'package:tajeerai_mobile/app/theme/theme.dart';
 
 /// Wraps a widget in the app's real theme.
 ///
@@ -16,13 +16,23 @@ Widget wrapWidget(
   Brightness brightness = Brightness.light,
   TextDirection textDirection = TextDirection.ltr,
   Size size = const Size(400, 800),
+  TajeerPreset preset = TajeerPreset.fallback,
+  bool disableAnimations = false,
+  TextScaler textScaler = TextScaler.noScaling,
 }) {
   return MaterialApp(
-    theme: brightness == Brightness.dark ? AppTheme.dark() : AppTheme.light(),
+    // Off, or every golden carries a red ribbon across its top corner and the
+    // first thing anybody reviewing one sees is the banner.
+    debugShowCheckedModeBanner: false,
+    theme: AppTheme.of(preset, brightness),
     home: Directionality(
       textDirection: textDirection,
       child: MediaQuery(
-        data: MediaQueryData(size: size),
+        data: MediaQueryData(
+          size: size,
+          disableAnimations: disableAnimations,
+          textScaler: textScaler,
+        ),
         child: Scaffold(body: child),
       ),
     ),
@@ -36,6 +46,7 @@ Widget scoped(
   Brightness brightness = Brightness.light,
   TextDirection textDirection = TextDirection.ltr,
   Size size = const Size(400, 800),
+  TajeerPreset preset = TajeerPreset.fallback,
 }) {
   return ProviderScope(
     child: wrapWidget(
@@ -43,15 +54,16 @@ Widget scoped(
       brightness: brightness,
       textDirection: textDirection,
       size: size,
+      preset: preset,
     ),
   );
 }
 
 /// Pumps [child] in both appearances and runs [expectations] against each.
 ///
-/// Every identity in the web theme remaps the same semantic names, so a
-/// component has to be verified in both -- checking only the one you happen to
-/// be looking at is how a colour ends up unreadable in dark mode.
+/// Every preset remaps the same semantic names, so a component has to be
+/// verified in both appearances -- checking only the one you happen to be
+/// looking at is how a colour ends up unreadable in dark mode.
 Future<void> pumpInBothThemes(
   WidgetTester tester,
   Widget child,
@@ -74,5 +86,33 @@ Future<void> pumpInBothThemes(
     await tester.pump(const Duration(milliseconds: 200));
 
     await expectations(tester, brightness);
+  }
+}
+
+/// Pumps [child] in both directions and runs [expectations] against each.
+///
+/// The mirror image of [pumpInBothThemes], for the other axis this app has to
+/// be right in. Arabic is the default locale, so a layout that only works in
+/// LTR is broken for most of the people using it.
+Future<void> pumpInBothDirections(
+  WidgetTester tester,
+  Widget child,
+  Future<void> Function(WidgetTester tester, TextDirection direction)
+  expectations, {
+  Brightness brightness = Brightness.light,
+}) async {
+  for (final direction in TextDirection.values) {
+    await tester.pumpWidget(
+      wrapWidget(
+        KeyedSubtree(key: ValueKey<TextDirection>(direction), child: child),
+        brightness: brightness,
+        textDirection: direction,
+      ),
+    );
+
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    await expectations(tester, direction);
   }
 }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../app/theme/app_theme.dart';
-import '../../app/theme/radii.dart';
+import '../../app/theme/theme.dart';
 
 /// A loading placeholder.
 ///

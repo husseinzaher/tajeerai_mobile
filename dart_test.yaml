@@ -1,0 +1,11 @@
+# Test tags.
+#
+# `golden` marks the pixel comparisons. They are the only tests whose result
+# depends on how the machine rasterises a font, so an environment that cannot
+# reproduce the reference rendering excludes them rather than blessing a diff:
+#
+#     flutter test --exclude-tags golden
+#
+# Re-bless them deliberately, never as a reflex, with `make golden-update`.
+tags:
+  golden:

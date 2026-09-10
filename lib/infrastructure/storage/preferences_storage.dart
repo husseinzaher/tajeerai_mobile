@@ -16,6 +16,12 @@ class PreferencesStorage {
       PreferencesStorage(await SharedPreferences.getInstance());
 
   static const String themeModeKey = 'settings.themeMode';
+
+  /// Which visual preset the member chose. Read through
+  /// `TajeerPreset.fromName`, which falls back rather than throwing -- a value
+  /// written by a build that knew a preset this one does not must not stop the
+  /// app opening.
+  static const String themePresetKey = 'settings.themePreset';
   static const String localeKey = 'settings.locale';
 
   String? readString(String key) => _preferences.getString(key);

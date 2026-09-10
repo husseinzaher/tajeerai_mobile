@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../app/theme/app_theme.dart';
-import '../../app/theme/radii.dart';
-import '../../app/theme/spacing.dart';
-import '../../app/theme/shadows.dart';
+import '../../app/theme/theme.dart';
 
 /// The tone of a transient notice.
 enum SnackbarTone { neutral, success, warning, destructive }
@@ -28,10 +25,16 @@ abstract final class AppSnackbar {
     final messenger = ScaffoldMessenger.of(context);
 
     final (icon, accent) = switch (tone) {
-      SnackbarTone.neutral => (null, colors.foreground),
-      SnackbarTone.success => (LucideIcons.circleCheck, colors.success),
-      SnackbarTone.warning => (LucideIcons.triangleAlert, colors.warning),
-      SnackbarTone.destructive => (LucideIcons.circleAlert, colors.destructive),
+      SnackbarTone.neutral => (null, colors.textPrimary),
+      SnackbarTone.success => (LucideIcons.circleCheck, colors.successDefault),
+      SnackbarTone.warning => (
+        LucideIcons.triangleAlert,
+        colors.warningDefault,
+      ),
+      SnackbarTone.destructive => (
+        LucideIcons.circleAlert,
+        colors.dangerDefault,
+      ),
     };
 
     // A queued backlog of stale toasts is worse than losing one: the newest
@@ -41,13 +44,13 @@ abstract final class AppSnackbar {
     messenger.showSnackBar(
       SnackBar(
         duration: duration,
-        backgroundColor: colors.popover,
+        backgroundColor: colors.surfaceElevated,
         elevation: 0,
         behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(TajeerSpacing.x4),
+        margin: const EdgeInsets.all(TajeerSpacing.md),
         padding: const EdgeInsetsDirectional.symmetric(
-          horizontal: TajeerSpacing.x4,
-          vertical: TajeerSpacing.x3,
+          horizontal: TajeerSpacing.md,
+          vertical: TajeerSpacing.sm,
         ),
         shape: RoundedRectangleBorder(
           borderRadius: TajeerRadii.lgAll,
@@ -56,14 +59,14 @@ abstract final class AppSnackbar {
           ),
         ),
         content: Row(
-          spacing: TajeerSpacing.x3,
+          spacing: TajeerSpacing.sm,
           children: <Widget>[
             if (icon != null) Icon(icon, size: 16, color: accent),
             Expanded(
               child: Text(
                 message,
                 style: context.text.bodyMedium?.copyWith(
-                  color: colors.popoverForeground,
+                  color: colors.textPrimary,
                 ),
               ),
             ),
@@ -87,6 +90,4 @@ abstract final class AppSnackbar {
       show(context, message: message, tone: SnackbarTone.destructive);
 
   /// Kept for the shadow token to stay referenced from one place; the
-  /// `SnackBar` shape above cannot take a box shadow directly.
-  static List<BoxShadow> get elevation => TajeerShadows.lg;
 }

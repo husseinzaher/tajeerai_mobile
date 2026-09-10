@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/app/theme/colors.dart';
+import 'package:tajeerai_mobile/app/theme/theme.dart';
 import 'package:tajeerai_mobile/design_system/buttons/app_button.dart';
 import 'package:tajeerai_mobile/design_system/loaders/spinner.dart';
 
@@ -38,8 +38,8 @@ void main() {
           expect(find.text('Sign in'), findsOneWidget);
 
           final expected = brightness == Brightness.dark
-              ? TajeerColors.dark.primary
-              : TajeerColors.light.primary;
+              ? TajeerColors.tajeerDark.primary
+              : TajeerColors.tajeerLight.primary;
 
           expect(_decorationOf(tester).color, expected);
         },
@@ -59,7 +59,10 @@ void main() {
         ),
       );
 
-      expect(_decorationOf(tester).color, TajeerColors.light.destructive);
+      expect(
+        _decorationOf(tester).color,
+        TajeerColors.tajeerLight.dangerDefault,
+      );
     });
 
     testWidgets('outline shows the surface behind it', (tester) async {
