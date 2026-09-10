@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../app/theme/theme.dart';
+import 'status_dot.dart';
 
 /// A round identity image with an initials fallback.
 ///
@@ -13,12 +14,27 @@ class AppAvatar extends StatelessWidget {
     required this.name,
     this.imageUrl,
     this.size = 40,
+    this.presence = AppPresence.unknown,
+    this.badge,
     super.key,
   });
 
   final String name;
   final String? imageUrl;
   final double size;
+
+  /// Drawn as a ringed dot at the bottom-end corner.
+  ///
+  /// Part of the avatar rather than a Stack somebody assembles beside it: the
+  /// dot has to sit on the circle's edge, which means it has to know the
+  /// radius, and every caller re-deriving that is every caller getting it
+  /// slightly differently.
+  final AppPresence presence;
+
+  /// A marker at the bottom-end corner — the channel a conversation arrived
+  /// on, in the Inbox. Mutually exclusive with [presence] by position: a caller
+  /// passing both gets the badge, because a channel is the more specific fact.
+  final Widget? badge;
 
   /// At most two letters, taken from the first and last word.
   ///
@@ -43,26 +59,50 @@ class AppAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
 
+    final Widget? marker =
+        badge ??
+        (presence == AppPresence.unknown
+            ? null
+            : AppPresenceDot(presence: presence, size: size * 0.3));
+
     return Semantics(
       label: name,
       image: true,
-      child: Container(
-        width: size,
-        height: size,
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          color: colors.surfaceMuted,
-          shape: BoxShape.circle,
-        ),
-        child: imageUrl == null || imageUrl!.isEmpty
-            ? _fallback(context)
-            : Image.network(
-                imageUrl!,
-                fit: BoxFit.cover,
-                // A broken avatar must not blank the row it sits in.
-                errorBuilder: (context, error, stack) => _fallback(context),
-              ),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: <Widget>[
+          _circle(context, colors),
+          if (marker != null)
+            // Directional, so it lands bottom-left in Arabic. The offset is a
+            // fraction of the radius rather than a constant: a 32px avatar and
+            // a 56px one need the dot in the same *relative* place.
+            PositionedDirectional(
+              bottom: -size * 0.02,
+              end: -size * 0.02,
+              child: marker,
+            ),
+        ],
       ),
+    );
+  }
+
+  Widget _circle(BuildContext context, TajeerColors colors) {
+    return Container(
+      width: size,
+      height: size,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: colors.surfaceMuted,
+        shape: BoxShape.circle,
+      ),
+      child: imageUrl == null || imageUrl!.isEmpty
+          ? _fallback(context)
+          : Image.network(
+              imageUrl!,
+              fit: BoxFit.cover,
+              // A broken avatar must not blank the row it sits in.
+              errorBuilder: (context, error, stack) => _fallback(context),
+            ),
     );
   }
 
