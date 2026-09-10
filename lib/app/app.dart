@@ -9,6 +9,7 @@ import 'localization/locale_manager.dart';
 import 'router/app_router.dart';
 import '../design_system/design_system.dart';
 import 'theme/theme.dart';
+import 'theme/theme_mode_manager.dart';
 
 /// The application widget.
 ///

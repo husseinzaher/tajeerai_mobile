@@ -19,6 +19,14 @@ abstract final class AppRoutes {
   static String conversationDetailPath(String conversationId) =>
       '$conversations/thread/$conversationId';
 
+  /// The design system's own documentation surface.
+  ///
+  /// Registered only under `kDebugMode`, so it never ships to a merchant. The
+  /// route constant is unconditional because `AuthGuard` must stay free of
+  /// build-mode branching — in a release build there is simply nothing at the
+  /// other end of it.
+  static const String designSystem = '/design-system';
+
   /// Shown while the session is still being resolved at start-up.
   ///
   /// A real route, not a flag: without it the router would have to guess, and
@@ -32,5 +40,6 @@ abstract final class AppRouteNames {
   static const String login = 'login';
   static const String conversations = 'conversations';
   static const String conversationDetail = 'conversation-detail';
+  static const String designSystem = 'design-system';
   static const String splash = 'splash';
 }

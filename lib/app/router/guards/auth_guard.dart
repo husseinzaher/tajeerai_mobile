@@ -9,7 +9,16 @@ import '../routes.dart';
 /// call, and why the redirect logic is here rather than inline in a closure.
 abstract final class AuthGuard {
   /// Routes reachable without a session.
-  static const Set<String> publicRoutes = <String>{AppRoutes.login};
+  ///
+  /// The design system's showcase is here unconditionally, and that is safe
+  /// rather than lax: the *route* only exists under `kDebugMode`, so in a
+  /// release build there is nothing at the other end of this entry. Keeping it
+  /// unconditional is what lets this class stay a pure function of
+  /// (state, location) — no build-mode branching, no Flutter import.
+  static const Set<String> publicRoutes = <String>{
+    AppRoutes.login,
+    AppRoutes.designSystem,
+  };
 
   /// The redirect target, or null to allow the navigation.
   ///

@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -8,6 +8,7 @@ import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/conversations/presentation/screens/conversation_list_screen.dart';
 import '../../features/conversations/presentation/screens/conversation_screen.dart';
 import '../../design_system/loaders/app_splash.dart';
+import '../../design_system/showcase/showcase_app.dart';
 import 'guards/auth_guard.dart';
 import 'routes.dart';
 
@@ -47,6 +48,16 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((ref) {
         name: AppRouteNames.login,
         builder: (context, state) => const LoginScreen(),
       ),
+      // Debug only. `kDebugMode` is a const, so the release compiler drops the
+      // branch and tree-shakes the showcase out entirely -- the import above
+      // costs a release build nothing, and must not be "optimised" into a
+      // deferred one.
+      if (kDebugMode)
+        GoRoute(
+          path: AppRoutes.designSystem,
+          name: AppRouteNames.designSystem,
+          builder: (context, state) => const ShowcaseApp(),
+        ),
       GoRoute(
         path: AppRoutes.conversations,
         name: AppRouteNames.conversations,

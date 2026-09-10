@@ -4,6 +4,7 @@
 
 .PHONY: help setup tokens tokens-check generate watch arch format format-check analyze \
         test golden golden-update coverage verify clean run run-staging run-prod \
+        showcase showcase-build \
         build-prod build-staging
 
 # Build configuration comes from a .env file, read natively by Flutter's
@@ -19,6 +20,7 @@ help:
 	@echo "generate      Regenerate the theme, drift, Riverpod and JSON sources"
 	@echo "watch         Regenerate continuously while developing"
 	@echo "run           Run against $(ENV_FILE)"
+	@echo "showcase      Run the design system on its own, in a browser"
 	@echo "run-staging   Run against .env.staging"
 	@echo "run-prod      Run against .env.production"
 	@echo "build-prod    Release APK against .env.production"
@@ -53,6 +55,19 @@ watch:
 
 run:
 	flutter run --dart-define-from-file=$(ENV_FILE)
+
+# The design system, with none of the app around it.
+#
+# A second entry point rather than a second project: it mounts the same
+# ShowcaseApp the in-app /design-system route does, which mounts the same
+# production components every screen does. It exists because main.dart opens a
+# database, a socket and a secure store before it shows anything, and a browser
+# has none of those.
+showcase:
+	flutter run -t lib/main_showcase.dart -d chrome
+
+showcase-build:
+	flutter build web -t lib/main_showcase.dart --no-tree-shake-icons
 
 run-staging:
 	flutter run --dart-define-from-file=.env.staging
