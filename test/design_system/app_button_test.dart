@@ -148,7 +148,7 @@ void main() {
         ),
       );
 
-      expect(find.byType(Spinner), findsOneWidget);
+      expect(find.byType(AppSpinner), findsOneWidget);
       expect(find.byIcon(Icons.add), findsNothing);
 
       // The label stays put so the button does not change width mid-press.

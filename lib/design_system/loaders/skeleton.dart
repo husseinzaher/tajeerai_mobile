@@ -7,8 +7,8 @@ import '../../app/theme/theme.dart';
 /// `skeleton.tsx` is `animate-pulse rounded-md bg-primary/10` -- a tinted
 /// block that breathes, not a shimmer sweep. Reproduced with the same tint and
 /// the same opacity range so a loading list looks like the web's.
-class Skeleton extends StatefulWidget {
-  const Skeleton({
+class AppSkeleton extends StatefulWidget {
+  const AppSkeleton({
     this.width,
     this.height = 16,
     this.borderRadius = TajeerRadii.mdAll,
@@ -16,12 +16,12 @@ class Skeleton extends StatefulWidget {
   });
 
   /// A one-line text placeholder at the system's `text-sm` line box.
-  const Skeleton.text({this.width, super.key})
+  const AppSkeleton.text({this.width, super.key})
     : height = 14,
       borderRadius = TajeerRadii.smAll;
 
   /// A round placeholder for an avatar slot.
-  const Skeleton.circle({double size = 40, super.key})
+  const AppSkeleton.circle({double size = 40, super.key})
     : width = size,
       height = size,
       borderRadius = TajeerRadii.fullAll;
@@ -31,10 +31,10 @@ class Skeleton extends StatefulWidget {
   final BorderRadius borderRadius;
 
   @override
-  State<Skeleton> createState() => _SkeletonState();
+  State<AppSkeleton> createState() => _SkeletonState();
 }
 
-class _SkeletonState extends State<Skeleton>
+class _SkeletonState extends State<AppSkeleton>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,

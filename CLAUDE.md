@@ -13,10 +13,23 @@ It is mandatory, not advisory.
 
 1. **Read `ARCHITECTURE.md`.** Read the sections your change touches. If you are
    adding a feature, read §3, §4, §5 and §6 in full.
-2. **Inspect the design system.** `packages/tajeerai-design-system/tokens.json`
-   is the source of truth for every visual value. Never invent a colour,
-   radius, spacing step or font.
-3. **Look for what already exists.** Search `design_system/` before adding a
+2. **Inspect the design system — this one, not the web one.**
+   `lib/design_system/` is where every reusable component lives, and
+   `design/tokens.json` is the source of truth for every visual value. Never
+   invent a colour, radius, spacing step or font.
+
+   **`packages/tajeerai-design-system/` is the WEB design system and is not a
+   source of truth for mobile.** It cannot be imported, so the rule is about
+   copying: its dimensions, spacing, interaction models and touch targets were
+   designed for a pointer. A popover is a bottom sheet here.
+
+3. **Follow Design System First.** In order: reuse the component; extend it
+   with a variant if it nearly fits; if the missing pattern is reusable, build
+   it *in the design system* — both appearances, both directions, its states —
+   and then use it. Only a genuinely feature-specific thing is built inside a
+   feature. `LoginButton`, `InboxCard` and `ConversationInput` are the shapes
+   this forbids. See `ARCHITECTURE.md` §12.
+4. **Look for what already exists.** Search `design_system/` before adding a
    widget, `domain/services/` before adding a rule, and the existing feature
    before adding a folder.
 
@@ -51,8 +64,17 @@ subscribe to a socket.
 not make network calls. Writes go through the outbox so they survive being
 offline and survive the process dying.
 
-**Use the design system.** Semantic tokens only. Both light and dark. Logical
-directions so Arabic and English share one implementation.
+**Use the design system.** Import it through `design_system/design_system.dart`
+— that is the only door a feature has, and RULE 31 enforces it. Semantic tokens
+only, never a hex or an off-scale number. Both appearances of **both presets**:
+`aurora` and `tajeer` declare the same names, so a component that reads tokens
+is correct in all four without knowing which it is in. Logical directions so
+Arabic and English share one implementation.
+
+**A design-system file imports its siblings by leaf path, never the barrel**,
+and may reach `app/theme/` but nothing else under `app/` (RULE 32). It must not
+import Riverpod, go_router, Dio, drift or a storage package (RULE 33): take the
+value as a parameter and report the change through a callback.
 
 **Keep infrastructure exceptions contained.** `HttpException` and
 `SocketException` are translated to an `AppFailure` at the data boundary and
@@ -80,6 +102,7 @@ Run all of it. Every step also runs in CI, and CI failing on something you could
 have caught locally is wasted time for everyone.
 
 ```bash
+dart run tool/build_tokens.dart
 dart run build_runner build --delete-conflicting-outputs
 dart run tool/check_architecture.dart
 dart format lib test tool
@@ -118,8 +141,8 @@ change — never to describe a violation after the fact. When it does change:
 | Screen state | `features/<f>/presentation/controllers/` |
 | A socket command | `features/<f>/data/remote/` |
 | Socket event handling | `features/<f>/realtime/` |
-| A shared widget | `design_system/` |
 | Dependency wiring | `app/bootstrap/dependencies.dart` |
-| A colour or spacing value | `app/theme/` (sourced from `tokens.json`) |
+| A shared component | `design_system/`, reached via `design_system.dart` |
+| A colour, type step or spacing value | `design/tokens.json`, generated into `app/theme/tokens.g.dart` |
 | Error types | `failures/app_failure.dart` |
-| The backend contract | `backend/src/contracts/schemas/conversation-socket.ts` |
+| The backend contract | `backend/src/modules/conversation/application/contracts/conversation-socket.ts` |

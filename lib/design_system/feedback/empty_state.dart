@@ -9,8 +9,8 @@ import '../buttons/app_button.dart';
 /// slot, a `text-lg font-medium` title, muted description, and an optional
 /// action. The dashed border the web draws is kept, because it is what marks
 /// the region as a placeholder rather than a real card.
-class EmptyState extends StatelessWidget {
-  const EmptyState({
+class AppEmptyState extends StatelessWidget {
+  const AppEmptyState({
     required this.title,
     this.description,
     this.icon,

@@ -4,17 +4,19 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:tajeerai_mobile/app/theme/theme.dart';
 import 'package:tajeerai_mobile/design_system/feedback/empty_state.dart';
 import 'package:tajeerai_mobile/design_system/feedback/error_state.dart';
+import 'package:tajeerai_mobile/design_system/feedback/inline_error.dart';
+import 'package:tajeerai_mobile/design_system/feedback/status_banner.dart';
 import 'package:tajeerai_mobile/design_system/loaders/skeleton.dart';
 import 'package:tajeerai_mobile/design_system/loaders/spinner.dart';
 
 import '../support/widget_harness.dart';
 
 void main() {
-  group('EmptyState', () {
+  group('AppEmptyState', () {
     testWidgets('shows a title, description and icon', (tester) async {
       await tester.pumpWidget(
         wrapWidget(
-          const EmptyState(
+          const AppEmptyState(
             title: 'No conversations yet',
             description: 'New conversations will appear here.',
             icon: LucideIcons.messageSquare,
@@ -32,7 +34,7 @@ void main() {
 
       await tester.pumpWidget(
         wrapWidget(
-          EmptyState(
+          AppEmptyState(
             title: 'Nothing here',
             actionLabel: 'Refresh',
             onAction: () => taps += 1,
@@ -48,26 +50,27 @@ void main() {
 
     testWidgets('omits the action when none is given', (tester) async {
       await tester.pumpWidget(
-        wrapWidget(const EmptyState(title: 'Nothing here')),
+        wrapWidget(const AppEmptyState(title: 'Nothing here')),
       );
 
       expect(find.text('Refresh'), findsNothing);
     });
 
     testWidgets('renders in both appearances', (tester) async {
-      await pumpInBothThemes(tester, const EmptyState(title: 'Nothing here'), (
+      await pumpInBothThemes(
         tester,
-        brightness,
-      ) async {
-        expect(find.text('Nothing here'), findsOneWidget);
-      });
+        const AppEmptyState(title: 'Nothing here'),
+        (tester, brightness) async {
+          expect(find.text('Nothing here'), findsOneWidget);
+        },
+      );
     });
   });
 
-  group('ErrorState', () {
+  group('AppErrorState', () {
     testWidgets('shows the message it was given', (tester) async {
       await tester.pumpWidget(
-        wrapWidget(const ErrorState(message: 'The list could not be read.')),
+        wrapWidget(const AppErrorState(message: 'The list could not be read.')),
       );
 
       expect(find.text('The list could not be read.'), findsOneWidget);
@@ -78,7 +81,9 @@ void main() {
       var retries = 0;
 
       await tester.pumpWidget(
-        wrapWidget(ErrorState(message: 'Boom.', onRetry: () => retries += 1)),
+        wrapWidget(
+          AppErrorState(message: 'Boom.', onRetry: () => retries += 1),
+        ),
       );
 
       await tester.tap(find.text('Try again'));
@@ -88,10 +93,10 @@ void main() {
     });
   });
 
-  group('InlineError', () {
+  group('AppInlineError', () {
     testWidgets('renders on the destructive token', (tester) async {
       await tester.pumpWidget(
-        wrapWidget(const InlineError(message: 'Check your details.')),
+        wrapWidget(const AppInlineError(message: 'Check your details.')),
       );
 
       final text = tester.widget<Text>(find.text('Check your details.'));
@@ -102,7 +107,7 @@ void main() {
     testWidgets('uses the dark destructive token in dark mode', (tester) async {
       await tester.pumpWidget(
         wrapWidget(
-          const InlineError(message: 'Check your details.'),
+          const AppInlineError(message: 'Check your details.'),
           brightness: Brightness.dark,
         ),
       );
@@ -113,10 +118,10 @@ void main() {
     });
   });
 
-  group('StatusBanner', () {
+  group('AppStatusBanner', () {
     testWidgets('renders a warning tone', (tester) async {
       await tester.pumpWidget(
-        wrapWidget(const StatusBanner(message: 'Reconnecting…')),
+        wrapWidget(const AppStatusBanner(message: 'Reconnecting…')),
       );
 
       expect(find.text('Reconnecting…'), findsOneWidget);
@@ -127,7 +132,7 @@ void main() {
     testWidgets('the spinner announces itself to a screen reader', (
       tester,
     ) async {
-      await tester.pumpWidget(wrapWidget(const Spinner()));
+      await tester.pumpWidget(wrapWidget(const AppSpinner()));
       await tester.pump();
 
       expect(find.bySemanticsLabel('Loading'), findsOneWidget);
@@ -137,13 +142,13 @@ void main() {
     });
 
     testWidgets('the skeleton is hidden from screen readers', (tester) async {
-      await tester.pumpWidget(wrapWidget(const Skeleton(width: 100)));
+      await tester.pumpWidget(wrapWidget(const AppSkeleton(width: 100)));
       await tester.pump();
 
       // A placeholder that reads out as an unlabelled box is noise.
       expect(
         find.descendant(
-          of: find.byType(Skeleton),
+          of: find.byType(AppSkeleton),
           matching: find.byType(ExcludeSemantics),
         ),
         findsOneWidget,

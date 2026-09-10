@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tajeerai_mobile/app/bootstrap/dependencies.dart';
 import 'package:tajeerai_mobile/design_system/buttons/app_button.dart';
-import 'package:tajeerai_mobile/design_system/feedback/error_state.dart';
+import 'package:tajeerai_mobile/design_system/feedback/inline_error.dart';
 import 'package:tajeerai_mobile/design_system/inputs/app_text_field.dart';
 import 'package:tajeerai_mobile/design_system/loaders/spinner.dart';
 import 'package:tajeerai_mobile/failures/app_failure.dart';
@@ -85,7 +85,7 @@ void main() {
     testWidgets('shows no error before anything is submitted', (tester) async {
       await tester.pumpWidget(subject());
 
-      expect(find.byType(InlineError), findsNothing);
+      expect(find.byType(AppInlineError), findsNothing);
     });
   });
 
@@ -130,12 +130,12 @@ void main() {
       await tester.pumpWidget(subject());
       await fillAndSubmit(tester);
 
-      expect(find.byType(Spinner), findsOneWidget);
+      expect(find.byType(AppSpinner), findsOneWidget);
 
       repository.signInGate!.complete();
       await tester.pumpAndSettle();
 
-      expect(find.byType(Spinner), findsNothing);
+      expect(find.byType(AppSpinner), findsNothing);
     });
 
     testWidgets('disables the fields while submitting', (tester) async {
@@ -169,7 +169,7 @@ void main() {
       await fillAndSubmit(tester, password: 'wrong');
       await tester.pumpAndSettle();
 
-      expect(find.byType(InlineError), findsOneWidget);
+      expect(find.byType(AppInlineError), findsOneWidget);
       expect(
         find.text(
           'Those details were not recognised. Check them and try again.',
@@ -218,7 +218,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(coordinator.state.isAuthenticated, isTrue);
-      expect(find.byType(InlineError), findsNothing);
+      expect(find.byType(AppInlineError), findsNothing);
     });
   });
 

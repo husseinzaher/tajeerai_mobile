@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../design_system/design_system.dart';
 import '../../../../app/theme/theme.dart';
-import '../../../../design_system/loaders/spinner.dart';
 import '../../domain/entities/message.dart';
 
 /// One message in a thread.
@@ -160,7 +160,7 @@ class _StatusLine extends StatelessWidget {
         ),
         if (message.isOutbound) ...<Widget>[
           if (message.state == MessageState.sending)
-            Spinner(size: 10, color: color)
+            AppSpinner(size: 10, color: color)
           else if (icon != null)
             Icon(icon, size: 12, color: color),
           if (label != null)

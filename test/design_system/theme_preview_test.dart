@@ -4,8 +4,8 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tajeerai_mobile/app/theme/theme.dart';
-import 'package:tajeerai_mobile/design_system/atoms/avatar.dart';
-import 'package:tajeerai_mobile/design_system/atoms/badge.dart';
+import 'package:tajeerai_mobile/design_system/display/avatar.dart';
+import 'package:tajeerai_mobile/design_system/display/badge.dart';
 import 'package:tajeerai_mobile/design_system/buttons/app_button.dart';
 import 'package:tajeerai_mobile/design_system/cards/app_card.dart';
 import 'package:tajeerai_mobile/design_system/feedback/empty_state.dart';
@@ -121,7 +121,7 @@ class _Sheet extends StatelessWidget {
                 AppBadge(label: 'الكل', variant: AppBadgeVariant.outline),
               ],
             ),
-            const EmptyState(
+            const AppEmptyState(
               title: 'لا توجد محادثات بعد',
               description: 'ستظهر هنا المحادثات الواردة من قنوات التواصل.',
               icon: LucideIcons.messageCircle,
@@ -151,7 +151,7 @@ void main() {
             size: const Size(390, 844),
           ),
         );
-        // Never pumpAndSettle: Spinner and Skeleton repeat() forever.
+        // Never pumpAndSettle: AppSpinner and AppSkeleton repeat() forever.
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 300));
 

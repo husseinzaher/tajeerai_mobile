@@ -3,14 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../design_system/design_system.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../app/router/routes.dart';
-import '../../../../design_system/buttons/app_button.dart';
-import '../../../../design_system/feedback/empty_state.dart';
-import '../../../../design_system/feedback/error_state.dart';
-import '../../../../design_system/inputs/search_field.dart';
-import '../../../../design_system/layouts/app_scaffold.dart';
-import '../../../../design_system/loaders/skeleton.dart';
 import '../../application/state/sync_state.dart';
 import '../../domain/entities/conversation.dart';
 import '../controllers/conversation_list_controller.dart';
@@ -75,7 +70,7 @@ class _ConversationListScreenState
         children: <Widget>[
           Padding(
             padding: const EdgeInsets.all(TajeerSpacing.md),
-            child: SearchField(
+            child: AppSearchField(
               controller: _search,
               hintText: 'Search conversations',
               // Filters what is already on the device -- no network call.
@@ -86,14 +81,14 @@ class _ConversationListScreenState
           Expanded(
             child: conversations.when(
               loading: () => const _ConversationListSkeleton(),
-              error: (error, _) => ErrorState(
+              error: (error, _) => AppErrorState(
                 message: 'The conversation list could not be read.',
                 onRetry: () => ref.invalidate(conversationListProvider),
                 bordered: false,
               ),
               data: (items) {
                 if (items.isEmpty) {
-                  return EmptyState(
+                  return AppEmptyState(
                     title: _search.text.isEmpty
                         ? 'No conversations yet'
                         : 'No matches',
@@ -151,29 +146,29 @@ class _SyncBanner extends StatelessWidget {
     }
 
     final (message, tone) = switch (state.phase) {
-      SyncPhase.syncing => ('Updating…', StatusTone.neutral),
+      SyncPhase.syncing => ('Updating…', AppStatusTone.neutral),
       SyncPhase.stale => (
         'Showing saved conversations. Reconnecting…',
-        StatusTone.warning,
+        AppStatusTone.warning,
       ),
       SyncPhase.failed => (
         state.message ?? 'Could not refresh. Showing saved conversations.',
-        StatusTone.warning,
+        AppStatusTone.warning,
       ),
       _ when state.failedMutations > 0 => (
         '${state.failedMutations} message(s) could not be sent',
-        StatusTone.warning,
+        AppStatusTone.warning,
       ),
       _ when state.pendingMutations > 0 => (
         'Sending ${state.pendingMutations} message(s)…',
-        StatusTone.neutral,
+        AppStatusTone.neutral,
       ),
-      _ => ('', StatusTone.neutral),
+      _ => ('', AppStatusTone.neutral),
     };
 
     if (message.isEmpty) return const SizedBox.shrink();
 
-    return StatusBanner(message: message, tone: tone);
+    return AppStatusBanner(message: message, tone: tone);
   }
 }
 
@@ -195,14 +190,14 @@ class _ConversationListSkeleton extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           spacing: TajeerSpacing.sm,
           children: <Widget>[
-            const Skeleton.circle(),
+            const AppSkeleton.circle(),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 spacing: TajeerSpacing.xs,
                 children: const <Widget>[
-                  Skeleton.text(width: 140),
-                  Skeleton.text(width: double.infinity),
+                  AppSkeleton.text(width: 140),
+                  AppSkeleton.text(width: double.infinity),
                 ],
               ),
             ),

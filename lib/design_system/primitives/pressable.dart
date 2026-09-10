@@ -22,8 +22,8 @@ enum ElevateStep { none, one, two }
 /// The press also scales to `motion.pressScale`, and both the overlay and the
 /// scale run on the shared `motion.duration`/`motion.easing` so a press here
 /// feels like a press on the web.
-class Pressable extends StatefulWidget {
-  const Pressable({
+class AppPressable extends StatefulWidget {
+  const AppPressable({
     required this.child,
     this.onTap,
     this.onLongPress,
@@ -61,10 +61,10 @@ class Pressable extends StatefulWidget {
   bool get _interactive => enabled && (onTap != null || onLongPress != null);
 
   @override
-  State<Pressable> createState() => _PressableState();
+  State<AppPressable> createState() => _PressableState();
 }
 
-class _PressableState extends State<Pressable> {
+class _PressableState extends State<AppPressable> {
   bool _hovered = false;
   bool _pressed = false;
   bool _focused = false;

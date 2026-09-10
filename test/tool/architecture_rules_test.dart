@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import '../../tool/architecture/architecture_rule.dart';
 import '../../tool/architecture/import_analyzer.dart';
 import '../../tool/architecture/path_classifier.dart';
+import '../../tool/architecture/rules/design_system_boundary_rule.dart';
 import '../../tool/architecture/rules/feature_boundary_rule.dart';
 import '../../tool/architecture/rules/forbidden_directory_rule.dart';
 import '../../tool/architecture/rules/infrastructure_rule.dart';
@@ -257,6 +258,135 @@ void main() {
 
       expect(violations, hasLength(1));
       expect(violations.single.rule, contains('RULE 18'));
+    });
+  });
+
+  group('RULE 31 -- features reach the design system through its barrel', () {
+    test('flags a screen importing a component file directly', () {
+      final violations = const DesignSystemBarrelRule().check(
+        contextFor(
+          'lib/features/conversations/presentation/screens/list.dart',
+          <String>['lib/design_system/buttons/app_button.dart'],
+        ),
+      );
+
+      expect(violations, hasLength(1));
+      expect(violations.single.rule, contains('RULE 31'));
+      expect(
+        violations.single.allowedAlternative,
+        contains('design_system.dart'),
+      );
+    });
+
+    test('allows the barrel itself', () {
+      final violations = const DesignSystemBarrelRule().check(
+        contextFor(
+          'lib/features/conversations/presentation/screens/list.dart',
+          <String>['lib/design_system/design_system.dart'],
+        ),
+      );
+
+      expect(violations, isEmpty);
+    });
+
+    test('leaves design-system files alone, which import each other by leaf', () {
+      // The barrel must not import itself, so the rule cannot apply inside the
+      // design system -- only features are held to it.
+      final violations = const DesignSystemBarrelRule().check(
+        contextFor('lib/design_system/feedback/error_state.dart', <String>[
+          'lib/design_system/feedback/empty_state.dart',
+        ]),
+      );
+
+      expect(violations, isEmpty);
+    });
+  });
+
+  group('RULE 32 -- the design system sees app/theme/ and nothing else', () {
+    test('flags a component reaching the dependency graph', () {
+      final violations = const DesignSystemAppAccessRule().check(
+        contextFor('lib/design_system/buttons/app_button.dart', <String>[
+          'lib/app/bootstrap/dependencies.dart',
+        ]),
+      );
+
+      expect(violations, hasLength(1));
+      expect(violations.single.rule, contains('RULE 32'));
+    });
+
+    test('flags a component reaching the router', () {
+      final violations = const DesignSystemAppAccessRule().check(
+        contextFor('lib/design_system/cards/app_card.dart', <String>[
+          'lib/app/router/routes.dart',
+        ]),
+      );
+
+      expect(violations, hasLength(1));
+    });
+
+    test('allows the theme, which every component needs', () {
+      final violations = const DesignSystemAppAccessRule().check(
+        contextFor('lib/design_system/cards/app_card.dart', <String>[
+          'lib/app/theme/theme.dart',
+        ]),
+      );
+
+      expect(violations, isEmpty);
+    });
+  });
+
+  group('RULE 33 -- the design system carries no application plumbing', () {
+    test('flags a component importing a state management package', () {
+      final violations = const DesignSystemPackageRule().check(
+        contextFor(
+          'lib/design_system/inputs/app_text_field.dart',
+          <String>[],
+          packages: <String>['flutter_riverpod'],
+        ),
+      );
+
+      expect(violations, hasLength(1));
+      expect(violations.single.rule, contains('RULE 33'));
+      expect(violations.single.allowedAlternative, contains('callback'));
+    });
+
+    test('flags routing, networking and persistence alike', () {
+      for (final package in <String>['go_router', 'dio', 'drift']) {
+        final violations = const DesignSystemPackageRule().check(
+          contextFor(
+            'lib/design_system/cards/app_card.dart',
+            <String>[],
+            packages: <String>[package],
+          ),
+        );
+
+        expect(violations, hasLength(1), reason: package);
+      }
+    });
+
+    test('allows flutter and the icon set', () {
+      final violations = const DesignSystemPackageRule().check(
+        contextFor(
+          'lib/design_system/display/badge.dart',
+          <String>[],
+          packages: <String>['flutter', 'lucide_icons_flutter'],
+        ),
+      );
+
+      expect(violations, isEmpty);
+    });
+
+    test('holds only the design system to it', () {
+      // A feature is entitled to all of these -- that is where they belong.
+      final violations = const DesignSystemPackageRule().check(
+        contextFor(
+          'lib/features/auth/presentation/screens/login_screen.dart',
+          <String>[],
+          packages: <String>['flutter_riverpod', 'go_router'],
+        ),
+      );
+
+      expect(violations, isEmpty);
     });
   });
 
@@ -547,7 +677,7 @@ void main() {
       final violations = const ForbiddenDirectoryRule().checkProject(
         <FileLocation>[
           PathClassifier.classify('lib/app/app.dart'),
-          PathClassifier.classify('lib/design_system/atoms/badge.dart'),
+          PathClassifier.classify('lib/design_system/display/badge.dart'),
           PathClassifier.classify('lib/failures/app_failure.dart'),
           PathClassifier.classify(
             'lib/features/auth/domain/services/auth_service.dart',

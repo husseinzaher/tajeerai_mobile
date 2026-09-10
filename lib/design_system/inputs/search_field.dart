@@ -11,8 +11,8 @@ import '../../app/theme/theme.dart';
 /// and the clear affordance the web's search inputs carry, not a second input
 /// implementation. The web theme hides the native `::-webkit-search-cancel`
 /// and draws its own clear control, which is what the trailing slot does here.
-class SearchField extends StatefulWidget {
-  const SearchField({
+class AppSearchField extends StatefulWidget {
+  const AppSearchField({
     required this.controller,
     this.hintText,
     this.onChanged,
@@ -30,10 +30,10 @@ class SearchField extends StatefulWidget {
   final bool enabled;
 
   @override
-  State<SearchField> createState() => _SearchFieldState();
+  State<AppSearchField> createState() => _SearchFieldState();
 }
 
-class _SearchFieldState extends State<SearchField> {
+class _SearchFieldState extends State<AppSearchField> {
   @override
   void initState() {
     super.initState();

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../app/theme/theme.dart';
-import '../atoms/pressable.dart';
+import '../primitives/pressable.dart';
 
 /// The system's surface container.
 ///
@@ -51,66 +51,11 @@ class AppCard extends StatelessWidget {
 
     if (onTap == null) return surface;
 
-    return Pressable(
+    return AppPressable(
       onTap: onTap,
       borderRadius: TajeerRadii.xlAll,
       semanticLabel: semanticLabel,
       child: surface,
-    );
-  }
-}
-
-/// The `CardHeader` / `CardTitle` / `CardDescription` stack.
-///
-/// Kept as one widget rather than three: the web splits them because JSX needs
-/// somewhere to hang `space-y-1.5`, and three Flutter widgets whose only job
-/// is vertical spacing would be ceremony without a purpose.
-class AppCardHeader extends StatelessWidget {
-  const AppCardHeader({
-    required this.title,
-    this.description,
-    this.trailing,
-    super.key,
-  });
-
-  final String title;
-  final String? description;
-  final Widget? trailing;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            spacing: TajeerSpacing.xs, // `space-y-1.5`
-            children: <Widget>[
-              Text(
-                title,
-                // `font-semibold leading-none tracking-tight`.
-                style: context.text.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: -0.2,
-                  color: colors.textPrimary,
-                ),
-              ),
-              if (description != null)
-                Text(
-                  description!,
-                  style: context.text.bodyMedium?.copyWith(
-                    color: colors.textMuted,
-                  ),
-                ),
-            ],
-          ),
-        ),
-        ?trailing,
-      ],
     );
   }
 }

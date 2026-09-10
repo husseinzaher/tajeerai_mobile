@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../design_system/design_system.dart';
 import '../../../../app/theme/theme.dart';
-import '../../../../design_system/buttons/app_button.dart';
-import '../../../../design_system/inputs/app_text_field.dart';
 
 /// The message input.
 ///

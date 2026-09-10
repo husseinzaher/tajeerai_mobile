@@ -68,7 +68,7 @@ abstract final class AppTheme {
       fontFamilyFallback: TajeerTypography.sansFallback,
       splashFactory: NoSplash.splashFactory,
       // Press feedback is the overlay plus a scale, and both live in
-      // `Pressable`. Material's ink ripple on top would be a second, different
+      // `AppPressable`. Material's ink ripple on top would be a second, different
       // press animation.
       highlightColor: Colors.transparent,
       hoverColor: colors.overlayHover,

@@ -3,13 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../design_system/design_system.dart';
 import '../../../../app/theme/theme.dart';
-import '../../../../design_system/atoms/avatar.dart';
-import '../../../../design_system/feedback/empty_state.dart';
-import '../../../../design_system/feedback/error_state.dart';
-import '../../../../design_system/layouts/app_scaffold.dart';
-import '../../../../design_system/loaders/skeleton.dart';
-import '../../../../design_system/snackbars/app_snackbar.dart';
 import '../../domain/entities/conversation.dart';
 import '../../domain/entities/message.dart';
 import '../controllers/conversation_thread_controller.dart';
@@ -60,7 +55,11 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
 
       if (message == null || message == previous?.errorMessage) return;
 
-      AppSnackbar.show(context, message: message, tone: SnackbarTone.warning);
+      AppSnackbar.show(
+        context,
+        message: message,
+        tone: AppSnackbarTone.warning,
+      );
 
       ref
           .read(
@@ -81,7 +80,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
           Expanded(
             child: messages.when(
               loading: () => const _ThreadSkeleton(),
-              error: (error, _) => ErrorState(
+              error: (error, _) => AppErrorState(
                 message: 'This conversation could not be read.',
                 bordered: false,
                 onRetry: () => ref.invalidate(
@@ -90,7 +89,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
               ),
               data: (items) {
                 if (items.isEmpty) {
-                  return const EmptyState(
+                  return const AppEmptyState(
                     title: 'No messages yet',
                     description: 'Send the first message in this conversation.',
                     icon: LucideIcons.messageSquare,
@@ -206,7 +205,7 @@ class _ThreadSkeleton extends StatelessWidget {
             alignment: isOutbound
                 ? AlignmentDirectional.centerEnd
                 : AlignmentDirectional.centerStart,
-            child: Skeleton(width: isOutbound ? 180 : 220, height: 40),
+            child: AppSkeleton(width: isOutbound ? 180 : 220, height: 40),
           ),
         );
       },

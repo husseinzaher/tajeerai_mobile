@@ -16,7 +16,7 @@ class AppSplash extends StatelessWidget {
   Widget build(BuildContext context) {
     return ColoredBox(
       color: context.colors.background,
-      child: Center(child: Spinner(size: 24, color: context.colors.primary)),
+      child: Center(child: AppSpinner(size: 24, color: context.colors.primary)),
     );
   }
 }

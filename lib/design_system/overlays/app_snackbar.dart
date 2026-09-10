@@ -4,7 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../app/theme/theme.dart';
 
 /// The tone of a transient notice.
-enum SnackbarTone { neutral, success, warning, destructive }
+enum AppSnackbarTone { neutral, success, warning, destructive }
 
 /// The system's toast.
 ///
@@ -16,7 +16,7 @@ abstract final class AppSnackbar {
   static void show(
     BuildContext context, {
     required String message,
-    SnackbarTone tone = SnackbarTone.neutral,
+    AppSnackbarTone tone = AppSnackbarTone.neutral,
     String? actionLabel,
     VoidCallback? onAction,
     Duration duration = const Duration(seconds: 4),
@@ -25,13 +25,16 @@ abstract final class AppSnackbar {
     final messenger = ScaffoldMessenger.of(context);
 
     final (icon, accent) = switch (tone) {
-      SnackbarTone.neutral => (null, colors.textPrimary),
-      SnackbarTone.success => (LucideIcons.circleCheck, colors.successDefault),
-      SnackbarTone.warning => (
+      AppSnackbarTone.neutral => (null, colors.textPrimary),
+      AppSnackbarTone.success => (
+        LucideIcons.circleCheck,
+        colors.successDefault,
+      ),
+      AppSnackbarTone.warning => (
         LucideIcons.triangleAlert,
         colors.warningDefault,
       ),
-      SnackbarTone.destructive => (
+      AppSnackbarTone.destructive => (
         LucideIcons.circleAlert,
         colors.dangerDefault,
       ),
@@ -55,7 +58,7 @@ abstract final class AppSnackbar {
         shape: RoundedRectangleBorder(
           borderRadius: TajeerRadii.lgAll,
           side: BorderSide(
-            color: tone == SnackbarTone.neutral ? colors.border : accent,
+            color: tone == AppSnackbarTone.neutral ? colors.border : accent,
           ),
         ),
         content: Row(
@@ -84,10 +87,10 @@ abstract final class AppSnackbar {
   }
 
   static void success(BuildContext context, String message) =>
-      show(context, message: message, tone: SnackbarTone.success);
+      show(context, message: message, tone: AppSnackbarTone.success);
 
   static void error(BuildContext context, String message) =>
-      show(context, message: message, tone: SnackbarTone.destructive);
+      show(context, message: message, tone: AppSnackbarTone.destructive);
 
   /// Kept for the shadow token to stay referenced from one place; the
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../app/theme/theme.dart';
-import '../atoms/pressable.dart';
+import '../primitives/pressable.dart';
 import '../loaders/spinner.dart';
 
 /// The six button variants, matching `button.tsx`'s `cva` set.
@@ -14,7 +14,7 @@ enum AppButtonSize { medium, small, large, icon }
 ///
 /// A direct port of the design system's `Button`: same variants, same sizes,
 /// same `rounded-md` corner, and the same interaction model -- no hover colour
-/// per variant, just the shared elevate overlay from [Pressable]. The border
+/// per variant, just the shared elevate overlay from [AppPressable]. The border
 /// on the opaque variants is computed from the surface colour the way the web
 /// theme computes `--primary-border`, rather than being a second token.
 class AppButton extends StatelessWidget {
@@ -69,7 +69,7 @@ class AppButton extends StatelessWidget {
 
     final content = <Widget>[
       if (loading)
-        Spinner(size: 16, color: style.foreground)
+        AppSpinner(size: 16, color: style.foreground)
       else if (leading != null)
         IconTheme.merge(
           data: IconThemeData(color: style.foreground, size: 16),
@@ -126,7 +126,7 @@ class AppButton extends StatelessWidget {
       ),
     );
 
-    return Pressable(
+    return AppPressable(
       onTap: _enabled ? onPressed : null,
       enabled: _enabled,
       borderRadius: TajeerRadii.mdAll,

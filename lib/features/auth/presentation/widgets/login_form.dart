@@ -2,16 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../design_system/design_system.dart';
 import '../../../../app/theme/theme.dart';
-import '../../../../design_system/buttons/app_button.dart';
-import '../../../../design_system/feedback/error_state.dart';
-import '../../../../design_system/inputs/app_text_field.dart';
 import '../controllers/login_controller.dart';
 
 /// The sign-in form.
 ///
 /// Built entirely from the design system -- [AppTextField], [AppButton],
-/// [InlineError]. No colour, radius or spacing literal appears below; every
+/// [AppInlineError]. No colour, radius or spacing literal appears below; every
 /// value comes from a token, which is what makes the screen correct in dark
 /// mode without a second implementation.
 class LoginForm extends ConsumerStatefulWidget {
@@ -58,7 +56,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
         spacing: TajeerSpacing.md,
         children: <Widget>[
           if (state.errorMessage != null)
-            InlineError(message: state.errorMessage!),
+            AppInlineError(message: state.errorMessage!),
           AppTextField(
             controller: _identifier,
             label: 'Email or phone',

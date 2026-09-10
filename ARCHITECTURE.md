@@ -48,7 +48,8 @@ lib/
 │   └── localization/          Locale selection and copy.
 │
 ├── design_system/             Business-agnostic UI. Knows nothing about conversations or auth.
-│   ├── atoms/ buttons/ inputs/ cards/ dialogs/ sheets/ snackbars/ loaders/ layouts/ feedback/
+│   ├── design_system.dart     The barrel. The only door a feature may use.
+│   ├── primitives/ buttons/ inputs/ display/ cards/ feedback/ loaders/ overlays/ layouts/
 │
 ├── infrastructure/            Technical implementations. Business-agnostic.
 │   ├── realtime/              Generic socket engine: connect, reconnect, authenticate, encode.
@@ -376,9 +377,65 @@ Rules:
   Arabic and English share one implementation.
 - Generic components go in `design_system/`; business-aware widgets stay in
   their feature. `AppButton` is shared, `MessageBubble` is not.
+- Every widget carries the `App` prefix. Not taste: `Card`, `Divider`,
+  `Switch`, `Checkbox`, `Radio`, `Badge`, `Chip`, `Dialog`, `Banner`, `Drawer`,
+  `Tooltip` and `ListTile` all collide with `material.dart`, which every one of
+  these files imports. A "prefix only when it collides" rule is what produced
+  the inconsistency this replaced.
 - Extend an existing component with a variant before adding a sibling.
 
 ---
+
+### The theme is two presets, not one palette
+
+`design/tokens.json` carries `aurora` and `tajeer`. Both declare the same 38
+semantic names, and that is the whole mechanism: a component asks for
+`colors.surface` and the preset decides what that is, so one component set
+renders under every identity without naming one. Type, spacing, radii, motion
+and channel identity live at the file's root, shared — a preset that could
+carry its own spacing scale would be a second design system wearing the first
+one's name, and `tokens_completeness_test.dart` asserts it cannot.
+
+Adding a preset is adding a block to the token file. The enum, the palettes and
+the lookup are generated from it, so nothing has to be remembered.
+
+### Design System First
+
+**Any mobile UI task starts in `lib/design_system/`.** In order:
+
+1. Inspect what is there. Reuse the component.
+2. If it nearly fits, extend it — a variant, a size, a slot.
+3. If the missing pattern is reusable, build it **in the design system**, with
+   both appearances, both directions and its states, and use it from there.
+4. Only a genuinely feature-specific thing is built inside a feature.
+
+A feature must never hold UI that belongs to the system. `LoginButton`,
+`InboxCard` and `ConversationInput` are the shapes this forbids.
+
+**The web design system is not a source of truth for mobile.** It cannot be
+imported — it is TypeScript, and not in `pubspec.yaml` — so this is a rule
+about *copying*: taking a web component's dimensions, spacing, interaction
+model or touch targets instead of designing for a phone. A popover is a bottom
+sheet here; a 36px control is below the touch-target floor. Enforced by review,
+because no guard can see it.
+
+### The barrel, and who may use it
+
+- A **feature** imports `design_system/design_system.dart` and nothing else
+  from the design system (RULE 31).
+- A **design-system file** imports its siblings by relative path, never the
+  barrel: a barrel that imports itself is a cycle, and it would make every
+  component's analysis depend on every other's.
+- A **test** imports the leaf file it is testing, so a unit test that renders
+  nothing does not drag the whole system into its coverage record.
+
+Coverage is measured per *loaded* library, and features import the barrel — so
+a feature's widget test loads every component regardless. Introducing the
+barrel moved overall coverage from 87.2% to 82.9% against an 80% floor, because
+~150 component lines that had no lcov record before now have one. **A component
+added to the design system is counted from the day it lands, tested or not.**
+Plan for it: components and their tests land together, or the gate fails on the
+next one.
 
 ## 13. Testing rules
 
@@ -424,7 +481,7 @@ a connection's lifecycle and nothing else.
 
 ## 15. Enforcement
 
-`tool/check_architecture.dart` implements 30 rules across five rule classes. Each
+`tool/check_architecture.dart` implements 33 rules across six rule classes. Each
 violation prints the rule, the source file and line, the forbidden dependency,
 why it is wrong, and what to use instead. Non-zero exit fails CI.
 
@@ -435,7 +492,7 @@ dart run tool/check_architecture.dart
 Rules are objects, not branches in a long function: adding one is adding a file
 under `tool/architecture/rules/` and a line in `_fileRules`.
 
-### The 30 rules
+### The 33 rules
 
 1–5 Presentation must not import data, infrastructure, repository
 implementations, database APIs or socket infrastructure.
@@ -455,6 +512,14 @@ forbidden.
 29 Relative imports resolve to the same paths as `package:` imports, so a
 boundary cannot be evaded by switching import style.
 30 Every future feature is checked by the same rules, with no edit.
+31 A feature reaches the design system only through `design_system.dart`.
+32 The design system may import `app/theme/`, and nothing else under `app/`.
+33 The design system must not import a state-management, routing, networking
+or storage package.
+
+Rules 31–33 close holes rule 18 left open: it checked only that a design-system
+file did not import a *feature*, so `app/bootstrap/dependencies.dart`, the
+router, Riverpod and even Dio were all reachable from a component.
 
 ---
 

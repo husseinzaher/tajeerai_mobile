@@ -2,17 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../design_system/design_system.dart';
 import '../../../../app/theme/theme.dart';
-import '../../../../design_system/atoms/avatar.dart';
-import '../../../../design_system/atoms/badge.dart';
-import '../../../../design_system/atoms/pressable.dart';
 import '../../domain/entities/conversation.dart';
 
 /// One row in the Inbox rail.
 ///
 /// A feature widget, not a design-system one: it knows what a conversation is.
 /// It is *composed* from design-system parts -- [AppAvatar], [AppBadge],
-/// [Pressable] -- and introduces no colour or spacing of its own.
+/// [AppPressable] -- and introduces no colour or spacing of its own.
 class ConversationTile extends StatelessWidget {
   const ConversationTile({
     required this.conversation,
@@ -32,7 +30,7 @@ class ConversationTile extends StatelessWidget {
     final colors = context.colors;
     final unread = conversation.hasUnread;
 
-    return Pressable(
+    return AppPressable(
       onTap: onTap,
       borderRadius: TajeerRadii.lgAll,
       semanticLabel: _semanticLabel(),
