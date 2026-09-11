@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../app/theme/theme.dart';
+import '../display/status_dot.dart';
 import '../localization/ds_localization.dart';
 import '../localization/ds_messages.dart';
 import 'status_banner.dart';
@@ -93,6 +95,104 @@ class AppConnectionBanner extends StatelessWidget {
       container: true,
       liveRegion: true,
       child: AppStatusBanner(message: message, icon: icon, tone: tone),
+    );
+  }
+}
+
+/// Whether what is on screen is current, as a dot.
+///
+/// The banner, for a place with no room for a sentence — beside a title, in a
+/// drawer's header. It takes the same [AppConnectionStatus], so the two can
+/// never disagree about the same moment, and for the same reason it is not
+/// about the socket: a green dot for a client that is connected but has not
+/// caught up is the bug ARCHITECTURE §7 is written against.
+///
+/// Nothing is drawn for [AppConnectionStatus.current], as nothing is drawn for
+/// [AppPresence.unknown]: `current` also means "not yet asked", and a green dot
+/// would be a confident answer to it.
+///
+/// Offline and a failed catch-up share a colour — both are warnings, because
+/// the data on screen is still valid in both — so the words are what tell them
+/// apart. They are always the dot's semantic label, and [showLabel] puts them
+/// on screen too. It is not a live region: a screen showing this and the
+/// banner would announce every change twice, and the banner is the one that
+/// speaks.
+class AppConnectionDot extends StatelessWidget {
+  const AppConnectionDot({
+    required this.status,
+    this.showLabel = false,
+    this.size = 10,
+    this.ringColor,
+    super.key,
+  });
+
+  final AppConnectionStatus status;
+
+  /// Whether the words sit beside the dot, rather than only reaching a screen
+  /// reader.
+  final bool showLabel;
+
+  final double size;
+
+  /// The cutout behind the dot. Defaults to the surface it sits on.
+  final Color? ringColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final TajeerColors colors = context.colors;
+    final AppMessages strings = context.strings;
+
+    final (Color, String)? look = switch (status) {
+      AppConnectionStatus.current => null,
+      AppConnectionStatus.syncing => (colors.infoDefault, strings.syncing),
+      AppConnectionStatus.offline => (colors.warningDefault, strings.offline),
+      AppConnectionStatus.failed => (colors.warningDefault, strings.syncFailed),
+    };
+
+    if (look == null) {
+      return const SizedBox.shrink();
+    }
+
+    final (Color color, String label) = look;
+
+    if (!showLabel) {
+      return AppStatusDot(
+        color: color,
+        size: size,
+        ringColor: ringColor,
+        semanticLabel: label,
+      );
+    }
+
+    // One run of text with the dot inside it, rather than a Row: it wraps like
+    // text at a large type size, and it has no flex to break in a parent with
+    // unbounded width.
+    return Semantics(
+      container: true,
+      label: label,
+      child: ExcludeSemantics(
+        child: Text.rich(
+          TextSpan(
+            children: <InlineSpan>[
+              WidgetSpan(
+                alignment: PlaceholderAlignment.middle,
+                child: Padding(
+                  padding: const EdgeInsetsDirectional.only(
+                    end: TajeerSpacing.xs2,
+                  ),
+                  child: AppStatusDot(
+                    color: color,
+                    size: size,
+                    ringColor: ringColor,
+                  ),
+                ),
+              ),
+              TextSpan(text: label),
+            ],
+          ),
+          style: context.type.labelSm.copyWith(color: colors.textMuted),
+        ),
+      ),
     );
   }
 }

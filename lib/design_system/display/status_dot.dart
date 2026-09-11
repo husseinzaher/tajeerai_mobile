@@ -5,9 +5,10 @@ import '../../app/theme/theme.dart';
 /// A small filled circle, optionally ringed.
 ///
 /// One primitive with two semantic wrappers over it — [AppPresenceDot] for a
-/// person and `AppConnectionDot` for the socket. They mean entirely different
-/// things and must not be interchangeable in a call site, but they are the same
-/// eight pixels and there is no reason to draw those twice.
+/// person, and `AppConnectionDot`, beside the connection banner, for whether
+/// what is on screen is current. They mean entirely different things and must
+/// not be interchangeable in a call site, but they are the same eight pixels
+/// and there is no reason to draw those twice.
 ///
 /// The ring is what makes it legible on top of something else: a dot on the
 /// corner of an avatar has no contrast guarantee against a photograph, so it

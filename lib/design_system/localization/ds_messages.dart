@@ -79,6 +79,7 @@ class AppMessages {
     required this.reconnecting,
     required this.syncing,
     required this.showingSaved,
+    required this.syncFailed,
   });
 
   // Chrome.
@@ -180,6 +181,10 @@ class AppMessages {
   final String reconnecting;
   final String syncing;
   final String showingSaved;
+
+  /// The last catch-up failed, said where there is no room for the banner's
+  /// longer way of putting it.
+  final String syncFailed;
 
   /// Fills `{name}` placeholders.
   ///

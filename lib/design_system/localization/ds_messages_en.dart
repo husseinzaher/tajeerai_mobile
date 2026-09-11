@@ -64,4 +64,5 @@ const AppMessages appMessagesEn = AppMessages(
   reconnecting: 'Reconnecting…',
   syncing: 'Syncing…',
   showingSaved: 'Showing saved messages',
+  syncFailed: 'Couldn’t sync',
 );

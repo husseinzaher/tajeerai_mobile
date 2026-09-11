@@ -69,4 +69,5 @@ const AppMessages appMessagesAr = AppMessages(
   reconnecting: 'جارٍ إعادة الاتصال…',
   syncing: 'جارٍ المزامنة…',
   showingSaved: 'عرض الرسائل المحفوظة',
+  syncFailed: 'تعذّرت المزامنة',
 );

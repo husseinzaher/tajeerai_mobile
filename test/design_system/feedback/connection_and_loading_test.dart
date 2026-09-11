@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tajeerai_mobile/app/theme/theme.dart';
+import 'package:tajeerai_mobile/design_system/display/status_dot.dart';
 import 'package:tajeerai_mobile/design_system/feedback/connection_banner.dart';
 import 'package:tajeerai_mobile/design_system/feedback/loading_state.dart';
 import 'package:tajeerai_mobile/design_system/feedback/status_banner.dart';
@@ -179,6 +181,130 @@ void main() {
       );
       await tester.pump();
       expect(find.byType(AppSkeleton), findsNWidgets(6));
+    });
+  });
+
+  group('AppConnectionDot', () {
+    Future<void> pump(
+      WidgetTester tester,
+      Widget child, {
+      Locale locale = const Locale('en'),
+      TextDirection direction = TextDirection.ltr,
+    }) async {
+      await tester.pumpWidget(
+        wrapWidget(child, locale: locale, textDirection: direction),
+      );
+      await tester.pump();
+    }
+
+    testWidgets('says nothing while current, which also means not yet asked', (
+      WidgetTester tester,
+    ) async {
+      await pump(
+        tester,
+        const AppConnectionDot(status: AppConnectionStatus.current),
+      );
+
+      expect(find.byType(AppStatusDot), findsNothing);
+    });
+
+    testWidgets('every other state carries its own words', (
+      WidgetTester tester,
+    ) async {
+      final Map<AppConnectionStatus, String> words =
+          <AppConnectionStatus, String>{
+            AppConnectionStatus.syncing: appMessagesEn.syncing,
+            AppConnectionStatus.offline: appMessagesEn.offline,
+            AppConnectionStatus.failed: appMessagesEn.syncFailed,
+          };
+
+      for (final MapEntry<AppConnectionStatus, String> entry in words.entries) {
+        await pump(tester, AppConnectionDot(status: entry.key));
+
+        expect(
+          tester.widget<AppStatusDot>(find.byType(AppStatusDot)).semanticLabel,
+          entry.value,
+          reason: entry.key.name,
+        );
+      }
+      // Offline and failed share a colour, so the words are all that tells
+      // them apart. They must not be the same words.
+      expect(words.values.toSet(), hasLength(words.length));
+    });
+
+    testWidgets('it and the banner never disagree about the same moment', (
+      WidgetTester tester,
+    ) async {
+      for (final AppConnectionStatus status in AppConnectionStatus.values) {
+        await pump(
+          tester,
+          Column(
+            children: <Widget>[
+              AppConnectionBanner(status: status),
+              AppConnectionDot(status: status),
+            ],
+          ),
+        );
+
+        final Finder banner = find.byType(AppStatusBanner);
+        final Finder dot = find.byType(AppStatusDot);
+        expect(
+          dot.evaluate().length,
+          banner.evaluate().length,
+          reason: '${status.name}: drawn by one and not the other',
+        );
+
+        if (banner.evaluate().isNotEmpty) {
+          final TajeerColors colors = tester.element(dot).colors;
+          expect(
+            tester.widget<AppStatusDot>(dot).color == colors.warningDefault,
+            tester.widget<AppStatusBanner>(banner).tone ==
+                AppStatusTone.warning,
+            reason: '${status.name}: a warning in one is a warning in both',
+          );
+        }
+      }
+    });
+
+    testWidgets("its words go on screen when asked, in the reader's language", (
+      WidgetTester tester,
+    ) async {
+      await pump(
+        tester,
+        const AppConnectionDot(
+          status: AppConnectionStatus.failed,
+          showLabel: true,
+        ),
+        locale: const Locale('ar'),
+        direction: TextDirection.rtl,
+      );
+
+      expect(find.textContaining('تعذّرت المزامنة'), findsOneWidget);
+      expect(find.bySemanticsLabel('تعذّرت المزامنة'), findsOneWidget);
+    });
+
+    testWidgets('the dot leads its words from the start edge', (
+      WidgetTester tester,
+    ) async {
+      for (final TextDirection direction in TextDirection.values) {
+        await pump(
+          tester,
+          const AppConnectionDot(
+            status: AppConnectionStatus.offline,
+            showLabel: true,
+          ),
+          direction: direction,
+        );
+
+        final double dot = tester.getCenter(find.byType(AppStatusDot)).dx;
+        final double whole = tester.getCenter(find.byType(AppConnectionDot)).dx;
+
+        if (direction == TextDirection.ltr) {
+          expect(dot, lessThan(whole), reason: 'ltr start = left');
+        } else {
+          expect(dot, greaterThan(whole), reason: 'rtl start = right');
+        }
+      }
     });
   });
 }
