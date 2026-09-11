@@ -62,6 +62,69 @@ void main() {
     });
   });
 
+  group('clearWorkspaceData', () {
+    test('empties every table', () async {
+      await database
+          .into(database.conversations)
+          .insert(
+            ConversationsCompanion.insert(
+              id: 'c1',
+              state: ConversationStateRow.open,
+              createdAt: testEpoch,
+            ),
+          );
+      await database
+          .into(database.messages)
+          .insert(
+            MessagesCompanion.insert(
+              id: 'm1',
+              conversationId: 'c1',
+              direction: MessageDirectionRow.outbound,
+              state: MessageStateRow.sent,
+              createdAt: testEpoch,
+            ),
+          );
+      await database.syncDao.markSynchronized(
+        'conversations',
+        syncedAt: testEpoch,
+        now: testEpoch,
+      );
+      await database.syncDao.registerEvent(
+        eventId: 'e1',
+        eventName: 'conversation.updated',
+        now: testEpoch,
+      );
+
+      await database.clearWorkspaceData();
+
+      // Every table, not the ones this test filled: the next member on this
+      // device must not inherit anything, including tables added later.
+      for (final table in database.allTables) {
+        final count = await database
+            .customSelect('SELECT COUNT(*) AS n FROM ${table.actualTableName}')
+            .getSingle();
+
+        expect(count.read<int>('n'), 0, reason: table.actualTableName);
+      }
+    });
+
+    test('defers foreign-key checks only while it runs', () async {
+      await database.clearWorkspaceData();
+
+      final deferred = await database
+          .customSelect('PRAGMA defer_foreign_keys')
+          .getSingle();
+      final enforced = await database
+          .customSelect('PRAGMA foreign_keys')
+          .getSingle();
+
+      // A deferral that outlived the clear would let every later write
+      // break a foreign key until the next commit noticed.
+      expect(deferred.data.values.first, 0);
+      expect(enforced.data.values.first, 1);
+    });
+  });
+
   group('conversations table', () {
     test('inserts and reads back a row', () async {
       await database

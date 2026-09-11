@@ -38,8 +38,11 @@ const Map<String, double> _criticalAreas = <String, double>{
 /// An exclusion is a claim that a file cannot be meaningfully unit-tested, not
 /// a way to make a number look better. Every entry below is one of:
 ///
-/// - **generated output** -- the builder's responsibility, and a test would
-///   assert on a generator's behaviour rather than this project's;
+/// - **generated output** -- `.g.dart`, `.freezed.dart`, and the `.steps.dart`
+///   schema snapshots `make migrations` writes. The generator's
+///   responsibility, and a test would assert on its behaviour rather than
+///   this project's. The migration steps written against those snapshots are
+///   not generated, and `migration_test.dart` runs them;
 /// - **`main.dart`** -- the composition root. Covering it means booting the
 ///   whole app to satisfy a number; `dependencies_test.dart` covers the graph
 ///   it wires instead;
@@ -61,6 +64,7 @@ bool _isExcluded(String path) {
 
   return path.endsWith('.g.dart') ||
       path.endsWith('.freezed.dart') ||
+      path.endsWith('.steps.dart') ||
       path.endsWith('_tables.dart') ||
       excludedFiles.contains(path);
 }

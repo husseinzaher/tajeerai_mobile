@@ -151,6 +151,7 @@ change — never to describe a violation after the fact. When it does change:
 | A socket command | `features/<f>/data/remote/` |
 | Socket event handling | `features/<f>/realtime/` |
 | Dependency wiring | `app/bootstrap/dependencies.dart` |
+| A database schema change | `infrastructure/database/migrations/schema_migrations.dart`, then `make migrations` |
 | A shared component | `design_system/`, reached via `design_system.dart` |
 | The signed-in frame (drawer, bottom bar) | `app/shell/authenticated_shell.dart`, built from `design_system/shell/` |
 | A colour, type step or spacing value | `design/tokens.json`, generated into `app/theme/tokens.g.dart` |

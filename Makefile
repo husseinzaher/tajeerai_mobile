@@ -2,7 +2,7 @@
 #
 # Flutter is invoked by name; ensure it is on your PATH.
 
-.PHONY: help setup tokens tokens-check generate watch arch format format-check analyze \
+.PHONY: help setup tokens tokens-check generate watch migrations arch format format-check analyze \
         test golden golden-update coverage verify clean run run-staging run-prod \
         showcase showcase-build \
         build-prod build-staging
@@ -19,6 +19,7 @@ help:
 	@echo "tokens-check  Fail if the generated theme is stale"
 	@echo "generate      Regenerate the theme, drift, Riverpod and JSON sources"
 	@echo "watch         Regenerate continuously while developing"
+	@echo "migrations    Snapshot a new database schema version"
 	@echo "run           Run against $(ENV_FILE)"
 	@echo "showcase      Run the design system on its own, in a browser"
 	@echo "run-staging   Run against .env.staging"
@@ -52,6 +53,14 @@ generate: tokens
 
 watch:
 	dart run build_runner watch --delete-conflicting-outputs
+
+# After changing a table and bumping SchemaMigrations.version. Snapshots the
+# schema into drift_schemas/, regenerates the stepByStep helper beside the
+# database, and the schemas the migration tests open. Formats what it wrote,
+# because the generator's output is committed.
+migrations:
+	dart run drift_dev make-migrations
+	dart format lib/infrastructure/database test/drift
 
 run:
 	flutter run --dart-define-from-file=$(ENV_FILE)

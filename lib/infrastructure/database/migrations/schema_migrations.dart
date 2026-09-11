@@ -1,5 +1,7 @@
 import 'package:drift/drift.dart';
 
+import '../app_database.steps.dart';
+
 /// Schema versioning and indexes.
 ///
 /// Kept out of `AppDatabase` so the migration history stays readable as it
@@ -7,13 +9,20 @@ import 'package:drift/drift.dart';
 /// longest file in the project by version 5.
 ///
 /// Rules for adding a version:
-/// 1. Bump [version].
-/// 2. Add an `if (from <= n)` block to [strategy]'s `onUpgrade`. Never edit an
-///    existing block -- a shipped migration has already run on real devices.
-/// 3. Add a migration test.
+/// 1. Change the tables, and bump [version].
+/// 2. Run `make migrations`. It snapshots the new schema into
+///    `drift_schemas/` and regenerates `app_database.steps.dart`, which gives
+///    `stepByStep` a required `fromNToM` for the new step, along with the
+///    schemas the migration tests open.
+/// 3. Write that step in [strategy]. A step works against its own version's
+///    snapshot, so a later table change cannot break it. Never edit a step
+///    that has shipped -- it has already run on real devices.
+/// 4. When the step moves or reshapes existing rows, add a data test to
+///    `test/drift/app_database/migration_test.dart`.
 abstract final class SchemaMigrations {
   /// v1 -- conversations, messages, session, outbox, sync metadata.
-  static const int version = 1;
+  /// v2 -- `sync_states.page_cursor`, for the paged HTTP syncs.
+  static const int version = 2;
 
   static MigrationStrategy strategy(GeneratedDatabase database) {
     return MigrationStrategy(
@@ -21,9 +30,14 @@ abstract final class SchemaMigrations {
         await migrator.createAll();
         await _createIndexes(database, migrator);
       },
-      onUpgrade: (Migrator migrator, int from, int to) async {
-        // No upgrades yet. Each future version appends its own block here.
-      },
+      onUpgrade: stepByStep(
+        from1To2: (Migrator migrator, Schema2 schema) async {
+          await migrator.addColumn(
+            schema.syncStates,
+            schema.syncStates.pageCursor,
+          );
+        },
+      ),
       beforeOpen: (OpeningDetails details) async {
         // Drift does not enforce foreign keys unless asked, and the messages
         // -> conversations relation is only useful if it is actually enforced.
@@ -37,6 +51,9 @@ abstract final class SchemaMigrations {
   /// Written out rather than left to SQLite: every one of these backs a query
   /// that runs on a screen, and without them the rail degrades to a full scan
   /// once a workspace has a few thousand threads.
+  ///
+  /// Only a fresh install runs this. A version that adds an index creates it
+  /// in its own step as well, or upgraded devices never get it.
   static Future<void> _createIndexes(
     GeneratedDatabase database,
     Migrator migrator,

@@ -68,4 +68,26 @@ class AppDatabase extends _$AppDatabase {
 
   @override
   MigrationStrategy get migration => SchemaMigrations.strategy(this);
+
+  /// Empties every table, for sign-out.
+  ///
+  /// Everything in this database belongs to the workspace that was signed in
+  /// -- its conversations, its session, its outbox, its sync cursors -- and
+  /// leaving any of it for the next member would be a data leak, not a cache
+  /// hit. It walks [allTables] rather than a list, so a table added later is
+  /// wiped without anyone remembering to add it. Anything that must outlive a
+  /// session does not belong in this database.
+  Future<void> clearWorkspaceData() {
+    return transaction(() async {
+      // No table declares a foreign key yet. The first that does would make
+      // this walk depend on the order tables are listed in, so the check is
+      // deferred to the commit, when every table is already empty. SQLite
+      // turns the deferral off again at the end of the transaction.
+      await customStatement('PRAGMA defer_foreign_keys = ON');
+
+      for (final TableInfo<Table, Object?> table in allTables) {
+        await delete(table).go();
+      }
+    });
+  }
 }

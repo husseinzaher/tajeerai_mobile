@@ -30,6 +30,29 @@ class SyncDao extends DatabaseAccessor<AppDatabase> with _$SyncDaoMixin {
   Future<DateTime?> cursorFor(String scope) async =>
       (await stateOf(scope))?.syncedAt;
 
+  /// Where a paged HTTP sync of [scope] resumes, or null when it has nothing
+  /// to resume. See `SyncStates.pageCursor`.
+  Future<String?> pageCursorFor(String scope) async =>
+      (await stateOf(scope))?.pageCursor;
+
+  /// Stores where a paged HTTP sync of [scope] resumes, or clears it with
+  /// null once there is nothing left to carry on.
+  ///
+  /// Call it inside the transaction that writes the page it follows: a process
+  /// killed mid-walk then resumes after the last page that actually landed,
+  /// never after one that did not. Nothing else about the scope changes.
+  Future<void> savePageCursor(String scope, String? cursor) async {
+    await into(syncStates).insert(
+      SyncStatesCompanion.insert(
+        scope: scope,
+        pageCursor: Value<String?>(cursor),
+      ),
+      onConflict: DoUpdate(
+        (_) => SyncStatesCompanion(pageCursor: Value<String?>(cursor)),
+      ),
+    );
+  }
+
   Future<void> markSyncing(String scope, {required DateTime now}) async {
     await into(syncStates).insertOnConflictUpdate(
       SyncStatesCompanion.insert(
@@ -144,12 +167,5 @@ class SyncDao extends DatabaseAccessor<AppDatabase> with _$SyncDaoMixin {
     return (delete(
       processedEvents,
     )..where((row) => row.processedAt.isSmallerThanValue(before))).go();
-  }
-
-  /// Clears all synchronisation state. Used on sign-out, so the next user
-  /// does not inherit the previous one's cursors.
-  Future<void> clear() async {
-    await delete(syncStates).go();
-    await delete(processedEvents).go();
   }
 }

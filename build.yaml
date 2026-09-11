@@ -22,3 +22,13 @@ targets:
 
           # Generated table classes are named after the row, not the table.
           named_parameters: true
+
+          # Read by `dart run drift_dev make-migrations`, never by the build:
+          # which database to snapshot, where each version's schema snapshot
+          # is kept, and where the migration tests generated from those
+          # snapshots go. See `migrations/schema_migrations.dart` for when to
+          # run it.
+          databases:
+            app_database: lib/infrastructure/database/app_database.dart
+          schema_dir: drift_schemas/
+          test_dir: test/drift/

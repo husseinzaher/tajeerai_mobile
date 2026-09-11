@@ -313,12 +313,33 @@ Properties, each tested:
   returns the current state of affected rows rather than an event replay:
   smaller after a long absence, and impossible to apply out of order.
 - **Reconnect** — catch up, then recover and drain the outbox.
+- **Paged HTTP lists** — customers, orders and products have no server cursor,
+  only numbered pages that shift as rows change. Such a scope keeps its own
+  resume position in `SyncStates.pageCursor`, written in the transaction that
+  writes the page it follows, so an abandoned walk resumes after the last page
+  that landed.
 
 The cursor advances **only** on a confirmed success, using the server's own
 `syncedAt` — never the device clock, which may be minutes fast. A failed pass
 leaves the cursor alone so the next attempt re-requests the same window.
 Advancing past an unconfirmed window is how a client silently skips a day of
 messages.
+
+### Schema versions
+
+Every shipped schema version is snapshotted in `drift_schemas/`. Each upgrade
+is a `fromNToM` step in `SchemaMigrations`, written against its own version's
+snapshot, so a later table change cannot break an old step. `make migrations`
+writes the snapshot, the `stepByStep` helper and the schemas the migration
+tests open. `test/drift/app_database/migration_test.dart` upgrades every
+snapshot to every later version and checks the result is exactly what a new
+install creates. A shipped step is never edited — it has already run on real
+devices.
+
+Sign-out empties every table through `AppDatabase.clearWorkspaceData()`, which
+walks the database's own table list. A new table is wiped without being
+registered anywhere, and anything that must outlive a session does not belong
+in this database.
 
 ---
 

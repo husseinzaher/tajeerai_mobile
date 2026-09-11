@@ -192,25 +192,61 @@ void main() {
     });
   });
 
-  group('clear', () {
-    test('wipes cursors and deduplication records', () async {
+  group('page cursor', () {
+    const customers = 'customers';
+
+    test('is null for a scope that has never walked', () async {
+      expect(await database.syncDao.pageCursorFor(customers), isNull);
+    });
+
+    test('is stored and read back as written', () async {
+      await database.syncDao.savePageCursor(customers, '{"page":7}');
+
+      expect(await database.syncDao.pageCursorFor(customers), '{"page":7}');
+    });
+
+    test('clears with null once there is nothing to resume', () async {
+      await database.syncDao.savePageCursor(customers, '{"page":7}');
+      await database.syncDao.savePageCursor(customers, null);
+
+      expect(await database.syncDao.pageCursorFor(customers), isNull);
+    });
+
+    test('leaves the rest of the scope as it was', () async {
+      final serverTime = testEpoch.add(const Duration(minutes: 3));
       await database.syncDao.markSynchronized(
-        scope,
+        customers,
+        syncedAt: serverTime,
+        now: clock(),
+      );
+
+      await database.syncDao.savePageCursor(customers, '{"page":2}');
+
+      final state = await database.syncDao.stateOf(customers);
+      expect(state?.status, SyncStatus.synchronized);
+      expect(state?.syncedAt, serverTime);
+    });
+
+    test('survives every status change', () async {
+      // A walk interrupted by a failure, going offline or a new attempt must
+      // pick up where it stopped rather than start again.
+      await database.syncDao.savePageCursor(customers, '{"page":4}');
+
+      await database.syncDao.markSyncing(customers, now: clock());
+      expect(await database.syncDao.pageCursorFor(customers), '{"page":4}');
+
+      await database.syncDao.markFailed(customers, now: clock(), error: 'x');
+      expect(await database.syncDao.pageCursorFor(customers), '{"page":4}');
+
+      await database.syncDao.markStale(customers);
+      expect(await database.syncDao.pageCursorFor(customers), '{"page":4}');
+
+      await database.syncDao.markSynchronized(
+        customers,
         syncedAt: testEpoch,
         now: clock(),
       );
-      await database.syncDao.registerEvent(
-        eventId: 'e1',
-        eventName: 'x',
-        now: clock(),
-      );
-
-      await database.syncDao.clear();
-
-      // The next user on this device must not inherit the previous one's
-      // cursors.
-      expect(await database.syncDao.stateOf(scope), isNull);
-      expect(await database.syncDao.hasProcessed('e1'), isFalse);
+      expect(await database.syncDao.pageCursorFor(customers), '{"page":4}');
     });
   });
 

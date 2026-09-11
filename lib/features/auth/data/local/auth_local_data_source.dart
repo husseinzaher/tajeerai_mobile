@@ -127,17 +127,12 @@ class AuthLocalDataSource {
 
   /// Wipes everything tied to the session.
   ///
-  /// Clears the *business* tables too. Conversations and messages belong to
-  /// the workspace that was signed in; leaving them for the next user to read
+  /// Clears the *business* tables too -- every one of them, including those a
+  /// later feature adds. Conversations, customers and orders belong to the
+  /// workspace that was signed in; leaving them for the next user to read
   /// would be a data leak, not a cache hit.
   Future<void> clear() async {
-    await _database.transaction(() async {
-      await _database.delete(_database.sessionUsers).go();
-      await _database.delete(_database.messages).go();
-      await _database.delete(_database.conversations).go();
-      await _database.delete(_database.outboxEntries).go();
-      await _database.syncDao.clear();
-    });
+    await _database.clearWorkspaceData();
 
     await _secureStorage.clear();
   }

@@ -21,6 +21,15 @@ class SyncStates extends Table {
   /// sequence number.
   DateTimeColumn get syncedAt => dateTime().nullable()();
 
+  /// Where a sync over one of the paged HTTP lists resumes.
+  ///
+  /// Those lists are numbered pages with no server cursor, and a page number
+  /// alone drifts as rows are added or changed mid-walk. So each scope's
+  /// syncer stores what it needs to carry on without skipping a row, in its
+  /// own form -- opaque to this table. Null for the scopes the socket syncs,
+  /// which resume from [syncedAt].
+  TextColumn get pageCursor => text().nullable()();
+
   TextColumn get status =>
       textEnum<SyncStatus>().withDefault(Constant(SyncStatus.idle.name))();
 
