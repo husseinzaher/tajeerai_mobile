@@ -35,6 +35,7 @@ void main() {
     sections.firstWhere((ShowcaseSection s) => s.title == 'Authentication'),
     sections.firstWhere((ShowcaseSection s) => s.title == 'App shell'),
     sections.firstWhere((ShowcaseSection s) => s.title == 'Channels'),
+    sections.firstWhere((ShowcaseSection s) => s.title == 'Inbox'),
   ];
 
   for (final ShowcaseSection section in captured) {
