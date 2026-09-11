@@ -37,6 +37,7 @@ void main() {
     sections.firstWhere((ShowcaseSection s) => s.title == 'Channels'),
     sections.firstWhere((ShowcaseSection s) => s.title == 'Inbox'),
     sections.firstWhere((ShowcaseSection s) => s.title == 'Messaging'),
+    sections.firstWhere((ShowcaseSection s) => s.title == 'Composer and media'),
   ];
 
   for (final ShowcaseSection section in captured) {
