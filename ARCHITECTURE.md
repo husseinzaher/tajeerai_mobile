@@ -391,7 +391,8 @@ Rules:
 - Layouts use logical directions (`start`/`end`, `EdgeInsetsDirectional`) so
   Arabic and English share one implementation.
 - Generic components go in `design_system/`; business-aware widgets stay in
-  their feature. `AppButton` is shared, `MessageBubble` is not.
+  their feature. `AppButton` and `AppMessageBubble` are shared; what a
+  conversation or a message *is* stays in the feature.
 - Every widget carries the `App` prefix. Not taste: `Card`, `Divider`,
   `Switch`, `Checkbox`, `Radio`, `Badge`, `Chip`, `Dialog`, `Banner`, `Drawer`,
   `Tooltip` and `ListTile` all collide with `material.dart`, which every one of
@@ -569,6 +570,35 @@ draws as the wrong thing.
 Two parts are built and have nothing to show yet: inbound typing, which no
 event carries, and the unread marker, which needs a read position the device
 does not keep — the count is cleared as the thread opens.
+
+### Composing, and what the design system will not own
+
+`AppComposer` decides its controls from `AppChannelCapabilities`, never from a
+channel's name: the paperclip needs a channel that carries files *and* an app
+that can pick one, the microphone a channel that carries voice *and* an app
+that can record, the reply strip a channel that takes replies. `onSend` returns
+whether the app took the message, and only a yes empties the field — an offline
+failure never costs a member what they typed. The screen owns the
+`AppComposerController`, so a reply started from a long press or a file added
+from a picker reaches the composer without either reaching into it.
+
+Three things the design system draws and deliberately does not do:
+
+- **Play audio.** `AppAudioMessage` takes an `AppAudioController`, an interface
+  the app implements over whichever player it chooses. Without one, a voice note
+  is drawn and cannot play.
+- **Open files or pictures.** Previews report a tap; opening is the app's, so
+  the design system never learns the router.
+- **Record.** `AppVoiceRecordButton` reports hold, release and slide-to-cancel,
+  with a tap alternative for a screen reader that cannot hold.
+
+The thread screen wires what the send path can carry today — text, plus copy,
+retry and discard from the long-press menu. Attachments, voice notes, replies,
+reactions and quick replies are built and shown in the showcase, and appear in
+the screen when the send path and the data behind them exist.
+
+The composer's failures reach the screen as a `ComposerError` reason, and the
+screen words it. A controller holding sentences put English on Arabic screens.
 
 ## 13. Testing rules
 
