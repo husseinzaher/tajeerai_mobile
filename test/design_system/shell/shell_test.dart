@@ -729,23 +729,25 @@ void main() {
   });
 
   group('AppScaffold', () {
-    testWidgets(
-      'draws the toolbar it is given, never the older bar beside it',
-      (WidgetTester tester) async {
-        await tester.pumpWidget(
-          wrapWidget(
-            const AppScaffold(
-              toolbar: AppToolbar(title: 'New'),
-              title: 'Old',
-              body: SizedBox.shrink(),
-            ),
+    testWidgets('draws the toolbar it is given, and no bar without one', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        wrapWidget(
+          const AppScaffold(
+            toolbar: AppToolbar(title: 'New'),
+            body: SizedBox.shrink(),
           ),
-        );
+        ),
+      );
 
-        expect(find.text('New'), findsOneWidget);
-        expect(find.text('Old'), findsNothing);
-        expect(find.byType(AppBar), findsOneWidget);
-      },
-    );
+      expect(find.text('New'), findsOneWidget);
+      expect(find.byType(AppBar), findsOneWidget);
+
+      await tester.pumpWidget(
+        wrapWidget(const AppScaffold(body: SizedBox.shrink())),
+      );
+      expect(find.byType(AppBar), findsNothing);
+    });
   });
 }
