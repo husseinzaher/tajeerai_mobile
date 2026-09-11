@@ -108,6 +108,16 @@ void main() {
       expect(find.text('invoice.pdf'), findsOneWidget);
       expect(find.text('471 KB'), findsOneWidget);
       expect(find.bySemanticsLabel('invoice.pdf, 471 KB'), findsOneWidget);
+      // Identifiers, left to right in either language: in Arabic a size laid
+      // out right to left reads "KB 471".
+      expect(
+        tester.widget<Text>(find.text('471 KB')).textDirection,
+        TextDirection.ltr,
+      );
+      expect(
+        tester.widget<Text>(find.text('invoice.pdf')).textDirection,
+        TextDirection.ltr,
+      );
     });
 
     testWidgets('a voice note plays through the app\'s controller', (

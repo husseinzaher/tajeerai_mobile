@@ -171,10 +171,14 @@ class AppFilePreview extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      AppBidiText(
+                      // A file name and a size are identifiers, read left to right in
+                      // either language the way a phone number is: laid out in
+                      // Arabic, "471 KB" reads "KB 471".
+                      Text(
                         name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
+                        textDirection: TextDirection.ltr,
                         style: context.type.labelMd.copyWith(
                           color: colors.textPrimary,
                         ),
@@ -182,6 +186,7 @@ class AppFilePreview extends StatelessWidget {
                       if (size != null)
                         Text(
                           size,
+                          textDirection: TextDirection.ltr,
                           style: context.type.caption.copyWith(
                             color: colors.textMuted,
                           ),
