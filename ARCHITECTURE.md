@@ -44,12 +44,15 @@ lib/
 │   ├── config/
 │   │   ├── app_config.dart    Resolved configuration for one run.
 │   │   └── environment.dart   Which deployment this build points at.
-│   ├── theme/                 Design tokens: colors, typography, spacing, radii, shadows, motion.
+│   ├── theme/                 Generated from design/tokens.json, plus the accessors and the preset lookup.
 │   └── localization/          Locale selection and copy.
 │
 ├── design_system/             Business-agnostic UI. Knows nothing about conversations or auth.
 │   ├── design_system.dart     The barrel. The only door a feature may use.
 │   ├── primitives/ buttons/ inputs/ display/ cards/ feedback/ loaders/ overlays/ layouts/
+│   ├── auth/                  The frame and the parts of every unauthenticated screen.
+│   ├── localization/          The copy components render on their own behalf.
+│   └── showcase/              The debug-only gallery. The same components, never copies.
 │
 ├── infrastructure/            Technical implementations. Business-agnostic.
 │   ├── realtime/              Generic socket engine: connect, reconnect, authenticate, encode.
@@ -364,10 +367,17 @@ this document, not a convenience.
 
 ## 12. Design system
 
-`packages/tajeerai-design-system/tokens.json` is the source of truth for every
-colour, type step, radius, spacing step and motion value. `lib/app/theme/`
-transcribes it, and `test/app/theme/tokens_parity_test.dart` checks the
-transcription against the file so the two platforms cannot drift.
+`design/tokens.json` is the source of truth for every colour, type step,
+radius, spacing step, elevation and motion value. `tool/build_tokens.dart`
+generates `lib/app/theme/tokens.g.dart` from it; nothing is transcribed by hand.
+
+It is deliberately **not** `packages/tajeerai-design-system/tokens.json`. This
+client used to hand-copy the web palette, with a parity test binding the two —
+a test that read a path a submodule checkout does not have, so CI skipped it
+while it failed on every developer's machine. Mobile and web are two design
+systems that share a brand. `tokens_completeness_test.dart` and
+`contrast_test.dart` walk the mobile token file itself, so a token added there
+and never emitted fails the build rather than going unnoticed.
 
 Rules:
 
@@ -580,12 +590,22 @@ Recorded so they are decisions, not omissions.
   `analyzer ^8` while `riverpod_generator` 4.x requires `^13`. Rechecked after
   a full `pub upgrade --major-versions`; still unresolvable upstream. Revisit
   when `custom_lint` moves.
-- **Bundled fonts.** `IBM Plex Sans Arabic` is requested by name with a fallback
-  stack; the face is not yet shipped as an asset.
 - **Push notifications.** `infrastructure/notifications/` is intentionally
   empty — no provider has been chosen, and an empty abstraction would be a
   guess.
 - **Media download and attachment rendering.** `FileStorage` provides the
   location; the flow is not built.
 - **Localization.** `AppStrings` is a plain map with the shape `gen-l10n`
-  produces. Moving to ARB is mechanical when the copy volume justifies it.
+  produces, read through `appStringsProvider`. Moving to ARB is mechanical when
+  the copy volume justifies it. The design system's own chrome is not in it —
+  that lives in `AppMessages`, and a key in both would drift. Only the sign-in
+  screen reads it so far; the conversation screens still hold English literals
+  until they are moved onto the design system.
+- **The logo is a placeholder.** No logo asset exists in the repository.
+  `AppBrandLogo` draws an obvious stand-in and carries `TODO(brand)`. Replace
+  the mark inside it when the asset arrives, not the component.
+- **Social sign-in, "forgot password" and "create an account".** The reference
+  design draws all three and the sign-in screen draws none, because nothing sits
+  behind them on mobile yet — a control that goes nowhere is worse than an
+  absent one. `AppSocialButton` is built and documented in the showcase for the
+  day the OAuth flow exists.
