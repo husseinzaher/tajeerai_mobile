@@ -17,6 +17,7 @@ import '../../messaging/quick_reply_bar.dart';
 import '../../messaging/reply_preview.dart';
 import '../../messaging/voice_record_button.dart';
 import '../../shell/toolbar.dart';
+import '../showcase_fixtures.dart';
 import '../showcase_section.dart';
 
 /// Everything WhatsApp can carry, for the showcase alone.
@@ -97,14 +98,14 @@ ShowcaseSection composerSection() => ShowcaseSection(
         children: <Widget>[
           const AppReplyPreview(
             reply: AppReplyData(
-              authorName: 'سارة أحمد',
-              text: 'هل الطلب جاهز للاستلام اليوم؟',
+              authorName: ShowcaseFixtures.customer,
+              text: ShowcaseFixtures.question,
             ),
             onDismiss: _noop,
           ),
           const AppReplyPreview(
             reply: AppReplyData(
-              authorName: 'Lina Hassan',
+              authorName: ShowcaseFixtures.latinCustomer,
               kind: AppMessageKind.image,
             ),
           ),
@@ -125,6 +126,31 @@ ShowcaseSection composerSection() => ShowcaseSection(
           'A picture reports a tap and owns no gallery; a file shows its name '
           'and size; a voice note plays through a controller the app supplies.',
       builder: (BuildContext context) => const _AudioDemo(),
+    ),
+    ShowcaseExample(
+      name: 'Previews on their own',
+      description:
+          'What a bubble and the composer are built from. A picture still on '
+          'this device has nothing to fetch yet; a file waiting in the '
+          'composer can be taken out again; a voice note with no player is '
+          'drawn, and cannot play.',
+      builder: (BuildContext context) => const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: TajeerSpacing.sm,
+        children: <Widget>[
+          AppImagePreview(
+            attachment: AppAttachmentData(name: 'product.jpg'),
+            width: 160,
+            height: 120,
+          ),
+          AppFilePreview(attachment: _invoice),
+          AppAudioMessage(
+            attachment: _voiceNote,
+            duration: Duration(seconds: 42),
+          ),
+          AppAttachmentPreview(attachment: _invoice, onRemove: _noop),
+        ],
+      ),
     ),
     ShowcaseExample(
       name: 'Links and reactions',
@@ -207,8 +233,8 @@ class _ComposerDemoState extends State<_ComposerDemo> {
   final AppComposerController _controller = AppComposerController()
     ..startReply(
       const AppReplyData(
-        authorName: 'سارة أحمد',
-        text: 'هل الطلب جاهز للاستلام اليوم؟',
+        authorName: ShowcaseFixtures.customer,
+        text: ShowcaseFixtures.question,
       ),
     );
   bool _recording = false;
@@ -307,7 +333,7 @@ class _AudioDemoState extends State<_AudioDemo> {
           side: AppMessageSide.incoming,
           sentAt: DateTime(2026, 3, 12, 9, 13),
           kind: AppMessageKind.image,
-          text: 'هذا اللون',
+          text: ShowcaseFixtures.photoCaption,
           attachment: const AppAttachmentData(name: 'product.jpg'),
           replyTo: const AppReplyData(
             authorName: 'أحمد',
@@ -358,7 +384,7 @@ class _ActionsDemo extends StatelessWidget {
           id: 'x1',
           side: AppMessageSide.outgoing,
           sentAt: DateTime(2026, 3, 12, 9, 31),
-          text: 'رقم الطلب #1042',
+          text: ShowcaseFixtures.orderNumber,
           status: AppMessageStatus.notSent,
         ),
         onReply: _noop,
@@ -388,7 +414,7 @@ class _ThreadDemoState extends State<_ThreadDemo> {
   @override
   Widget build(BuildContext context) => AppConversationShell(
     toolbar: AppToolbar.conversation(
-      title: 'سارة أحمد',
+      title: ShowcaseFixtures.customer,
       subtitle: 'واتساب · المبيعات',
       onBack: _noop,
     ),
@@ -398,13 +424,13 @@ class _ThreadDemoState extends State<_ThreadDemo> {
           id: 't1',
           side: AppMessageSide.incoming,
           sentAt: DateTime(2026, 3, 12, 9, 12),
-          text: 'هل الطلب جاهز للاستلام اليوم؟',
+          text: ShowcaseFixtures.question,
         ),
         AppMessageData(
           id: 't2',
           side: AppMessageSide.outgoing,
           sentAt: DateTime(2026, 3, 12, 9, 20),
-          text: 'نعم، يصلك خلال ساعتين.',
+          text: ShowcaseFixtures.answer,
           status: AppMessageStatus.read,
         ),
       ]),

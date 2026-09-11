@@ -16,9 +16,12 @@ import '../../display/segmented_control.dart';
 import '../../display/status_dot.dart';
 import '../../display/tabs.dart';
 import '../../display/separator.dart';
+import '../../feedback/async_view.dart';
+import '../../feedback/connection_banner.dart';
 import '../../feedback/empty_state.dart';
 import '../../feedback/error_state.dart';
 import '../../feedback/inline_error.dart';
+import '../../feedback/loading_state.dart';
 import '../../feedback/progress_bar.dart';
 import '../../feedback/status_banner.dart';
 import '../../feedback/tooltip.dart';
@@ -30,12 +33,16 @@ import '../../inputs/app_text_field.dart';
 import '../../inputs/otp_field.dart';
 import '../../inputs/password_field.dart';
 import '../../inputs/search_field.dart';
+import '../../loaders/app_splash.dart';
 import '../../loaders/skeleton.dart';
 import '../../loaders/spinner.dart';
 import '../../overlays/action_sheet.dart';
 import '../../overlays/app_bottom_sheet.dart';
 import '../../overlays/app_dialog.dart';
 import '../../overlays/app_snackbar.dart';
+import '../../primitives/bidi_text.dart';
+import '../../primitives/pressable.dart';
+import '../showcase_fixtures.dart';
 import '../showcase_section.dart';
 
 ShowcaseSection buttonsSection() => ShowcaseSection(
@@ -124,6 +131,22 @@ ShowcaseSection buttonsSection() => ShowcaseSection(
         expand: true,
         trailing: const Icon(LucideIcons.arrowLeft),
         onPressed: () {},
+      ),
+    ),
+    ShowcaseExample(
+      name: 'Pressable',
+      description:
+          'The surface under everything tappable. A press washes it rather '
+          'than recolouring it, so the same component reads on any '
+          'background. Its scale comes from context.motion, which is where '
+          'reduced motion is decided — no component checks for it.',
+      builder: (BuildContext context) => AppPressable(
+        onTap: () {},
+        borderRadius: TajeerRadii.lgAll,
+        child: Padding(
+          padding: const EdgeInsets.all(TajeerSpacing.md),
+          child: Text('طلب #1042 — اضغط هنا', style: context.type.bodyMd),
+        ),
       ),
     ),
   ],
@@ -229,7 +252,7 @@ ShowcaseSection displaySection() => ShowcaseSection(
       builder: (BuildContext context) => const Row(
         spacing: TajeerSpacing.sm,
         children: <Widget>[
-          AppAvatar(name: 'سارة أحمد'),
+          AppAvatar(name: ShowcaseFixtures.customer),
           AppAvatar(name: 'Nour Store', size: 32),
           AppAvatar(name: 'خالد عبدالله', size: 56),
         ],
@@ -254,8 +277,14 @@ ShowcaseSection displaySection() => ShowcaseSection(
           Row(
             spacing: TajeerSpacing.md,
             children: <Widget>[
-              AppAvatar(name: 'سارة أحمد', presence: AppPresence.online),
-              AppAvatar(name: 'محمد علي', presence: AppPresence.away),
+              AppAvatar(
+                name: ShowcaseFixtures.customer,
+                presence: AppPresence.online,
+              ),
+              AppAvatar(
+                name: ShowcaseFixtures.secondCustomer,
+                presence: AppPresence.away,
+              ),
               AppAvatar(name: 'خالد', presence: AppPresence.busy),
               AppAvatar(name: 'نورة', presence: AppPresence.offline),
               AppAvatar(name: 'ريم', presence: AppPresence.unknown),
@@ -264,6 +293,40 @@ ShowcaseSection displaySection() => ShowcaseSection(
           AppAvatarGroup(
             names: <String>['أحمد', 'سارة', 'خالد', 'نورة', 'محمد'],
           ),
+        ],
+      ),
+    ),
+    ShowcaseExample(
+      name: 'Status dots',
+      description:
+          'One primitive, and meanings that must not be swapped at a call '
+          'site: a person, and whether the data is current (under States). '
+          'The ring is a cutout, so a dot stays legible on a photograph.',
+      builder: (BuildContext context) => Row(
+        spacing: TajeerSpacing.md,
+        children: <Widget>[
+          for (final AppPresence presence in AppPresence.values)
+            AppPresenceDot(presence: presence, label: presence.name),
+          AppStatusDot(color: context.colors.primary, size: 14),
+        ],
+      ),
+    ),
+    ShowcaseExample(
+      name: 'Text somebody else wrote',
+      description:
+          'A customer writes in their own language. Laid out in the app\'s '
+          'direction, an English question in an Arabic list reads "?before it '
+          'ships". AppBidiText keeps the words\' own direction, and lines each '
+          'one up with the row.',
+      builder: (BuildContext context) => const Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: TajeerSpacing.xs,
+        children: <Widget>[
+          AppBidiText(
+            'Can I change the size before it ships?',
+            alignToAmbient: true,
+          ),
+          AppBidiText('هل يمكن تغيير المقاس قبل الشحن؟', alignToAmbient: true),
         ],
       ),
     ),
@@ -329,6 +392,10 @@ ShowcaseSection displaySection() => ShowcaseSection(
   ],
 );
 
+Widget _names(List<String> names) => Text(names.join('، '));
+
+bool _isEmpty(List<String> names) => names.isEmpty;
+
 ShowcaseSection statesSection() => ShowcaseSection(
   title: 'States',
   icon: LucideIcons.circleAlert,
@@ -343,6 +410,65 @@ ShowcaseSection statesSection() => ShowcaseSection(
           AppSkeleton.text(width: 220),
           AppSkeleton.text(width: 160),
           AppSkeleton.circle(),
+        ],
+      ),
+    ),
+    ShowcaseExample(
+      name: 'Loading, as a screen draws it',
+      description:
+          'A wait with no shape of its own is a spinner. A list on its way '
+          'draws rows shaped like the ones it stands in for, so nothing jumps '
+          'when the first real one lands. Either way it is one word to a '
+          'screen reader.',
+      builder: (BuildContext context) => const Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          AppLoadingState(),
+          // Whole rows: a placeholder cut in half reads as a rendering bug.
+          SizedBox(height: 160, child: AppLoadingState.list(rows: 2)),
+        ],
+      ),
+    ),
+    ShowcaseExample(
+      name: 'Splash',
+      description: 'Before the first screen has anything to say.',
+      builder: (BuildContext context) =>
+          const SizedBox(height: 120, child: AppSplash()),
+    ),
+    ShowcaseExample(
+      name: 'Async view',
+      description:
+          'The four states, drawn one way everywhere. Loaded and empty are one '
+          'value to the data layer and two different pictures here, so the '
+          'caller says what empty means for its own type.',
+      builder: (BuildContext context) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: TajeerSpacing.md,
+        children: <Widget>[
+          const AppAsyncView<List<String>>(
+            state: AppViewLoading<List<String>>(),
+            data: _names,
+          ),
+          AppAsyncView<List<String>>(
+            state: AppViewFailed<List<String>>(
+              'تعذّر تحميل القائمة.',
+              onRetry: () {},
+            ),
+            data: _names,
+          ),
+          const AppAsyncView<List<String>>(
+            state: AppViewLoaded<List<String>>(<String>[]),
+            isEmpty: _isEmpty,
+            data: _names,
+          ),
+          const AppAsyncView<List<String>>(
+            state: AppViewLoaded<List<String>>(<String>[
+              ShowcaseFixtures.customer,
+              ShowcaseFixtures.secondCustomer,
+            ]),
+            isEmpty: _isEmpty,
+            data: _names,
+          ),
         ],
       ),
     ),
@@ -402,6 +528,37 @@ ShowcaseSection statesSection() => ShowcaseSection(
         ],
       ),
     ),
+    ShowcaseExample(
+      name: 'Connection dot',
+      description:
+          'The connection banner, where there is no room for a sentence. Same '
+          'status, so the two never disagree. Nothing is drawn while current, '
+          'which also means not yet asked; and the words always reach a screen '
+          'reader, because offline and a failed catch-up share a colour.',
+      builder: (BuildContext context) => const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: TajeerSpacing.sm,
+        children: <Widget>[
+          AppConnectionDot(
+            status: AppConnectionStatus.syncing,
+            showLabel: true,
+          ),
+          AppConnectionDot(
+            status: AppConnectionStatus.offline,
+            showLabel: true,
+          ),
+          AppConnectionDot(status: AppConnectionStatus.failed, showLabel: true),
+          Row(
+            spacing: TajeerSpacing.sm,
+            children: <Widget>[
+              AppConnectionDot(status: AppConnectionStatus.current),
+              AppConnectionDot(status: AppConnectionStatus.syncing),
+              AppConnectionDot(status: AppConnectionStatus.offline),
+            ],
+          ),
+        ],
+      ),
+    ),
   ],
 );
 
@@ -448,7 +605,7 @@ ShowcaseSection overlaysSection() => ShowcaseSection(
         variant: AppButtonVariant.outline,
         onPressed: () => AppActionSheet.show(
           context: context,
-          title: 'سارة أحمد',
+          title: ShowcaseFixtures.customer,
           actions: <AppAction>[
             AppAction(
               label: 'تثبيت المحادثة',
@@ -550,10 +707,10 @@ class _ListDemoState extends State<_ListDemo> {
     children: <Widget>[
       AppListItem(
         leading: const AppAvatar(
-          name: 'سارة أحمد',
+          name: ShowcaseFixtures.customer,
           presence: AppPresence.online,
         ),
-        title: const Text('سارة أحمد'),
+        title: const Text(ShowcaseFixtures.customer),
         subtitle: const Text('مرحباً، هل المنتج ما زال متوفر؟'),
         meta: const Text('10:24'),
         trailing: AppBadge.count(3),
@@ -562,16 +719,19 @@ class _ListDemoState extends State<_ListDemo> {
         onTap: () => setState(() => _selected = 0),
       ),
       AppListItem(
-        leading: const AppAvatar(name: 'متجر النخبة'),
-        title: const Text('متجر النخبة'),
+        leading: const AppAvatar(name: ShowcaseFixtures.store),
+        title: const Text(ShowcaseFixtures.store),
         subtitle: const Text('تم شحن طلبك بنجاح'),
         meta: const Text('09:15'),
         selected: _selected == 1,
         onTap: () => setState(() => _selected = 1),
       ),
       AppListItem(
-        leading: const AppAvatar(name: 'محمد علي', presence: AppPresence.away),
-        title: const Text('محمد علي'),
+        leading: const AppAvatar(
+          name: ShowcaseFixtures.secondCustomer,
+          presence: AppPresence.away,
+        ),
+        title: const Text(ShowcaseFixtures.secondCustomer),
         subtitle: const Text('كم مدة التوصيل؟'),
         meta: const Text('أمس'),
         selected: _selected == 2,
@@ -672,7 +832,7 @@ class _SearchableSelectDemoState extends State<_SearchableSelectDemo> {
       ),
       AppSelectOption<String>(
         value: '2',
-        label: 'سارة أحمد',
+        label: ShowcaseFixtures.customer,
         description: 'خدمة العملاء',
       ),
       AppSelectOption<String>(
@@ -692,7 +852,7 @@ class _SearchableSelectDemoState extends State<_SearchableSelectDemo> {
       ),
       AppSelectOption<String>(
         value: '6',
-        label: 'محمد علي',
+        label: ShowcaseFixtures.secondCustomer,
         description: 'المبيعات',
       ),
       AppSelectOption<String>(

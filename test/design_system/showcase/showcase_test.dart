@@ -27,25 +27,16 @@ Future<void> _pump(WidgetTester tester, Widget child) async {
   await tester.pump(const Duration(milliseconds: 300));
 }
 
-List<String> _showcaseSources() {
-  const List<String> paths = <String>[
-    'lib/design_system/showcase/showcase_app.dart',
-    'lib/design_system/showcase/showcase_scaffold.dart',
-    'lib/design_system/showcase/showcase_section.dart',
-    'lib/design_system/showcase/showcase_registry.dart',
-    'lib/design_system/showcase/sections/foundations_section.dart',
-    'lib/design_system/showcase/sections/components_section.dart',
-    'lib/design_system/showcase/sections/authentication_section.dart',
-    'lib/design_system/showcase/sections/shell_section.dart',
-    'lib/design_system/showcase/sections/channels_section.dart',
-    'lib/design_system/showcase/sections/inbox_section.dart',
-    'lib/design_system/showcase/sections/messaging_section.dart',
-    'lib/design_system/showcase/sections/composer_section.dart',
-  ];
-  return <String>[
-    for (final String path in paths) File(path).readAsStringSync(),
-  ];
-}
+/// Every Dart file under showcase/, found rather than listed, so a section
+/// added later is held to the checks below without anybody remembering to add
+/// it here.
+List<String> _showcaseSources() => <String>[
+  for (final FileSystemEntity entity in Directory(
+    'lib/design_system/showcase',
+  ).listSync(recursive: true))
+    if (entity is File && entity.path.endsWith('.dart'))
+      entity.readAsStringSync(),
+];
 
 void main() {
   final List<ShowcaseSection> sections = showcaseSections();
@@ -143,6 +134,23 @@ void main() {
           );
           expect(tester.takeException(), isNull, reason: 'text scale $scale');
         }
+      });
+
+      testWidgets('${section.title} — with animations turned off', (
+        WidgetTester tester,
+      ) async {
+        // Reduced motion swaps what `context.motion` returns for zero
+        // durations and no press scale. A component that quietly assumed
+        // time passes breaks only for the people who turned animations off.
+        await _pump(
+          tester,
+          wrapWidget(
+            ShowcaseSectionView(section: section),
+            disableAnimations: true,
+            size: const Size(390, 844),
+          ),
+        );
+        expect(tester.takeException(), isNull, reason: 'reduced motion');
       });
     }
   });
@@ -272,6 +280,42 @@ void main() {
           );
         }
       }
+    });
+
+    test('every widget the design system exports has a page', () {
+      // The other half of documentation: a component nobody can find on a
+      // showcase page is one the next screen rebuilds for itself. Read the
+      // barrel, find every public widget in the files it exports, and look
+      // for its name.
+      final String showcase = _showcaseSources().join('\n');
+      final String barrel = File('lib/design_system/design_system.dart')
+          .readAsStringSync();
+      final RegExp export = RegExp(r"^export '([^']+)';", multiLine: true);
+      final RegExp widget = RegExp(
+        r'^class (App\w+)[^{]*\bextends (?:StatelessWidget|StatefulWidget)\b',
+        multiLine: true,
+      );
+
+      final List<String> declared = <String>[
+        for (final RegExpMatch file in export.allMatches(barrel))
+          for (final RegExpMatch match in widget.allMatches(
+            File('lib/design_system/${file.group(1)}').readAsStringSync(),
+          ))
+            match.group(1)!,
+      ];
+      final List<String> missing = <String>[
+        for (final String name in declared)
+          if (!RegExp('\\b$name\\b').hasMatch(showcase)) name,
+      ];
+
+      expect(declared, isNotEmpty);
+      expect(
+        missing,
+        isEmpty,
+        reason:
+            'Exported, and on no showcase page. Add an example beside the '
+            'family it belongs to.',
+      );
     });
 
     test('no showcase file imports a feature', () {

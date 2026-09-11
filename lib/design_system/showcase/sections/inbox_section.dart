@@ -9,6 +9,7 @@ import '../../feedback/connection_banner.dart';
 import '../../inbox/conversation_list.dart';
 import '../../inbox/conversation_list_item.dart';
 import '../../inbox/conversation_summary.dart';
+import '../showcase_fixtures.dart';
 import '../showcase_section.dart';
 
 /// The showcase's own "today", so a row reads the same whatever the date is.
@@ -17,14 +18,14 @@ final DateTime _now = DateTime(2026, 3, 12, 18, 30);
 List<AppConversationSummary> _conversations() => <AppConversationSummary>[
   AppConversationSummary(
     id: 'c1',
-    title: 'سارة أحمد',
-    preview: 'هل الطلب جاهز للاستلام اليوم؟',
+    title: ShowcaseFixtures.customer,
+    preview: ShowcaseFixtures.question,
     lastActivityAt: DateTime(2026, 3, 12, 18, 12),
     unreadCount: 3,
     presence: AppPresence.online,
     channel: const AppChannelDescriptor(
       kind: AppChannelKind.whatsapp,
-      label: 'واتساب',
+      label: ShowcaseFixtures.whatsapp,
     ),
   ),
   AppConversationSummary(
@@ -40,13 +41,13 @@ List<AppConversationSummary> _conversations() => <AppConversationSummary>[
   ),
   AppConversationSummary(
     id: 'c3',
-    title: 'Lina Hassan',
+    title: ShowcaseFixtures.latinCustomer,
     preview: 'Can I change the delivery address before it ships?',
     lastActivityAt: DateTime(2026, 3, 11, 20, 5),
     unreadCount: 128,
     channel: const AppChannelDescriptor(
       kind: AppChannelKind.email,
-      label: 'البريد الإلكتروني',
+      label: ShowcaseFixtures.email,
     ),
   ),
   AppConversationSummary(
@@ -58,7 +59,7 @@ List<AppConversationSummary> _conversations() => <AppConversationSummary>[
     isMuted: true,
     channel: const AppChannelDescriptor(
       kind: AppChannelKind.sms,
-      label: 'رسائل SMS',
+      label: ShowcaseFixtures.sms,
     ),
   ),
   AppConversationSummary(

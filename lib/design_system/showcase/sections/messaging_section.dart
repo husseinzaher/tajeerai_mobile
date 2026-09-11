@@ -10,6 +10,7 @@ import '../../messaging/message_data.dart';
 import '../../messaging/message_status_icon.dart';
 import '../../messaging/message_timeline.dart';
 import '../../messaging/typing_indicator.dart';
+import '../showcase_fixtures.dart';
 import '../showcase_section.dart';
 
 /// The showcase's own "today", so day headings read the same on any date.
@@ -47,7 +48,7 @@ List<AppMessageData> _thread() => <AppMessageData>[
     side: AppMessageSide.incoming,
     sentAt: DateTime(2026, 3, 12, 9, 13),
     kind: AppMessageKind.image,
-    text: 'هذا اللون',
+    text: ShowcaseFixtures.photoCaption,
   ),
   AppMessageData(
     id: 'm6',
@@ -59,14 +60,14 @@ List<AppMessageData> _thread() => <AppMessageData>[
     id: 'm7',
     side: AppMessageSide.outgoing,
     sentAt: DateTime(2026, 3, 12, 9, 30),
-    text: 'نعم، يصلك خلال ساعتين.',
+    text: ShowcaseFixtures.answer,
     status: AppMessageStatus.delivered,
   ),
   AppMessageData(
     id: 'm8',
     side: AppMessageSide.outgoing,
     sentAt: DateTime(2026, 3, 12, 9, 31),
-    text: 'رقم الطلب #1042',
+    text: ShowcaseFixtures.orderNumber,
     status: AppMessageStatus.notSent,
   ),
   AppMessageData(
@@ -198,7 +199,7 @@ ShowcaseSection messagingSection() => ShowcaseSection(
           id: 'f1',
           side: AppMessageSide.outgoing,
           sentAt: DateTime(2026, 3, 12, 9, 31),
-          text: 'رقم الطلب #1042',
+          text: ShowcaseFixtures.orderNumber,
           status: AppMessageStatus.notSent,
         ),
         onRetry: _noop,
@@ -220,7 +221,7 @@ ShowcaseSection messagingSection() => ShowcaseSection(
               side: AppMessageSide.incoming,
               sentAt: DateTime(2026, 3, 12, 9, 13),
               kind: AppMessageKind.image,
-              text: 'هذا اللون',
+              text: ShowcaseFixtures.photoCaption,
             ),
           ),
           AppMessageBubble(

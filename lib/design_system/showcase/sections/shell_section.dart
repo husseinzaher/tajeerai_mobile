@@ -13,6 +13,7 @@ import '../../shell/navigation_destination.dart';
 import '../../shell/navigation_drawer.dart';
 import '../../shell/shell_scope.dart';
 import '../../shell/toolbar.dart';
+import '../showcase_fixtures.dart';
 import '../showcase_section.dart';
 
 const List<AppNavDestination> _tabs = <AppNavDestination>[
@@ -34,7 +35,7 @@ const List<AppNavDestination> _tabs = <AppNavDestination>[
 
 const AppDrawerProfile _profile = AppDrawerProfile(
   name: 'أحمد محمد',
-  subtitle: 'متجر النخبة',
+  subtitle: ShowcaseFixtures.store,
 );
 
 const AppBottomNavAction _compose = AppBottomNavAction(
@@ -130,7 +131,7 @@ ShowcaseSection shellSection() => ShowcaseSection(
           'presence and the way back.',
       builder: (BuildContext context) => _bar(
         AppToolbar.conversation(
-          title: 'سارة أحمد',
+          title: ShowcaseFixtures.customer,
           subtitle: 'متصلة الآن',
           presence: AppPresence.online,
           onBack: _noop,

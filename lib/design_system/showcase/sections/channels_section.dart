@@ -8,12 +8,13 @@ import '../../channels/channel_descriptor.dart';
 import '../../channels/channel_glyph.dart';
 import '../../channels/channel_palette.dart';
 import '../../display/avatar.dart';
+import '../showcase_fixtures.dart';
 import '../showcase_section.dart';
 
 const Map<AppChannelKind, String> _labels = <AppChannelKind, String>{
-  AppChannelKind.whatsapp: 'واتساب',
-  AppChannelKind.sms: 'رسائل SMS',
-  AppChannelKind.email: 'البريد الإلكتروني',
+  AppChannelKind.whatsapp: ShowcaseFixtures.whatsapp,
+  AppChannelKind.sms: ShowcaseFixtures.sms,
+  AppChannelKind.email: ShowcaseFixtures.email,
   AppChannelKind.instagram: 'إنستغرام',
   AppChannelKind.messenger: 'ماسنجر',
   AppChannelKind.liveChat: 'الدردشة المباشرة',
@@ -215,7 +216,7 @@ ShowcaseSection channelsSection() => ShowcaseSection(
         spacing: TajeerSpacing.md,
         children: <Widget>[
           AppAvatar(
-            name: 'سارة أحمد',
+            name: ShowcaseFixtures.customer,
             size: 48,
             badge: AppChannelGlyph(
               kind: AppChannelKind.whatsapp,
@@ -224,7 +225,7 @@ ShowcaseSection channelsSection() => ShowcaseSection(
             ),
           ),
           AppAvatar(
-            name: 'محمد علي',
+            name: ShowcaseFixtures.secondCustomer,
             size: 48,
             badge: AppChannelGlyph(
               kind: AppChannelKind.instagram,
@@ -233,7 +234,7 @@ ShowcaseSection channelsSection() => ShowcaseSection(
             ),
           ),
           AppAvatar(
-            name: 'Lina Hassan',
+            name: ShowcaseFixtures.latinCustomer,
             size: 48,
             badge: AppChannelGlyph(
               kind: AppChannelKind.email,
