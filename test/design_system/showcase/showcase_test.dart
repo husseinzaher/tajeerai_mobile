@@ -36,6 +36,7 @@ List<String> _showcaseSources() {
     'lib/design_system/showcase/sections/foundations_section.dart',
     'lib/design_system/showcase/sections/components_section.dart',
     'lib/design_system/showcase/sections/authentication_section.dart',
+    'lib/design_system/showcase/sections/shell_section.dart',
   ];
   return <String>[
     for (final String path in paths) File(path).readAsStringSync(),
@@ -238,6 +239,10 @@ void main() {
         '_SearchableSelectDemo',
         '_TogglesDemo',
         '_RadioDemo',
+        '_ToolbarSearchDemo',
+        '_DrawerDemo',
+        '_BottomNavDemo',
+        '_ShellDemo',
       ];
 
       final RegExp declaration = RegExp(

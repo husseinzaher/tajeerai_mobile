@@ -13,6 +13,7 @@ const AppMessages appMessagesEn = AppMessages(
   clearSearch: 'Clear search',
   noMatches: 'No matches',
   select: 'Select',
+  selectedCount: '{count} selected',
   showPassword: 'Show password',
   hidePassword: 'Hide password',
   required: 'Required',

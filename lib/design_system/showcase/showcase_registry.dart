@@ -1,6 +1,7 @@
 import 'sections/authentication_section.dart';
 import 'sections/components_section.dart';
 import 'sections/foundations_section.dart';
+import 'sections/shell_section.dart';
 import 'showcase_section.dart';
 
 /// Every section, in the order they appear.
@@ -15,4 +16,5 @@ List<ShowcaseSection> showcaseSections() => <ShowcaseSection>[
   statesSection(),
   overlaysSection(),
   authenticationSection(),
+  shellSection(),
 ];

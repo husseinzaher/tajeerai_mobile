@@ -10,6 +10,7 @@ import '../../app/theme/theme.dart';
 class AppScaffold extends StatelessWidget {
   const AppScaffold({
     required this.body,
+    this.toolbar,
     this.title,
     this.titleWidget,
     this.actions,
@@ -24,6 +25,11 @@ class AppScaffold extends StatelessWidget {
   });
 
   final Widget body;
+
+  /// The design system's toolbar. When given it replaces the legacy
+  /// title / actions bar below entirely — the two are never combined.
+  final PreferredSizeWidget? toolbar;
+
   final String? title;
   final Widget? titleWidget;
   final List<Widget>? actions;
@@ -39,8 +45,10 @@ class AppScaffold extends StatelessWidget {
 
   final bool resizeToAvoidBottomInset;
 
-  bool get _hasAppBar =>
+  bool get _hasLegacyAppBar =>
       title != null || titleWidget != null || showBack || leading != null;
+
+  bool get _hasAppBar => toolbar != null || _hasLegacyAppBar;
 
   @override
   Widget build(BuildContext context) {
@@ -49,29 +57,34 @@ class AppScaffold extends StatelessWidget {
     return Scaffold(
       backgroundColor: colors.background,
       resizeToAvoidBottomInset: resizeToAvoidBottomInset,
-      appBar: _hasAppBar
-          ? AppBar(
-              backgroundColor: colors.background,
-              surfaceTintColor: Colors.transparent,
-              elevation: 0,
-              scrolledUnderElevation: 0,
-              automaticallyImplyLeading: false,
-              leading:
-                  leading ??
-                  (showBack
-                      ? BackButton(color: colors.textPrimary, onPressed: onBack)
-                      : null),
-              title:
-                  titleWidget ??
-                  (title == null
-                      ? null
-                      : Text(title!, style: context.text.titleLarge)),
-              actions: actions,
-              bottom: bottom,
-              // A hairline under the bar, matching the web's `border-b`.
-              shape: Border(bottom: BorderSide(color: colors.border)),
-            )
-          : null,
+      appBar:
+          toolbar ??
+          (_hasLegacyAppBar
+              ? AppBar(
+                  backgroundColor: colors.background,
+                  surfaceTintColor: Colors.transparent,
+                  elevation: 0,
+                  scrolledUnderElevation: 0,
+                  automaticallyImplyLeading: false,
+                  leading:
+                      leading ??
+                      (showBack
+                          ? BackButton(
+                              color: colors.textPrimary,
+                              onPressed: onBack,
+                            )
+                          : null),
+                  title:
+                      titleWidget ??
+                      (title == null
+                          ? null
+                          : Text(title!, style: context.text.titleLarge)),
+                  actions: actions,
+                  bottom: bottom,
+                  // A hairline under the bar, matching the web's `border-b`.
+                  shape: Border(bottom: BorderSide(color: colors.border)),
+                )
+              : null),
       body: banner == null
           ? SafeArea(top: !_hasAppBar, child: body)
           : Column(

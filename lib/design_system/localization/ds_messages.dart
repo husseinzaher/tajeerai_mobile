@@ -28,6 +28,7 @@ class AppMessages {
     required this.clearSearch,
     required this.noMatches,
     required this.select,
+    required this.selectedCount,
     required this.showPassword,
     required this.hidePassword,
     required this.required,
@@ -71,6 +72,9 @@ class AppMessages {
   final String clearSearch;
   final String noMatches;
   final String select;
+
+  /// Takes `{count}` — what a toolbar in selection mode says.
+  final String selectedCount;
 
   // Fields.
   final String showPassword;

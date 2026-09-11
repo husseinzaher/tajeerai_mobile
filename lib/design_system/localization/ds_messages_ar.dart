@@ -18,6 +18,7 @@ const AppMessages appMessagesAr = AppMessages(
   clearSearch: 'مسح البحث',
   noMatches: 'لا توجد نتائج',
   select: 'اختيار',
+  selectedCount: 'تم تحديد {count}',
   showPassword: 'إظهار كلمة المرور',
   hidePassword: 'إخفاء كلمة المرور',
   required: 'مطلوب',
