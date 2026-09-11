@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart' show Bidi;
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../app/theme/theme.dart';
@@ -10,6 +9,7 @@ import '../display/list_item.dart';
 import '../display/relative_time.dart';
 import '../localization/ds_localization.dart';
 import '../localization/ds_messages.dart';
+import '../primitives/bidi_text.dart';
 import 'conversation_summary.dart';
 
 /// One row of the Inbox.
@@ -79,11 +79,11 @@ class AppConversationListItem extends StatelessWidget {
         children: <Widget>[
           if (summary.isPinned)
             Icon(LucideIcons.pin, size: 12, color: colors.textMuted),
-          Flexible(child: _Line(summary.title)),
+          Flexible(child: AppBidiText(summary.title, alignToAmbient: true)),
         ],
       ),
       meta: time == null ? null : Text(time),
-      subtitle: summary.preview == null ? null : _Line(summary.preview!),
+      subtitle: summary.preview == null ? null : AppBidiText(summary.preview!, alignToAmbient: true),
       trailing: summary.hasUnread || summary.isMuted
           ? Column(
               mainAxisSize: MainAxisSize.min,
@@ -121,28 +121,4 @@ class AppConversationListItem extends StatelessWidget {
       time,
     ].whereType<String>().join(', ');
   }
-}
-
-/// A line of somebody else's words, read in its own direction.
-///
-/// A row's title and preview are written by customers, in whatever language
-/// they wrote in. Laid out in the Inbox's direction, an English question in an
-/// Arabic Inbox reads "?before it ships": the punctuation takes the paragraph's
-/// side. So the line keeps its own direction, found from its words, and stays
-/// aligned to the row's start edge either way.
-class _Line extends StatelessWidget {
-  const _Line(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Text(
-    text,
-    textDirection: Bidi.detectRtlDirectionality(text)
-        ? TextDirection.rtl
-        : TextDirection.ltr,
-    textAlign: Directionality.of(context) == TextDirection.rtl
-        ? TextAlign.right
-        : TextAlign.left,
-  );
 }

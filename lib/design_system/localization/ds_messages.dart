@@ -41,6 +41,14 @@ class AppMessages {
     required this.attach,
     required this.recordVoice,
     required this.typing,
+    required this.typingName,
+    required this.photo,
+    required this.video,
+    required this.voiceMessage,
+    required this.document,
+    required this.location,
+    required this.unsupportedMessage,
+    required this.bot,
     required this.today,
     required this.yesterday,
     required this.queued,
@@ -97,6 +105,20 @@ class AppMessages {
   final String attach;
   final String recordVoice;
   final String typing;
+
+  /// Takes `{name}`.
+  final String typingName;
+
+  /// What a media message is, while its preview is not drawn.
+  final String photo;
+  final String video;
+  final String voiceMessage;
+  final String document;
+  final String location;
+  final String unsupportedMessage;
+
+  /// Who wrote a message the assistant sent.
+  final String bot;
   final String today;
   final String yesterday;
 

@@ -39,6 +39,7 @@ List<String> _showcaseSources() {
     'lib/design_system/showcase/sections/shell_section.dart',
     'lib/design_system/showcase/sections/channels_section.dart',
     'lib/design_system/showcase/sections/inbox_section.dart',
+    'lib/design_system/showcase/sections/messaging_section.dart',
   ];
   return <String>[
     for (final String path in paths) File(path).readAsStringSync(),

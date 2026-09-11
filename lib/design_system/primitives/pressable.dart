@@ -46,7 +46,7 @@ class AppPressable extends StatefulWidget {
 
   /// Clips the overlay to the surface's own corners. Left null the overlay is
   /// square, which is visible on anything rounded.
-  final BorderRadius? borderRadius;
+  final BorderRadiusGeometry? borderRadius;
 
   final ElevateStep hoverStep;
   final ElevateStep pressStep;

@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../../../design_system/design_system.dart';
+import '../../../../app/localization/translations/app_strings.dart';
 import '../../../../app/theme/theme.dart';
+import '../../../../design_system/design_system.dart';
 import '../../domain/entities/conversation.dart';
 import '../../domain/entities/message.dart';
 import '../controllers/conversation_thread_controller.dart';
-import '../widgets/message_bubble.dart';
+import '../widgets/async_view_state.dart';
 import '../widgets/message_composer.dart';
+import '../widgets/message_view_data.dart';
 
 /// One conversation.
 ///
@@ -17,6 +18,10 @@ import '../widgets/message_composer.dart';
 /// socket appears here because the realtime handler wrote a row and the
 /// reactive query re-emitted -- this screen has no socket subscription and no
 /// message list of its own to keep in step.
+///
+/// The thread itself is the design system's `AppMessageTimeline`, drawn from
+/// `message_view_data.dart`. The composer and the header move onto the design
+/// system next.
 class ConversationScreen extends ConsumerStatefulWidget {
   const ConversationScreen({required this.conversationId, super.key});
 
@@ -37,6 +42,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final AppStrings strings = ref.watch(appStringsProvider);
     final conversation = ref.watch(
       threadConversationProvider(widget.conversationId),
     );
@@ -78,50 +84,21 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
       body: Column(
         children: <Widget>[
           Expanded(
-            child: messages.when(
-              loading: () => const _ThreadSkeleton(),
-              error: (error, _) => AppErrorState(
-                message: 'This conversation could not be read.',
-                bordered: false,
+            child: AppMessageTimeline(
+              state: messages.toViewState(
+                (List<Message> items) => <AppMessageData>[
+                  for (final Message item in items) item.toMessageData(),
+                ],
+                failure: strings.threadUnreadable,
                 onRetry: () => ref.invalidate(
                   threadMessagesProvider(widget.conversationId),
                 ),
               ),
-              data: (items) {
-                if (items.isEmpty) {
-                  return const AppEmptyState(
-                    title: 'No messages yet',
-                    description: 'Send the first message in this conversation.',
-                    icon: LucideIcons.messageSquare,
-                    bordered: false,
-                  );
-                }
-
-                return ListView.separated(
-                  controller: _scroll,
-                  // Newest at the bottom: the list is reversed so it opens
-                  // pinned to the latest message, and older history loads
-                  // as the reader scrolls up.
-                  reverse: true,
-                  padding: const EdgeInsets.all(TajeerSpacing.md),
-                  itemCount: items.length,
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(height: TajeerSpacing.xs),
-                  itemBuilder: (context, index) {
-                    final message = items[items.length - 1 - index];
-
-                    return MessageBubble(
-                      message: message,
-                      onRetry: message.state.canRetry
-                          ? () => _retry(message)
-                          : null,
-                      onDiscard: message.state.canRetry
-                          ? () => _discard(message)
-                          : null,
-                    );
-                  },
-                );
-              },
+              emptyTitle: strings.noMessages,
+              emptyDescription: strings.sendFirstMessage,
+              controller: _scroll,
+              onRetry: (AppMessageData data) => _act(data, _retry),
+              onDiscard: (AppMessageData data) => _act(data, _discard),
             ),
           ),
           MessageComposer(
@@ -141,6 +118,18 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
         ],
       ),
     );
+  }
+
+  /// Runs [action] on the domain message a bubble was drawn from.
+  void _act(AppMessageData data, void Function(Message message) action) {
+    final Message? message = ref
+        .read(threadMessagesProvider(widget.conversationId))
+        .value
+        ?.where((Message candidate) => candidate.id == data.id)
+        .firstOrNull;
+    if (message != null) {
+      action(message);
+    }
   }
 
   void _retry(Message message) {
@@ -184,31 +173,6 @@ class _ThreadTitle extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _ThreadSkeleton extends StatelessWidget {
-  const _ThreadSkeleton();
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(TajeerSpacing.md),
-      itemCount: 6,
-      itemBuilder: (context, index) {
-        final isOutbound = index.isEven;
-
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: TajeerSpacing.xs),
-          child: Align(
-            alignment: isOutbound
-                ? AlignmentDirectional.centerEnd
-                : AlignmentDirectional.centerStart,
-            child: AppSkeleton(width: isOutbound ? 180 : 220, height: 40),
-          ),
-        );
-      },
     );
   }
 }

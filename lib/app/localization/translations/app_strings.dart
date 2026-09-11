@@ -144,6 +144,14 @@ class AppStrings {
       'en': 'No messages yet',
       'ar': 'لا توجد رسائل بعد',
     },
+    'threadUnreadable': <String, String>{
+      'en': 'This conversation could not be read.',
+      'ar': 'تعذّرت قراءة هذه المحادثة.',
+    },
+    'sendFirstMessage': <String, String>{
+      'en': 'Send the first message in this conversation.',
+      'ar': 'أرسل أول رسالة في هذه المحادثة.',
+    },
     // A row's name when the customer has none and the thread has no subject.
     // The domain keeps an English fallback of its own, for logs; a row read in
     // Arabic must not show it.
@@ -199,6 +207,8 @@ class AppStrings {
   String get noSearchMatches => call('noSearchMatches');
   String get conversationsUnreadable => call('conversationsUnreadable');
   String get noMessages => call('noMessages');
+  String get threadUnreadable => call('threadUnreadable');
+  String get sendFirstMessage => call('sendFirstMessage');
   String get unknownCustomer => call('unknownCustomer');
   String get writeMessage => call('writeMessage');
 }
