@@ -32,6 +32,7 @@ void main() {
     sections.firstWhere((ShowcaseSection s) => s.title == 'Foundations'),
     sections.firstWhere((ShowcaseSection s) => s.title == 'Forms'),
     sections.firstWhere((ShowcaseSection s) => s.title == 'Display'),
+    sections.firstWhere((ShowcaseSection s) => s.title == 'Authentication'),
   ];
 
   for (final ShowcaseSection section in captured) {
