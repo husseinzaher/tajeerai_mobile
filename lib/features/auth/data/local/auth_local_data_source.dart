@@ -51,6 +51,7 @@ class AuthLocalDataSource {
               permissions: Value<String>(
                 jsonEncode(session.user.permissions.toList()),
               ),
+              denied: Value<String>(jsonEncode(session.user.denied.toList())),
               tenantId: Value<String?>(session.workspace?.id),
               tenantName: Value<String?>(session.workspace?.name),
               updatedAt: now,
@@ -77,7 +78,8 @@ class AuthLocalDataSource {
         locale: row.locale,
         avatarUrl: row.avatarUrl,
         isPlatformAdmin: row.isPlatformAdmin,
-        permissions: _decodePermissions(row.permissions),
+        permissions: _decodeCapabilities(row.permissions),
+        denied: _decodeCapabilities(row.denied),
       ),
       workspace: row.tenantId == null
           ? null
@@ -108,7 +110,8 @@ class AuthLocalDataSource {
           locale: row.locale,
           avatarUrl: row.avatarUrl,
           isPlatformAdmin: row.isPlatformAdmin,
-          permissions: _decodePermissions(row.permissions),
+          permissions: _decodeCapabilities(row.permissions),
+          denied: _decodeCapabilities(row.denied),
         ),
         workspace: row.tenantId == null
             ? null
@@ -137,7 +140,8 @@ class AuthLocalDataSource {
     await _secureStorage.clear();
   }
 
-  static Set<String> _decodePermissions(String raw) {
+  /// A cached JSON array of permission strings -- the grants or the denials.
+  static Set<String> _decodeCapabilities(String raw) {
     if (raw.isEmpty) return const <String>{};
 
     try {

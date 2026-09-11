@@ -14,6 +14,7 @@ final class AuthenticatedUser {
     this.avatarUrl,
     this.isPlatformAdmin = false,
     this.permissions = const <String>{},
+    this.denied = const <String>{},
   });
 
   final String id;
@@ -30,21 +31,43 @@ final class AuthenticatedUser {
   final bool isPlatformAdmin;
 
   /// Capabilities with any withdrawn one already removed, from
-  /// `SessionUserDto.permissions`.
+  /// `SessionUserDto.permissions`, written `action:Subject`.
   final Set<String> permissions;
 
-  /// Whether this user holds [permission].
+  /// Capabilities a direct denial took away, from `SessionUserDto.denied`.
   ///
-  /// Platform admins hold everything, which matches how the backend treats
-  /// `isPlatformAdmin` in its own guards. A wildcard grant (`*`) is honoured
-  /// the same way the server's rule serialisation expresses it.
-  bool can(String permission) {
-    if (isPlatformAdmin) return true;
+  /// Sent apart from [permissions] because that list cannot express one: a
+  /// member holding `manage:all` is granted everything it does not name, so
+  /// an exception has to be named on its own.
+  final Set<String> denied;
 
-    return permissions.contains(permission) || permissions.contains('*');
+  /// Whether this user holds [permission], written `action:Subject`.
+  ///
+  /// The reading the web dashboard gives the same session. A denial is
+  /// checked first, because reading a wildcard first would say yes to the one
+  /// thing the backend is about to refuse. Then both of CASL's wildcards
+  /// count -- `manage` is any action and `all` any subject -- since that is
+  /// how roles are written: an owner holds `manage:all`.
+  ///
+  /// Being a platform admin adds nothing: the backend's guard asks the same
+  /// rules for one, and the session already carries what they resolve to. It
+  /// stays a hint about what to show; the guard makes the decision.
+  bool can(String permission) {
+    if (denied.contains(permission)) return false;
+
+    final int colon = permission.indexOf(':');
+    final String action = colon < 0
+        ? permission
+        : permission.substring(0, colon);
+    final String subject = colon < 0 ? '' : permission.substring(colon + 1);
+
+    return permissions.contains(permission) ||
+        permissions.contains('$action:all') ||
+        permissions.contains('manage:$subject') ||
+        permissions.contains('manage:all');
   }
 
-  /// Permissions are part of who this user is to the app.
+  /// Permissions and denials are part of who this user is to the app.
   ///
   /// They used to be left out, so a session re-read with a permission granted
   /// or withdrawn compared equal to the old one, and the change never reached
@@ -61,7 +84,9 @@ final class AuthenticatedUser {
       other.avatarUrl == avatarUrl &&
       other.isPlatformAdmin == isPlatformAdmin &&
       other.permissions.length == permissions.length &&
-      other.permissions.containsAll(permissions);
+      other.permissions.containsAll(permissions) &&
+      other.denied.length == denied.length &&
+      other.denied.containsAll(denied);
 
   @override
   int get hashCode => Object.hash(
@@ -74,6 +99,7 @@ final class AuthenticatedUser {
     avatarUrl,
     isPlatformAdmin,
     Object.hashAllUnordered(permissions),
+    Object.hashAllUnordered(denied),
   );
 
   @override

@@ -522,11 +522,26 @@ with a drawer shows the menu button on its own. No screen wires it.
 
 `app/shell/authenticated_shell.dart` joins the shell to the session and the
 routes. That is composition, which is why it lives in `app/` rather than in a
-feature. It mounts **only destinations that exist** — today the Inbox, and
-signing out — and no bottom bar: a drawer entry for a screen that is not built
-is a control that goes nowhere. A conversation thread is pushed onto the root
-navigator, so it covers the shell instead of opening inside it with the drawer
-still reachable behind.
+feature.
+
+**Destinations.** `ShellDestination` lists the signed-in destinations that
+exist, each with the permission it needs — the one the web dashboard gates the
+same screen on. Nothing is listed before its screen is built: an entry for a
+screen that is not built is a control that goes nowhere. The router mounts one
+`StatefulShellRoute` branch per destination, so each keeps its state while
+another is shown. The shell offers only the destinations the member's
+permissions open, and `AuthGuard` keeps them off the rest. The guard runs again
+whenever the session changes, so a permission withdrawn while its screen is
+open moves the member to their first open destination. Adding a destination is
+an enum value plus two switches that do not compile until they are filled in:
+its routes in `app_router.dart`, and its icon and label in the shell.
+
+Permissions are read the way the web reads them: a denial first, then `manage`
+as any action and `all` as any subject — an owner holds `manage:all`. They
+decide what is drawn, never what is allowed; the backend's guard decides that.
+
+A detail or a form is pushed onto the root navigator, so it covers the shell
+instead of opening inside it with the drawer still reachable behind.
 
 `AppScaffold` keeps its older `title`/`actions`/`leading`/`showBack` bar until
 the conversation screen moves onto `AppToolbar.conversation`, and loses it

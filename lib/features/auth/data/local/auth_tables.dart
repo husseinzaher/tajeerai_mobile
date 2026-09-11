@@ -25,6 +25,12 @@ class SessionUsers extends Table {
   /// JSON array of permission strings, from `SessionUserDto.permissions`.
   TextColumn get permissions => text().withDefault(const Constant('[]'))();
 
+  /// JSON array of denied permission strings, from `SessionUserDto.denied`.
+  ///
+  /// Cached with the grants: without it, a member holding `manage:all` less
+  /// one capability would be offered that capability on every offline start.
+  TextColumn get denied => text().withDefault(const Constant('[]'))();
+
   TextColumn get tenantId => text().nullable()();
   TextColumn get tenantName => text().nullable()();
 

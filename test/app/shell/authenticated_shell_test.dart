@@ -5,8 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tajeerai_mobile/app/bootstrap/dependencies.dart';
-import 'package:tajeerai_mobile/app/router/routes.dart';
 import 'package:tajeerai_mobile/app/shell/authenticated_shell.dart';
+import 'package:tajeerai_mobile/app/shell/shell_destination.dart';
 import 'package:tajeerai_mobile/app/theme/theme.dart';
 import 'package:tajeerai_mobile/design_system/display/list_item.dart';
 import 'package:tajeerai_mobile/design_system/layouts/app_scaffold.dart';
@@ -23,6 +23,8 @@ const AuthenticatedUser _ada = AuthenticatedUser(
   email: 'ada@demo.test',
   role: 'owner',
   locale: 'en',
+  // What an owner holds.
+  permissions: <String>{'manage:all'},
 );
 
 const Session _inStore = Session(
@@ -75,25 +77,37 @@ void main() {
     preferences = await PreferencesStorage.open();
   }
 
-  /// The shell under a real router, so picking a destination really moves.
+  /// The shell under a real router shaped like the app's -- one branch per
+  /// destination, each with a screen one step in -- so picking a destination
+  /// really moves. It opens one step into the Inbox.
   Widget subject({Session? session = _inStore}) {
     final GoRouter router = GoRouter(
-      initialLocation: '/elsewhere',
+      initialLocation: '${ShellDestination.inbox.path}/deeper',
       routes: <RouteBase>[
-        ShellRoute(
-          builder: (BuildContext context, GoRouterState state, Widget child) =>
-              AuthenticatedShell(child: child),
-          routes: <RouteBase>[
-            GoRoute(
-              path: AppRoutes.conversations,
-              builder: (BuildContext context, GoRouterState state) =>
-                  _screen('Inbox screen'),
-            ),
-            GoRoute(
-              path: '/elsewhere',
-              builder: (BuildContext context, GoRouterState state) =>
-                  _screen('Elsewhere'),
-            ),
+        StatefulShellRoute.indexedStack(
+          builder: (
+            BuildContext context,
+            GoRouterState state,
+            StatefulNavigationShell navigationShell,
+          ) => AuthenticatedShell(navigationShell: navigationShell),
+          branches: <StatefulShellBranch>[
+            for (final ShellDestination destination in ShellDestination.values)
+              StatefulShellBranch(
+                routes: <RouteBase>[
+                  GoRoute(
+                    path: destination.path,
+                    builder: (BuildContext context, GoRouterState state) =>
+                        _screen('${destination.name} start'),
+                    routes: <RouteBase>[
+                      GoRoute(
+                        path: 'deeper',
+                        builder: (BuildContext context, GoRouterState state) =>
+                            _screen('${destination.name} deeper'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
           ],
         ),
       ],
@@ -123,7 +137,7 @@ void main() {
     ) async {
       await tester.pumpWidget(subject());
 
-      expect(find.text('Elsewhere'), findsOneWidget);
+      expect(find.text('inbox deeper'), findsOneWidget);
       expect(find.byIcon(LucideIcons.menu), findsOneWidget);
     });
 
@@ -146,17 +160,18 @@ void main() {
       expect(find.text('ada@demo.test'), findsOneWidget);
     });
 
-    testWidgets('before the session resolves, there is no profile to show', (
+    testWidgets('before the session resolves, there is nothing to offer', (
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(subject(session: null));
       await _openDrawer(tester);
 
       expect(find.byType(AppListItem), findsNothing);
+      expect(find.text('Inbox'), findsNothing);
       expect(find.text('Sign out'), findsOneWidget);
     });
 
-    testWidgets('only the Inbox exists, so there is no bottom bar', (
+    testWidgets('one destination on offer, so there is no bottom bar', (
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(subject());
@@ -164,17 +179,41 @@ void main() {
       expect(find.byType(AppBottomNavigation), findsNothing);
     });
 
-    testWidgets('picking the Inbox goes to the Inbox', (
+    testWidgets(
+      'picking the destination already open returns it to its start',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(subject());
+        await _openDrawer(tester);
+
+        await tester.tap(find.text('Inbox'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+
+        expect(find.text('inbox start'), findsOneWidget);
+      },
+    );
+
+    testWidgets('a member without the permission is not offered the Inbox', (
       WidgetTester tester,
     ) async {
-      await tester.pumpWidget(subject());
+      await tester.pumpWidget(
+        subject(
+          session: const Session(
+            user: AuthenticatedUser(
+              id: 'u2',
+              name: 'Grace Hopper',
+              email: 'grace@demo.test',
+              role: 'member',
+              locale: 'en',
+              permissions: <String>{'read:Customer'},
+            ),
+          ),
+        ),
+      );
       await _openDrawer(tester);
 
-      await tester.tap(find.text('Inbox'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
-
-      expect(find.text('Inbox screen'), findsOneWidget);
+      expect(find.text('Grace Hopper'), findsOneWidget);
+      expect(find.text('Inbox'), findsNothing);
     });
 
     testWidgets('signing out ends the session and navigates nowhere itself', (
@@ -190,7 +229,7 @@ void main() {
       // The router's redirect moves a signed-out member to sign-in. The shell
       // only asks.
       expect(controller.signOuts, 1);
-      expect(find.text('Elsewhere'), findsOneWidget);
+      expect(find.text('inbox deeper'), findsOneWidget);
     });
   });
 

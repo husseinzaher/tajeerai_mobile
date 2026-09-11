@@ -7,6 +7,7 @@ import 'package:tajeerai_mobile/infrastructure/database/migrations/schema_migrat
 import 'generated/schema.dart';
 import 'generated/schema_v1.dart' as v1;
 import 'generated/schema_v2.dart' as v2;
+import 'generated/schema_v3.dart' as v3;
 
 /// Upgrades, tested against the schema each version actually shipped with.
 ///
@@ -96,6 +97,55 @@ void main() {
             lastError: 'offline',
           ),
         ]);
+      },
+    );
+  });
+
+  test('v2 to v3 keeps the cached session, with nothing withheld', () async {
+    await verifier.testWithDataIntegrity(
+      oldVersion: 2,
+      newVersion: 3,
+      createOld: v2.DatabaseAtV2.new,
+      createNew: v3.DatabaseAtV3.new,
+      openTestedDatabase: AppDatabase.new,
+      createItems: (Batch batch, v2.DatabaseAtV2 old) {
+        batch.insert(
+          old.sessionUsers,
+          v2.SessionUsersCompanion.insert(
+            id: 'u1',
+            name: 'Ada Lovelace',
+            email: 'ada@demo.test',
+            role: 'owner',
+            locale: 'ar',
+            permissions: const Value<String>('["manage:all"]'),
+            tenantId: const Value<String?>('t1'),
+            tenantName: const Value<String?>('Demo'),
+            updatedAt: '2026-09-01T08:00:00.000Z',
+          ),
+        );
+      },
+      validateItems: (v3.DatabaseAtV3 migrated) async {
+        // A member signed in before the upgrade is still signed in after it,
+        // holding what they held, until the next session read names anything
+        // withheld.
+        expect(
+          await migrated.select(migrated.sessionUsers).get(),
+          const <v3.SessionUsersData>[
+            v3.SessionUsersData(
+              id: 'u1',
+              name: 'Ada Lovelace',
+              email: 'ada@demo.test',
+              role: 'owner',
+              locale: 'ar',
+              isPlatformAdmin: 0,
+              permissions: '["manage:all"]',
+              denied: '[]',
+              tenantId: 't1',
+              tenantName: 'Demo',
+              updatedAt: '2026-09-01T08:00:00.000Z',
+            ),
+          ],
+        );
       },
     );
   });

@@ -256,44 +256,73 @@ void main() {
   });
 
   group('permissions', () {
-    test('a platform admin holds everything', () {
-      const admin = AuthenticatedUser(
-        id: 'a1',
-        name: 'Root',
-        email: 'root@demo.test',
-        role: 'admin',
-        locale: 'en',
-        isPlatformAdmin: true,
-      );
-
-      expect(admin.can('conversation:read'), isTrue);
-    });
-
-    test('a wildcard grant holds everything', () {
-      const user = AuthenticatedUser(
-        id: 'u1',
-        name: 'Ada',
-        email: 'ada@demo.test',
-        role: 'owner',
-        locale: 'ar',
-        permissions: <String>{'*'},
-      );
-
-      expect(user.can('anything'), isTrue);
-    });
-
-    test('an ordinary user holds only what was granted', () {
-      const user = AuthenticatedUser(
+    AuthenticatedUser holding(
+      Set<String> permissions, {
+      Set<String> denied = const <String>{},
+      bool isPlatformAdmin = false,
+    }) {
+      return AuthenticatedUser(
         id: 'u1',
         name: 'Ada',
         email: 'ada@demo.test',
         role: 'member',
         locale: 'ar',
-        permissions: <String>{'conversation:read'},
+        isPlatformAdmin: isPlatformAdmin,
+        permissions: permissions,
+        denied: denied,
+      );
+    }
+
+    test('an ordinary user holds only what was granted', () {
+      final AuthenticatedUser user = holding(<String>{'read:Conversation'});
+
+      expect(user.can('read:Conversation'), isTrue);
+      expect(user.can('delete:Conversation'), isFalse);
+      expect(user.can('read:Customer'), isFalse);
+    });
+
+    test('manage on a subject is every action on it', () {
+      final AuthenticatedUser user = holding(<String>{'manage:Customer'});
+
+      expect(user.can('read:Customer'), isTrue);
+      expect(user.can('delete:Customer'), isTrue);
+      expect(user.can('read:Order'), isFalse);
+    });
+
+    test('an action on all is that action on every subject', () {
+      // How the support role is written: exactly `read:all`.
+      final AuthenticatedUser user = holding(<String>{'read:all'});
+
+      expect(user.can('read:Order'), isTrue);
+      expect(user.can('update:Order'), isFalse);
+    });
+
+    test('manage on all is everything, which is what an owner holds', () {
+      final AuthenticatedUser user = holding(<String>{'manage:all'});
+
+      expect(user.can('read:Customer'), isTrue);
+      expect(user.can('delete:Product'), isTrue);
+    });
+
+    test('a denial wins over any wildcard', () {
+      // `permissions` cannot name what `manage:all` leaves out, so the backend
+      // sends the exception on its own.
+      final AuthenticatedUser user = holding(
+        <String>{'manage:all'},
+        denied: <String>{'read:Customer'},
       );
 
-      expect(user.can('conversation:read'), isTrue);
-      expect(user.can('conversation:delete'), isFalse);
+      expect(user.can('read:Customer'), isFalse);
+      expect(user.can('read:Order'), isTrue);
+    });
+
+    test('being a platform admin grants nothing the rules do not', () {
+      final AuthenticatedUser admin = holding(
+        const <String>{},
+        isPlatformAdmin: true,
+      );
+
+      expect(admin.can('read:Conversation'), isFalse);
     });
   });
 

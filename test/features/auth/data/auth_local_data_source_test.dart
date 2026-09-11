@@ -20,6 +20,20 @@ const _session = Session(
   workspace: Workspace(id: 't1', name: 'Demo', slug: 'demo', locale: 'ar'),
 );
 
+/// An owner with one capability withheld.
+const _withheld = Session(
+  user: AuthenticatedUser(
+    id: 'u1',
+    name: 'Ada Lovelace',
+    email: 'ada@demo.test',
+    role: 'owner',
+    locale: 'ar',
+    permissions: <String>{'manage:all'},
+    denied: <String>{'read:Customer'},
+  ),
+  workspace: Workspace(id: 't1', name: 'Demo', slug: 'demo', locale: 'ar'),
+);
+
 void main() {
   late AppDatabase database;
   late InMemorySecureStorage secureStorage;
@@ -35,6 +49,28 @@ void main() {
   });
 
   tearDown(() => database.close());
+
+  group('the cached session', () {
+    test('keeps what the member may do and what was withheld', () async {
+      await local.saveSession(_withheld, now: testEpoch);
+
+      final Session? cached = await local.readSession();
+
+      // Losing the denial would offer an owner the one thing withheld from
+      // them on every offline start.
+      expect(cached?.user.permissions, <String>{'manage:all'});
+      expect(cached?.user.denied, <String>{'read:Customer'});
+      expect(cached?.user.can('read:Customer'), isFalse);
+    });
+
+    test('and so does the stream the router follows', () async {
+      await local.saveSession(_withheld, now: testEpoch);
+
+      final Session? watched = await local.watchSession().first;
+
+      expect(watched?.user.denied, <String>{'read:Customer'});
+    });
+  });
 
   group('clear', () {
     test('forgets the session, the workspace data and the tokens', () async {

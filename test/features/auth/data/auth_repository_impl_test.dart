@@ -33,7 +33,7 @@ Map<String, Object?> _sessionPayload() => <String, Object?>{
     'avatar': <String, Object?>{'url': 'https://cdn.test/a.png'},
     'isPlatformAdmin': false,
     'permissions': <Object?>['conversation:read'],
-    'denied': <Object?>[],
+    'denied': <Object?>['delete:Conversation'],
   },
   'tenant': <String, Object?>{
     'id': 't1',
@@ -282,6 +282,9 @@ void main() {
 
       expect(cached!.user.email, 'ada@demo.test');
       expect(cached.user.permissions, contains('conversation:read'));
+      // Withheld capabilities are cached too, or an offline start would offer
+      // them again.
+      expect(cached.user.denied, contains('delete:Conversation'));
     });
   });
 

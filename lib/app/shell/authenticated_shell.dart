@@ -9,7 +9,7 @@ import '../../design_system/design_system.dart';
 import '../../features/auth/domain/entities/user.dart';
 import '../../features/auth/presentation/controllers/auth_controller.dart';
 import '../localization/translations/app_strings.dart';
-import '../router/routes.dart';
+import 'shell_destination.dart';
 
 /// The frame around every signed-in screen.
 ///
@@ -17,23 +17,30 @@ import '../router/routes.dart';
 /// [AppShell] to the session, and to the routes — three things no single
 /// feature owns.
 ///
-/// **Only destinations that exist.** The Inbox is the one signed-in screen
-/// today, so the drawer holds it and the way out, and there is no bottom bar:
-/// a tab bar with one tab is a label. Customers, orders and the rest arrive
-/// here with their screens, not before — a drawer entry for a screen that is
-/// not built is a control that goes nowhere.
+/// **Only destinations the member may open.** [ShellDestination] lists the
+/// screens that exist; the drawer and the bottom bar offer the ones this
+/// member's permissions open, and `AuthGuard` keeps them off the rest. The
+/// bottom bar appears once two are on offer: a tab bar with one tab is a
+/// label.
 class AuthenticatedShell extends ConsumerWidget {
-  const AuthenticatedShell({required this.child, super.key});
+  const AuthenticatedShell({required this.navigationShell, super.key});
 
-  /// The current signed-in screen, which draws its own toolbar.
-  final Widget child;
-
-  static const String _inbox = 'inbox';
+  /// The router's side of the shell: the current destination's screen, which
+  /// draws its own toolbar, and the way between destinations.
+  final StatefulNavigationShell navigationShell;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AppStrings strings = ref.watch(appStringsProvider);
     final Session? session = ref.watch(authControllerProvider).session;
+
+    final ShellDestination current =
+        ShellDestination.values[navigationShell.currentIndex];
+    final List<AppNavDestination> destinations = <AppNavDestination>[
+      for (final ShellDestination destination in ShellDestination.values)
+        if (session != null && destination.isOpenTo(session.user))
+          _describe(destination, strings),
+    ];
 
     return AppShell(
       drawer: AppNavigationDrawer(
@@ -46,19 +53,9 @@ class AuthenticatedShell extends ConsumerWidget {
                 subtitle: session.workspace?.name ?? session.user.email,
                 avatarUrl: session.user.avatarUrl,
               ),
-        selectedId: _inbox,
-        onSelect: (String id) => context.go(AppRoutes.conversations),
-        groups: <AppNavGroup>[
-          AppNavGroup(
-            destinations: <AppNavDestination>[
-              AppNavDestination(
-                id: _inbox,
-                label: strings.inbox,
-                icon: LucideIcons.messagesSquare,
-              ),
-            ],
-          ),
-        ],
+        selectedId: current.name,
+        onSelect: _select,
+        groups: <AppNavGroup>[AppNavGroup(destinations: destinations)],
         footerActions: <AppDrawerAction>[
           AppDrawerAction(
             label: strings.signOut,
@@ -71,7 +68,36 @@ class AuthenticatedShell extends ConsumerWidget {
           ),
         ],
       ),
-      body: child,
+      destinations: destinations,
+      selectedId: current.name,
+      onSelect: _select,
+      body: navigationShell,
     );
+  }
+
+  void _select(String id) {
+    final ShellDestination destination = ShellDestination.values.byName(id);
+
+    navigationShell.goBranch(
+      destination.index,
+      // Picking the destination already open returns it to where it starts,
+      // the way tapping the current tab does everywhere else.
+      initialLocation: destination.index == navigationShell.currentIndex,
+    );
+  }
+
+  /// How [destination] is drawn. A switch, so a destination added without an
+  /// icon and a label does not compile.
+  static AppNavDestination _describe(
+    ShellDestination destination,
+    AppStrings strings,
+  ) {
+    return switch (destination) {
+      ShellDestination.inbox => AppNavDestination(
+        id: destination.name,
+        label: strings.inbox,
+        icon: LucideIcons.messagesSquare,
+      ),
+    };
   }
 }

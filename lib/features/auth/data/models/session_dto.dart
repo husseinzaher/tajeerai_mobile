@@ -45,6 +45,7 @@ abstract final class SessionDto {
       avatarUrl: _mediaUrl(json['avatar']),
       isPlatformAdmin: json['isPlatformAdmin'] == true,
       permissions: _stringSet(json['permissions']),
+      denied: _stringSet(json['denied']),
     );
   }
 

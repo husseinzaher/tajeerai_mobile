@@ -22,7 +22,9 @@ import '../app_database.steps.dart';
 abstract final class SchemaMigrations {
   /// v1 -- conversations, messages, session, outbox, sync metadata.
   /// v2 -- `sync_states.page_cursor`, for the paged HTTP syncs.
-  static const int version = 2;
+  /// v3 -- `session_users.denied`, so a withdrawn capability outlives a
+  ///       restart.
+  static const int version = 3;
 
   static MigrationStrategy strategy(GeneratedDatabase database) {
     return MigrationStrategy(
@@ -35,6 +37,14 @@ abstract final class SchemaMigrations {
           await migrator.addColumn(
             schema.syncStates,
             schema.syncStates.pageCursor,
+          );
+        },
+        from2To3: (Migrator migrator, Schema3 schema) async {
+          // The column's default fills the cached row: nothing withheld until
+          // the next session read says otherwise.
+          await migrator.addColumn(
+            schema.sessionUsers,
+            schema.sessionUsers.denied,
           );
         },
       ),

@@ -11,6 +11,7 @@ const _session = Session(
     email: 'ada@demo.test',
     role: 'member',
     locale: 'ar',
+    permissions: <String>{'read:Conversation'},
   ),
   workspace: Workspace(id: 't1', name: 'Demo', slug: 'demo', locale: 'ar'),
 );
@@ -107,6 +108,92 @@ void main() {
         AuthGuard.redirect(state: state, location: AppRoutes.splash),
         AppRoutes.conversations,
       );
+    });
+  });
+
+  group('when signed in with nothing on offer', () {
+    // A role granted none of the permissions the shell's destinations need.
+    const state = AuthState.authenticated(
+      Session(
+        user: AuthenticatedUser(
+          id: 'u2',
+          name: 'Grace',
+          email: 'grace@demo.test',
+          role: 'member',
+          locale: 'ar',
+        ),
+        workspace: Workspace(
+          id: 't1',
+          name: 'Demo',
+          slug: 'demo',
+          locale: 'ar',
+        ),
+      ),
+    );
+
+    test('still lands on the first destination', () {
+      expect(
+        AuthGuard.redirect(state: state, location: AppRoutes.login),
+        AppRoutes.conversations,
+      );
+    });
+
+    test('is not sent away from the one place left, which would loop', () {
+      expect(
+        AuthGuard.redirect(state: state, location: AppRoutes.conversations),
+        isNull,
+      );
+    });
+  });
+
+  group('affectsRouting', () {
+    const signedIn = AuthState.authenticated(_session);
+
+    test('the first state the router sees does', () {
+      expect(AuthGuard.affectsRouting(null, signedIn), isTrue);
+    });
+
+    test('signing in or out does', () {
+      expect(
+        AuthGuard.affectsRouting(const AuthState.unknown(), signedIn),
+        isTrue,
+      );
+      expect(
+        AuthGuard.affectsRouting(signedIn, const AuthState.unauthenticated()),
+        isTrue,
+      );
+    });
+
+    test('the same session read again does not', () {
+      expect(
+        AuthGuard.affectsRouting(
+          signedIn,
+          const AuthState.authenticated(_session),
+        ),
+        isFalse,
+      );
+    });
+
+    test('a permission withdrawn does, though nobody signed out', () {
+      const withdrawn = AuthState.authenticated(
+        Session(
+          user: AuthenticatedUser(
+            id: 'u1',
+            name: 'Ada',
+            email: 'ada@demo.test',
+            role: 'member',
+            locale: 'ar',
+          ),
+          workspace: Workspace(
+            id: 't1',
+            name: 'Demo',
+            slug: 'demo',
+            locale: 'ar',
+          ),
+        ),
+      );
+
+      expect(AuthGuard.affectsRouting(signedIn, withdrawn), isTrue);
     });
   });
 

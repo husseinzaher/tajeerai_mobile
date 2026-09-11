@@ -76,6 +76,20 @@ void main() {
       expect(_user, isNot(granted));
     });
 
+    test('a denial added or lifted makes a different user', () {
+      const withheld = AuthenticatedUser(
+        id: 'u1',
+        name: 'Ada Lovelace',
+        email: 'ada@demo.test',
+        role: 'member',
+        locale: 'ar',
+        denied: <String>{'read:Customer'},
+      );
+
+      expect(_user, isNot(withheld));
+      expect(_user.hashCode, isNot(withheld.hashCode));
+    });
+
     test('the order permissions arrive in does not matter', () {
       const first = AuthenticatedUser(
         id: 'u1',
