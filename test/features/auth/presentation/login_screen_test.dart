@@ -33,6 +33,19 @@ Session _session() => const Session(
   ),
 );
 
+/// Taps [finder] the way a person does on a short screen: scroll to it first.
+///
+/// The sign-in form scrolls by design — `AppAuthLayout` centres it when there is
+/// room and scrolls when there is not — and on the test surface's 800x600 the
+/// logo pushes the submit button below the fold. A bare `tap` there lands
+/// outside the screen and submits nothing, which fails the test for a reason
+/// that has nothing to do with what the test is about.
+Future<void> tapVisible(WidgetTester tester, Finder finder) async {
+  await tester.ensureVisible(finder);
+  await tester.pump();
+  await tester.tap(finder);
+}
+
 void main() {
   late FakeAuthRepository repository;
   late SessionCoordinator coordinator;
@@ -75,7 +88,7 @@ void main() {
   }) async {
     await tester.enterText(find.byType(AppTextField).first, identifier);
     await tester.enterText(find.byType(AppTextField).last, password);
-    await tester.tap(find.text('Sign in').last);
+    await tapVisible(tester, find.text('Sign in').last);
     await tester.pump();
   }
 
@@ -110,7 +123,7 @@ void main() {
     testWidgets('shows field errors for an empty form', (tester) async {
       await tester.pumpWidget(subject());
 
-      await tester.tap(find.text('Sign in').last);
+      await tapVisible(tester, find.text('Sign in').last);
       await tester.pump();
 
       expect(find.text('Enter your email or phone number.'), findsOneWidget);
@@ -123,7 +136,7 @@ void main() {
     ) async {
       await tester.pumpWidget(subject());
 
-      await tester.tap(find.text('Sign in').last);
+      await tapVisible(tester, find.text('Sign in').last);
       await tester.pump();
 
       expect(find.text('Enter your password.'), findsOneWidget);
@@ -258,7 +271,7 @@ void main() {
 
       await tester.pumpWidget(subject());
 
-      await tester.tap(find.text('Keep me signed in'));
+      await tapVisible(tester, find.text('Keep me signed in'));
       await tester.pump();
 
       await fillAndSubmit(tester);

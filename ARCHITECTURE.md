@@ -601,9 +601,13 @@ Recorded so they are decisions, not omissions.
   that lives in `AppMessages`, and a key in both would drift. Only the sign-in
   screen reads it so far; the conversation screens still hold English literals
   until they are moved onto the design system.
-- **The logo is a placeholder.** No logo asset exists in the repository.
-  `AppBrandLogo` draws an obvious stand-in and carries `TODO(brand)`. Replace
-  the mark inside it when the asset arrives, not the component.
+- **App icons.** The logo itself is real — `AppBrandLogo` draws the official
+  exports in `assets/brand/`, through copies `build_app_assets.py` trims and
+  downscales into `assets/brand/app/`, the only folder the app bundles. The
+  Android and iOS launcher icons are still Flutter's default, by decision,
+  until the official app-icon exports exist: they are what people see on a home
+  screen and in the stores, and Android needs separate foreground and
+  background layers.
 - **Social sign-in, "forgot password" and "create an account".** The reference
   design draws all three and the sign-in screen draws none, because nothing sits
   behind them on mobile yet — a control that goes nowhere is worse than an
