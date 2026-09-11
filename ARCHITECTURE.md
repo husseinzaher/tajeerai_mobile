@@ -55,6 +55,7 @@ lib/
 │   ├── shell/                 The toolbar, the navigation drawer, the bottom bar and the shell that holds them.
 │   ├── channels/              A channel's kind, its instance colour and what it can carry — never which feature owns it.
 │   ├── inbox/                 The Inbox's row and list, drawn from AppConversationSummary rather than a domain type.
+│   ├── messaging/             The thread: the timeline builder, the bubble, day and system lines, typing.
 │   ├── localization/          The copy components render on their own behalf.
 │   └── showcase/              The debug-only gallery. The same components, never copies.
 │
@@ -532,6 +533,7 @@ owns the mapping into them:
 | `AppConversationSummary` | `conversation_view_data.dart` — `Conversation.toSummary` |
 | `AppConnectionStatus` | `conversation_view_data.dart` — `ConversationSyncState.connectionStatus` |
 | `AppViewState<T>` | `async_view_state.dart` — `AsyncValue.toViewState` |
+| `AppMessageData` | `message_view_data.dart` — `Message.toMessageData` |
 
 The mapper is where fallbacks are decided and translated. A row's title is the
 customer's name, then the thread's subject, then the app's "Unknown customer"
@@ -544,6 +546,29 @@ A screen built this way is composition. `conversation_list_screen.dart` holds
 no row, no skeleton, no banner and no four-state `.when`. The row it used to
 draw coloured its timestamp with the brand yellow at 1.53:1 — the kind of
 decision a feature should not be in a position to make.
+
+### The thread
+
+A thread is drawn in three layers, each testable without the one above it.
+
+- `AppTimelineBuilder.build` is pure Dart. It turns messages, oldest first, into
+  day headings, the unread marker and runs: one author, one side, within five
+  minutes, never across midnight, never including a system line.
+- `AppMessageBubble` draws one message and owns the tail — the speaker's bottom
+  corner is tightened, and so is the join inside a run — in logical corners, so
+  Arabic mirrors without a second layout. That corner logic moved across from
+  the feature's old bubble unchanged.
+- `AppMessageTimeline` draws the list, reversed so it opens on the newest
+  message, in the same four states as every other list.
+
+The domain's `MessageState` serves the outbox; `AppMessageStatus` decides a
+glyph. `message_view_data.dart` is the only place one becomes the other, and its
+test walks every state, so a state added to the domain fails a test before it
+draws as the wrong thing.
+
+Two parts are built and have nothing to show yet: inbound typing, which no
+event carries, and the unread marker, which needs a read position the device
+does not keep — the count is cleared as the thread opens.
 
 ## 13. Testing rules
 
