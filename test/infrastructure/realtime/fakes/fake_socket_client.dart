@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:tajeerai_mobile/infrastructure/network/token_refresher.dart';
 import 'package:tajeerai_mobile/infrastructure/realtime/authentication/socket_credentials.dart';
 import 'package:tajeerai_mobile/infrastructure/realtime/socket_client.dart';
 import 'package:tajeerai_mobile/infrastructure/realtime/socket_command.dart';
@@ -112,13 +113,17 @@ class FakeSocketClient implements SocketClient {
 
 /// A credentials provider whose answers a test controls.
 class FakeCredentials implements SocketCredentialsProvider {
-  FakeCredentials({this.token = 'token-1', this.refreshed = 'token-2'});
+  FakeCredentials({
+    this.token = 'token-1',
+    this.outcome = const TokenRefreshed('token-2'),
+  });
 
   /// The current token, or null for "no session".
   String? token;
 
-  /// What a refresh returns, or null when the session cannot be recovered.
-  String? refreshed;
+  /// What the next refresh comes to. A refreshed token becomes the current
+  /// one, the way the real provider stores it.
+  RefreshOutcome outcome;
 
   int currentCalls = 0;
   int refreshCalls = 0;
@@ -131,10 +136,12 @@ class FakeCredentials implements SocketCredentialsProvider {
   }
 
   @override
-  Future<String?> refreshToken() async {
+  Future<RefreshOutcome> refreshToken() async {
     refreshCalls += 1;
-    token = refreshed;
 
-    return refreshed;
+    final RefreshOutcome next = outcome;
+    if (next is TokenRefreshed) token = next.accessToken;
+
+    return next;
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -47,6 +49,14 @@ class _TajeerAppState extends ConsumerState<TajeerApp> {
   /// root, which is the only place allowed to know about both.
   void _wireSessionToRealtime() {
     final coordinator = ref.read(sessionCoordinatorProvider);
+
+    // What a member may do lives in their session. When the server says their
+    // access changed, the session is read again, so the shell and every screen
+    // see the new permissions without a restart.
+    ref
+        .read(socketManagerProvider)
+        .accessChanges
+        .listen((_) => unawaited(coordinator.reloadSession()));
 
     coordinator.events.listen((event) async {
       switch (event) {

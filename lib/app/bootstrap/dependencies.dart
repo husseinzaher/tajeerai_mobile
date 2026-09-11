@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
@@ -25,6 +27,7 @@ import '../../infrastructure/device/platform_info.dart';
 import '../../infrastructure/logging/crash_reporter.dart';
 import '../../infrastructure/logging/logger.dart';
 import '../../infrastructure/network/http_client.dart';
+import '../../infrastructure/network/token_refresher.dart';
 import '../../infrastructure/realtime/socket_client.dart';
 import '../../infrastructure/realtime/socket_connection.dart';
 import '../../infrastructure/realtime/socket_manager.dart';
@@ -130,6 +133,11 @@ final Provider<HttpClient> httpClientProvider = Provider<HttpClient>((ref) {
     config: ref.watch(appConfigProvider),
     logger: ref.watch(httpLoggerProvider),
     userAgent: ref.watch(platformInfoProvider).userAgent,
+    // Read when a request needs them, not when the client is built: the
+    // session coordinator behind both is itself built on this client.
+    renewCredential: () => ref.read(tokenRefresherProvider).refresh(),
+    onForbidden: () =>
+        unawaited(ref.read(sessionCoordinatorProvider).reloadSession()),
   );
 });
 
@@ -215,12 +223,18 @@ final Provider<SessionCoordinator> sessionCoordinatorProvider =
 final Provider<SessionCapability> sessionCapabilityProvider =
     Provider<SessionCapability>((ref) => ref.watch(sessionCoordinatorProvider));
 
+/// One renewal shared by the socket and HTTP. The backend's refresh tokens are
+/// single-use, so two transports renewing independently would sign members out.
+final Provider<TokenRefresher> tokenRefresherProvider =
+    Provider<TokenRefresher>(
+      (ref) => TokenRefresher(ref.watch(sessionCoordinatorProvider)),
+    );
+
 final Provider<AuthSocketCredentials> socketCredentialsProvider =
     Provider<AuthSocketCredentials>((ref) {
       return AuthSocketCredentials(
         repository: ref.watch(authRepositoryProvider),
-        coordinator: ref.watch(sessionCoordinatorProvider),
-        logger: ref.watch(authLoggerProvider),
+        refresher: ref.watch(tokenRefresherProvider),
       );
     });
 

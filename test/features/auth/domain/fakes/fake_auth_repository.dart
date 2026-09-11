@@ -4,6 +4,7 @@ import 'package:tajeerai_mobile/features/auth/domain/entities/user.dart';
 import 'package:tajeerai_mobile/features/auth/domain/repositories/auth_repository.dart';
 import 'package:tajeerai_mobile/features/auth/domain/value_objects/login_identifier.dart';
 import 'package:tajeerai_mobile/features/auth/domain/value_objects/password.dart';
+import 'package:tajeerai_mobile/features/auth/domain/value_objects/session_renewal.dart';
 
 /// An in-memory [AuthRepository].
 class FakeAuthRepository implements AuthRepository {
@@ -11,7 +12,16 @@ class FakeAuthRepository implements AuthRepository {
   Session? cached;
   Session? nextRestored;
   String? token = 'token-1';
-  String? refreshedToken = 'token-2';
+
+  /// What the next [renewSession] answers. Null renews [renewedSession] -- or
+  /// the cached one -- with [refreshedToken], and stores that token as current,
+  /// the way the real repository captures the new cookie.
+  SessionRenewal? nextRenewal;
+  Session? renewedSession;
+  String refreshedToken = 'token-2';
+
+  /// Thrown by the next [renewSession], for the unexpected-error path.
+  Object? renewalError;
 
   Object? failureToThrow;
 
@@ -73,11 +83,24 @@ class FakeAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<String?> refreshAccessToken() async {
+  Future<SessionRenewal> renewSession() async {
     refreshCalls += 1;
+
+    final Object? error = renewalError;
+    if (error != null) throw error;
+
+    final SessionRenewal? scripted = nextRenewal;
+    if (scripted != null) return scripted;
+
+    final Session? session = renewedSession ?? cached ?? nextSession;
+
+    if (session == null) {
+      throw StateError('FakeAuthRepository has no session to renew.');
+    }
+
     token = refreshedToken;
 
-    return refreshedToken;
+    return SessionRenewed(session: session, accessToken: refreshedToken);
   }
 
   @override

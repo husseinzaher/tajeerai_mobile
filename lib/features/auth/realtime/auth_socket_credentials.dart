@@ -1,56 +1,32 @@
-import '../../../infrastructure/logging/logger.dart';
+import '../../../infrastructure/network/token_refresher.dart';
 import '../../../infrastructure/realtime/authentication/socket_credentials.dart';
-import '../application/coordinators/session_coordinator.dart';
 import '../domain/repositories/auth_repository.dart';
 
 /// Supplies and renews the socket's credential.
 ///
-/// Lives in the auth feature because refreshing a session is auth's business,
-/// and the realtime infrastructure must stay unaware of how a token is
-/// obtained. `SocketManager` depends on the [SocketCredentialsProvider]
-/// interface; this is the implementation it is given at composition time.
+/// Lives in the auth feature because a session is auth's business, and the
+/// realtime infrastructure must stay unaware of how a token is obtained.
+/// `SocketManager` depends on the [SocketCredentialsProvider] interface; this is
+/// the implementation it is given at composition time.
 ///
-/// It is what makes the socket reconnect-aware: when the server sends
-/// `auth.expired` and closes the connection, the manager asks this to renew
-/// rather than reconnecting with the credential that was just rejected.
+/// Renewal goes through the shared [TokenRefresher] rather than straight to the
+/// repository, so a socket reconnect and an HTTP retry arriving together spend
+/// the single-use refresh token once. What an outcome *means* -- a refusal
+/// ending the session, a renewed session being published -- is decided by the
+/// session coordinator the refresher calls.
 class AuthSocketCredentials implements SocketCredentialsProvider {
   AuthSocketCredentials({
     required AuthRepository repository,
-    required SessionCoordinator coordinator,
-    required Logger logger,
+    required TokenRefresher refresher,
   }) : _repository = repository,
-       _coordinator = coordinator,
-       _logger = logger;
+       _refresher = refresher;
 
   final AuthRepository _repository;
-  final SessionCoordinator _coordinator;
-  final Logger _logger;
+  final TokenRefresher _refresher;
 
   @override
   Future<String?> currentToken() => _repository.accessToken();
 
-  /// Renews the session, or ends it.
-  ///
-  /// Returning null tells the manager to stop retrying -- which is the whole
-  /// point. Without a terminal answer the client would reconnect forever
-  /// against a credential the server has already refused, which is exactly
-  /// what the backend's `auth.expired` event exists to prevent.
-  ///
-  /// Signing out here rather than leaving the app in limbo means the user sees
-  /// the login screen instead of an Inbox that silently stopped updating.
   @override
-  Future<String?> refreshToken() async {
-    final token = await _repository.refreshAccessToken();
-
-    if (token != null) {
-      _logger.info('socket credential renewed');
-
-      return token;
-    }
-
-    _logger.info('socket credential could not be renewed; ending session');
-    await _coordinator.handleSessionExpired();
-
-    return null;
-  }
+  Future<RefreshOutcome> refreshToken() => _refresher.refresh();
 }

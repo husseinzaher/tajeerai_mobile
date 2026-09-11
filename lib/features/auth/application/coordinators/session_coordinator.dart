@@ -2,8 +2,10 @@ import 'dart:async';
 
 import '../../../../failures/app_failure.dart';
 import '../../../../infrastructure/logging/logger.dart';
+import '../../../../infrastructure/network/token_refresher.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/services/auth_service.dart';
+import '../../domain/value_objects/session_renewal.dart';
 import '../contracts/session_capability.dart';
 import '../events/auth_events.dart';
 import '../state/auth_state.dart';
@@ -23,8 +25,10 @@ import '../state/auth_state.dart';
 /// coordinator becoming the god class the architecture warns about.
 ///
 /// It also implements [SessionCapability], which is how Conversations reads
-/// the current user without knowing this class exists.
-class SessionCoordinator implements SessionCapability {
+/// the current user without knowing this class exists, and
+/// [CredentialRenewer], which is how both transports renew a credential
+/// without knowing what a session is.
+class SessionCoordinator implements SessionCapability, CredentialRenewer {
   SessionCoordinator({required AuthService authService, required Logger logger})
     : _authService = authService,
       _logger = logger;
@@ -144,9 +148,76 @@ class SessionCoordinator implements SessionCapability {
     _announce(SignedOut(wasExpired: expired));
   }
 
-  /// Called when the socket reports the credential is no longer accepted and
-  /// could not be refreshed.
-  Future<void> handleSessionExpired() => signOut(expired: true);
+  /// Renews the credential, for either transport.
+  ///
+  /// The transports reach this through `TokenRefresher`, never directly: the
+  /// backend's refresh tokens are single-use, so a socket reconnect and an HTTP
+  /// retry have to share one renewal.
+  ///
+  /// A renewed session is published, so a permission granted or revoked since
+  /// sign-in reaches the screens. A refusal ends the session and says why.
+  /// Anything else leaves the member signed in.
+  @override
+  Future<RefreshOutcome> renew() async {
+    final SessionRenewal renewal;
+
+    try {
+      renewal = await _authService.renew();
+    } on Object catch (error, stackTrace) {
+      _logger.error(
+        'session renewal failed unexpectedly',
+        error: error,
+        stackTrace: stackTrace,
+      );
+
+      return const RefreshUnavailable();
+    }
+
+    switch (renewal) {
+      case SessionRenewed(:final session, :final accessToken):
+        if (_state.isAuthenticated) {
+          _publish(AuthState.authenticated(session));
+          _announce(SessionRefreshed(session: session));
+        }
+
+        return TokenRefreshed(accessToken);
+
+      case SessionRenewalRejected():
+        if (_state.isAuthenticated) await signOut(expired: true);
+
+        return const RefreshRejected();
+
+      case SessionRenewalUnavailable():
+        return const RefreshUnavailable();
+    }
+  }
+
+  Future<void>? _reloading;
+
+  /// Re-reads the session after the server says the member's access changed.
+  ///
+  /// Concurrent requests share one read. It does nothing while signed out,
+  /// and leaves the session as it is when the server cannot be asked.
+  Future<void> reloadSession() {
+    return _reloading ??= _reload().whenComplete(() => _reloading = null);
+  }
+
+  Future<void> _reload() async {
+    if (!_state.isAuthenticated) return;
+
+    try {
+      final Session? session = await _authService.reload();
+
+      if (session != null && _state.isAuthenticated) {
+        _publish(AuthState.authenticated(session));
+      }
+    } on Object catch (error) {
+      _logger.warning(
+        'session reload failed',
+        data: <String, Object?>{'error': error.runtimeType.toString()},
+      );
+    }
+  }
 
   void _publish(AuthState next) {
     if (_state == next) return;

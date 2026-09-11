@@ -1,33 +1,36 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/features/auth/application/coordinators/session_coordinator.dart';
-import 'package:tajeerai_mobile/features/auth/application/state/auth_state.dart';
-import 'package:tajeerai_mobile/features/auth/domain/services/auth_service.dart';
 import 'package:tajeerai_mobile/features/auth/realtime/auth_socket_credentials.dart';
-import 'package:tajeerai_mobile/infrastructure/logging/logger.dart';
+import 'package:tajeerai_mobile/infrastructure/network/token_refresher.dart';
 
 import '../domain/fakes/fake_auth_repository.dart';
 
+/// A renewer that counts, and answers what the test sets.
+class _CountingRenewer implements CredentialRenewer {
+  RefreshOutcome outcome = const TokenRefreshed('token-2');
+  int calls = 0;
+
+  @override
+  Future<RefreshOutcome> renew() async {
+    calls += 1;
+
+    return outcome;
+  }
+}
+
 void main() {
   late FakeAuthRepository repository;
-  late SessionCoordinator coordinator;
+  late _CountingRenewer renewer;
   late AuthSocketCredentials credentials;
 
   setUp(() {
     repository = FakeAuthRepository();
-
-    coordinator = SessionCoordinator(
-      authService: AuthService(repository),
-      logger: Logger('test', verbose: false),
-    );
+    renewer = _CountingRenewer();
 
     credentials = AuthSocketCredentials(
       repository: repository,
-      coordinator: coordinator,
-      logger: Logger('test', verbose: false),
+      refresher: TokenRefresher(renewer),
     );
   });
-
-  tearDown(() => coordinator.dispose());
 
   test('supplies the stored access token for the handshake', () async {
     expect(await credentials.currentToken(), 'token-1');
@@ -39,26 +42,32 @@ void main() {
     expect(await credentials.currentToken(), isNull);
   });
 
-  test('renews the session and returns the new token', () async {
-    final token = await credentials.refreshToken();
+  test(
+    'renews through the shared refresher and passes the outcome on',
+    () async {
+      expect(await credentials.refreshToken(), isA<TokenRefreshed>());
 
-    expect(token, 'token-2');
-    expect(repository.refreshCalls, 1);
+      renewer.outcome = const RefreshRejected();
+      expect(await credentials.refreshToken(), isA<RefreshRejected>());
 
-    // Still signed in -- a successful refresh must not end the session.
-    expect(coordinator.state.status, isNot(AuthStatus.unauthenticated));
-  });
+      renewer.outcome = const RefreshUnavailable();
+      expect(await credentials.refreshToken(), isA<RefreshUnavailable>());
 
-  test('ends the session when the credential cannot be renewed', () async {
-    repository.refreshedToken = null;
+      expect(renewer.calls, 3);
+    },
+  );
 
-    final token = await credentials.refreshToken();
+  test('a reconnect arriving mid-renewal does not renew twice', () async {
+    final List<RefreshOutcome> outcomes = await Future.wait(
+      <Future<RefreshOutcome>>[
+        credentials.refreshToken(),
+        credentials.refreshToken(),
+      ],
+    );
 
-    // Returning null is what tells the manager to stop retrying. Without a
-    // terminal answer the client reconnects forever against a credential the
-    // server has already refused.
-    expect(token, isNull);
-    expect(coordinator.state.status, AuthStatus.unauthenticated);
-    expect(coordinator.state.failure, isNotNull);
+    // The backend's refresh tokens are single-use: a second renewal would
+    // spend a token the first had already revoked.
+    expect(renewer.calls, 1);
+    expect(outcomes, everyElement(isA<TokenRefreshed>()));
   });
 }

@@ -1,6 +1,7 @@
 import '../entities/user.dart';
 import '../value_objects/login_identifier.dart';
 import '../value_objects/password.dart';
+import '../value_objects/session_renewal.dart';
 
 /// Data access for authentication.
 ///
@@ -33,11 +34,12 @@ abstract interface class AuthRepository {
   /// and not an error: an expired refresh token simply means signing in again.
   Future<Session?> restoreSession();
 
-  /// Rotates the access credential.
+  /// Rotates the credential and stores the renewed session.
   ///
-  /// Returns the new access token, or null when the session is unrecoverable.
-  /// Used by the socket layer after `auth.expired`.
-  Future<String?> refreshAccessToken();
+  /// Never throws for a transport problem: offline, throttled and server
+  /// errors come back as [SessionRenewalUnavailable], and only the server
+  /// refusing the refresh credential is [SessionRenewalRejected].
+  Future<SessionRenewal> renewSession();
 
   /// The current access token for the socket handshake, without refreshing.
   Future<String?> accessToken();

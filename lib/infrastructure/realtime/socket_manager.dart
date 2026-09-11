@@ -2,6 +2,7 @@ import 'dart:async';
 
 import '../device/connectivity/connectivity_monitor.dart';
 import '../logging/logger.dart';
+import '../network/token_refresher.dart';
 import 'authentication/socket_credentials.dart';
 import 'connection/connection_state.dart';
 import 'connection/reconnect_policy.dart';
@@ -59,6 +60,14 @@ class SocketManager {
   final StreamController<void> _connections =
       StreamController<void>.broadcast();
 
+  /// Fires when the server says the member's access changed.
+  ///
+  /// The socket reconnects by itself, which recomputes its rooms. What the
+  /// member may *do* lives in the session, and the auth feature re-reads it on
+  /// this.
+  final StreamController<void> _accessChanges =
+      StreamController<void>.broadcast();
+
   StreamSubscription<SocketLifecycle>? _lifecycleSubscription;
   StreamSubscription<NetworkStatus>? _connectivitySubscription;
   Timer? _reconnectTimer;
@@ -78,6 +87,8 @@ class SocketManager {
   Stream<SocketConnectionState> get states => _states.stream;
 
   Stream<void> get connections => _connections.stream;
+
+  Stream<void> get accessChanges => _accessChanges.stream;
 
   /// Business frames, forwarded from the transport untouched.
   ///
@@ -172,6 +183,7 @@ class SocketManager {
           // The server is about to drop the socket. Reconnecting recomputes
           // the rooms; the disconnect that follows triggers it.
           _logger.info('access changed; awaiting reconnect');
+          if (!_accessChanges.isClosed) _accessChanges.add(null);
 
         case SocketTransportError():
           // Socket.IO reports errors that do not always close the connection.
@@ -182,27 +194,35 @@ class SocketManager {
     });
   }
 
-  /// Handles `auth.expired`: refresh once, then reconnect with the new token.
+  /// Handles `auth.expired`: renew, then reconnect with the new token.
   ///
-  /// A failed refresh is terminal. Retrying a rejected credential is the loop
-  /// the backend's `auth.expired` event exists to prevent, so the state
-  /// becomes [SocketConnectionState.unauthenticated] and the auth feature
-  /// takes over by watching for it.
+  /// A refusal is terminal. Retrying a rejected credential is the loop the
+  /// backend's `auth.expired` event exists to prevent, so the state becomes
+  /// [SocketConnectionState.unauthenticated] and the auth feature, which has
+  /// already ended the session, takes over.
+  ///
+  /// A renewal that could not be asked is not a refusal. The socket stays
+  /// wanted and tries again on its backoff; the next attempt's own rejection
+  /// brings it back here, and returning network shortens the wait.
   Future<void> _recoverCredential() async {
     _cancelReconnect();
 
-    final refreshed = await _credentials.refreshToken();
+    final RefreshOutcome outcome = await _credentials.refreshToken();
 
-    if (refreshed == null) {
-      _logger.warning('session could not be refreshed; socket stopped');
-      _wanted = false;
-      _publish(SocketConnectionState.unauthenticated);
+    switch (outcome) {
+      case TokenRefreshed():
+        _attempt = 0;
+        await _openConnection();
 
-      return;
+      case RefreshRejected():
+        _logger.warning('session was refused; socket stopped');
+        _wanted = false;
+        _publish(SocketConnectionState.unauthenticated);
+
+      case RefreshUnavailable():
+        _logger.info('session could not be renewed yet; retrying later');
+        _scheduleReconnect();
     }
-
-    _attempt = 0;
-    await _openConnection();
   }
 
   void _scheduleReconnect() {
@@ -287,5 +307,6 @@ class SocketManager {
     await _client.dispose();
     await _states.close();
     await _connections.close();
+    await _accessChanges.close();
   }
 }

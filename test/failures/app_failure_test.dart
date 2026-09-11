@@ -42,6 +42,20 @@ void main() {
     });
   });
 
+  group('RateLimitedFailure', () {
+    test('carries how long the server asked the client to wait', () {
+      const said = RateLimitedFailure(
+        message: 'Slow down.',
+        retryAfter: Duration(seconds: 30),
+      );
+      const unsaid = RateLimitedFailure(message: 'Slow down.');
+
+      expect(said.retryAfter, const Duration(seconds: 30));
+      // The server does not always say. Null means "a moment", not "now".
+      expect(unsaid.retryAfter, isNull);
+    });
+  });
+
   group('SocketFailure', () {
     test('carries retryability so the outbox can decide without a socket', () {
       const retryable = SocketFailure(message: 'Timed out.');
@@ -85,6 +99,7 @@ void main() {
         NotFoundFailure() => 'notFound',
         ConflictFailure() => 'conflict',
         TransportFailure() => 'transport',
+        RateLimitedFailure() => 'rateLimited',
         SocketFailure() => 'socket',
         DatabaseFailure() => 'database',
         SynchronizationFailure() => 'synchronization',

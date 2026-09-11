@@ -103,6 +103,21 @@ final class TransportFailure extends AppFailure {
   final bool isOffline;
 }
 
+/// The server is throttling this client.
+///
+/// Nothing is wrong with what was asked: waiting [retryAfter] -- or a moment,
+/// when the server did not say -- and asking again succeeds. Kept apart from
+/// [TransportFailure] so a sync can pace itself instead of reporting an error.
+final class RateLimitedFailure extends AppFailure {
+  const RateLimitedFailure({
+    required super.message,
+    this.retryAfter,
+    super.cause,
+  });
+
+  final Duration? retryAfter;
+}
+
 /// The realtime transport failed -- not connected, the command timed out
 /// waiting for its acknowledgement, or the socket reported an error.
 final class SocketFailure extends AppFailure {

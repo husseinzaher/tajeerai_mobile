@@ -10,6 +10,7 @@ import 'package:tajeerai_mobile/features/auth/data/remote/auth_remote_data_sourc
 import 'package:tajeerai_mobile/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:tajeerai_mobile/features/auth/domain/value_objects/login_identifier.dart';
 import 'package:tajeerai_mobile/features/auth/domain/value_objects/password.dart';
+import 'package:tajeerai_mobile/features/auth/domain/value_objects/session_renewal.dart';
 import 'package:tajeerai_mobile/infrastructure/database/app_database.dart';
 import 'package:tajeerai_mobile/infrastructure/logging/logger.dart';
 import 'package:tajeerai_mobile/infrastructure/network/http_client.dart';
@@ -377,23 +378,63 @@ void main() {
 
       expect(await repository.accessToken(), 'jwt-value');
     });
+  });
 
-    test('refreshing returns the newly stored token', () async {
+  group('renewSession', () {
+    test('stores the renewed session and returns the new token', () async {
       await storage.write(SecureStorage.accessTokenKey, 'jwt-new');
 
-      expect(await repository.refreshAccessToken(), 'jwt-new');
+      final SessionRenewal renewal = await repository.renewSession();
+
+      expect(
+        renewal,
+        isA<SessionRenewed>().having(
+          (SessionRenewed renewed) => renewed.accessToken,
+          'accessToken',
+          'jwt-new',
+        ),
+      );
       expect(remote.refreshCalls, 1);
+      // A cold start reads the renewed copy, with what the server grants now.
+      expect(await local.readSession(), isNotNull);
+    });
+
+    test('a 401 is the server refusing: the session is over', () async {
+      remote.failureToThrow = const HttpException(
+        message: 'Unauthorized',
+        statusCode: 401,
+      );
+
+      expect(await repository.renewSession(), isA<SessionRenewalRejected>());
     });
 
     test(
-      'refreshing returns null when the session cannot be renewed',
+      'offline, throttled, slow and failing servers are not a refusal',
       () async {
-        remote.failureToThrow = const HttpException(
-          message: 'Unauthorized',
-          statusCode: 401,
-        );
+        for (final HttpException error in <HttpException>[
+          const HttpException(message: 'No route', isConnectionError: true),
+          const HttpException(message: 'Slow down', statusCode: 429),
+          const HttpException(message: 'Boom', statusCode: 503),
+          const HttpException(message: 'Too slow', isTimeout: true),
+        ]) {
+          remote.failureToThrow = error;
 
-        expect(await repository.refreshAccessToken(), isNull);
+          expect(
+            await repository.renewSession(),
+            isA<SessionRenewalUnavailable>(),
+            reason: error.message,
+          );
+        }
+      },
+    );
+
+    test(
+      'an answer that stored no credential is not a refusal either',
+      () async {
+        expect(
+          await repository.renewSession(),
+          isA<SessionRenewalUnavailable>(),
+        );
       },
     );
   });

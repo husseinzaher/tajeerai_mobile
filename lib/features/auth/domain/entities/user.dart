@@ -44,6 +44,11 @@ final class AuthenticatedUser {
     return permissions.contains(permission) || permissions.contains('*');
   }
 
+  /// Permissions are part of who this user is to the app.
+  ///
+  /// They used to be left out, so a session re-read with a permission granted
+  /// or withdrawn compared equal to the old one, and the change never reached
+  /// a screen.
   @override
   bool operator ==(Object other) =>
       other is AuthenticatedUser &&
@@ -54,7 +59,9 @@ final class AuthenticatedUser {
       other.role == role &&
       other.locale == locale &&
       other.avatarUrl == avatarUrl &&
-      other.isPlatformAdmin == isPlatformAdmin;
+      other.isPlatformAdmin == isPlatformAdmin &&
+      other.permissions.length == permissions.length &&
+      other.permissions.containsAll(permissions);
 
   @override
   int get hashCode => Object.hash(
@@ -66,6 +73,7 @@ final class AuthenticatedUser {
     locale,
     avatarUrl,
     isPlatformAdmin,
+    Object.hashAllUnordered(permissions),
   );
 
   @override

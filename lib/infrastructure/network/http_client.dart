@@ -1,3 +1,5 @@
+import 'dart:io' show HttpDate;
+
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
@@ -6,6 +8,7 @@ import '../../app/config/app_config.dart';
 import '../logging/logger.dart';
 import 'http_exception.dart';
 import 'interceptors/logging_interceptor.dart';
+import 'token_refresher.dart';
 
 /// The HTTP transport.
 ///
@@ -32,14 +35,32 @@ import 'interceptors/logging_interceptor.dart';
 /// socket handshake, which accepts `auth.token`. That keeps the mobile client
 /// working against the deployed API with no server change; see
 /// `ARCHITECTURE.md` -> Backend assumptions.
+///
+/// ## An expired credential
+///
+/// A 401 on anything but the auth endpoints renews the session once, through
+/// the same shared renewal the socket uses, and repeats the request. A second
+/// 401 is the server's final word and reaches the caller as one.
 class HttpClient {
-  HttpClient._(this._dio, this.cookieJar);
+  HttpClient._(
+    this._dio,
+    this.cookieJar, {
+    required Future<RefreshOutcome> Function()? renewCredential,
+    required void Function()? onForbidden,
+    required DateTime Function() clock,
+  }) : _renewCredential = renewCredential,
+       _onForbidden = onForbidden,
+       _clock = clock;
 
   factory HttpClient.create({
     required AppConfig config,
     required Logger logger,
     required String userAgent,
     CookieJar? cookieJar,
+    Future<RefreshOutcome> Function()? renewCredential,
+    void Function()? onForbidden,
+    HttpClientAdapter? adapter,
+    DateTime Function() clock = DateTime.now,
   }) {
     final jar = cookieJar ?? CookieJar();
 
@@ -60,11 +81,20 @@ class HttpClient {
       ),
     );
 
+    // Only tests supply one: it answers without a network.
+    if (adapter != null) dio.httpClientAdapter = adapter;
+
     dio.interceptors
       ..add(CookieManager(jar))
       ..add(LoggingInterceptor(logger));
 
-    return HttpClient._(dio, jar);
+    return HttpClient._(
+      dio,
+      jar,
+      renewCredential: renewCredential,
+      onForbidden: onForbidden,
+      clock: clock,
+    );
   }
 
   final Dio _dio;
@@ -73,32 +103,51 @@ class HttpClient {
   /// access token for the socket handshake.
   final CookieJar cookieJar;
 
-  Future<Map<String, Object?>> get(
-    String path, {
-    Map<String, Object?>? query,
-  }) async {
-    return _send(() => _dio.get<Object?>(path, queryParameters: query));
+  /// Renews the session when a request comes back 401.
+  ///
+  /// A closure supplied by the composition root rather than an object, because
+  /// what renews a session is itself built on this client.
+  final Future<RefreshOutcome> Function()? _renewCredential;
+
+  /// Told when the server answers 403: the member's permissions may have
+  /// changed since the session was last read.
+  final void Function()? _onForbidden;
+
+  final DateTime Function() _clock;
+
+  /// The auth endpoints manage the credential themselves. Renewing on their
+  /// 401 would have a failed sign-in, refresh or sign-out try to renew itself.
+  static const String _authPrefix = '/v1/auth/';
+
+  Future<Map<String, Object?>> get(String path, {Map<String, Object?>? query}) {
+    return _send(path, () => _dio.get<Object?>(path, queryParameters: query));
   }
 
-  Future<Map<String, Object?>> post(String path, {Object? body}) async {
-    return _send(() => _dio.post<Object?>(path, data: body));
+  Future<Map<String, Object?>> post(String path, {Object? body}) {
+    return _send(path, () => _dio.post<Object?>(path, data: body));
+  }
+
+  Future<Map<String, Object?>> patch(String path, {Object? body}) {
+    return _send(path, () => _dio.patch<Object?>(path, data: body));
   }
 
   /// Sends a request and normalises everything that can go wrong into
   /// [HttpException].
   Future<Map<String, Object?>> _send(
+    String path,
     Future<Response<Object?>> Function() request,
   ) async {
-    final Response<Object?> response;
+    Response<Object?> response = await _attempt(request);
 
-    try {
-      response = await request();
-    } on DioException catch (error) {
-      throw HttpException(
-        message: 'Could not reach the server.',
-        isConnectionError: true,
-        cause: error,
-      );
+    final Future<RefreshOutcome> Function()? renew = _renewCredential;
+
+    if (response.statusCode == 401 &&
+        renew != null &&
+        !path.startsWith(_authPrefix)) {
+      // Once. The retry carries the renewed cookie from the jar.
+      if (await renew() is TokenRefreshed) {
+        response = await _attempt(request);
+      }
     }
 
     final status = response.statusCode ?? 0;
@@ -113,11 +162,58 @@ class HttpClient {
       return <String, Object?>{'data': data};
     }
 
+    if (status == 403) _onForbidden?.call();
+
     throw HttpException(
       message: _messageFrom(response.data) ?? 'Request failed.',
       statusCode: status,
       body: response.data,
+      retryAfter: status == 429 ? _retryAfter(response.headers) : null,
     );
+  }
+
+  /// Runs one request, turning Dio's failures into [HttpException].
+  Future<Response<Object?>> _attempt(
+    Future<Response<Object?>> Function() request,
+  ) async {
+    try {
+      return await request();
+    } on DioException catch (error) {
+      throw switch (error.type) {
+        DioExceptionType.sendTimeout ||
+        DioExceptionType.receiveTimeout => HttpException(
+          message: 'The server took too long to answer.',
+          isTimeout: true,
+          cause: error,
+        ),
+        DioExceptionType.badCertificate => HttpException(
+          message: "The server's certificate was not accepted.",
+          cause: error,
+        ),
+        _ => HttpException(
+          message: 'Could not reach the server.',
+          isConnectionError: true,
+          cause: error,
+        ),
+      };
+    }
+  }
+
+  /// `Retry-After` is either a number of seconds or an HTTP date.
+  Duration? _retryAfter(Headers headers) {
+    final String? value = headers.value('retry-after');
+    if (value == null) return null;
+
+    final int? seconds = int.tryParse(value.trim());
+    if (seconds != null) return Duration(seconds: seconds < 0 ? 0 : seconds);
+
+    try {
+      final Duration wait = HttpDate.parse(value).difference(_clock());
+
+      return wait.isNegative ? Duration.zero : wait;
+    } on Exception {
+      return null;
+    }
   }
 
   /// Nest reports failures as `{ message: string | string[] }`.

@@ -12,6 +12,8 @@ class HttpException implements Exception {
     this.statusCode,
     this.body,
     this.isConnectionError = false,
+    this.isTimeout = false,
+    this.retryAfter,
     this.cause,
   });
 
@@ -22,8 +24,19 @@ class HttpException implements Exception {
   /// backend's field-level validation messages out of a 400/422.
   final Object? body;
 
-  /// True when the request never reached a server -- DNS, timeout, no route.
+  /// True when no connection to a server could be made -- DNS, no route, a
+  /// connection that would not open.
   final bool isConnectionError;
+
+  /// True when a server was reached but did not answer in time.
+  ///
+  /// Not "offline". Telling a member on full signal that they have no
+  /// connection sends them looking for a problem their phone does not have.
+  final bool isTimeout;
+
+  /// How long the server asked the client to wait before trying again, from a
+  /// 429's `Retry-After`.
+  final Duration? retryAfter;
 
   final Object? cause;
 
@@ -41,6 +54,13 @@ class HttpException implements Exception {
       );
     }
 
+    if (isTimeout) {
+      return TransportFailure(
+        message: 'The server took too long to answer.',
+        cause: cause,
+      );
+    }
+
     return switch (statusCode) {
       401 => AuthenticationFailure(
         message: message,
@@ -53,6 +73,11 @@ class HttpException implements Exception {
       400 || 422 => ValidationFailure(
         message: message,
         fieldErrors: _fieldErrors(),
+        cause: cause,
+      ),
+      429 => RateLimitedFailure(
+        message: message,
+        retryAfter: retryAfter,
         cause: cause,
       ),
       _ => TransportFailure(

@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tajeerai_mobile/infrastructure/logging/logger.dart';
+import 'package:tajeerai_mobile/infrastructure/network/token_refresher.dart';
 import 'package:tajeerai_mobile/infrastructure/realtime/connection/connection_state.dart';
 import 'package:tajeerai_mobile/infrastructure/realtime/connection/reconnect_policy.dart';
 import 'package:tajeerai_mobile/infrastructure/realtime/socket_command.dart';
@@ -183,8 +184,8 @@ void main() {
       expect(client.connectTokens.last, 'token-2');
     });
 
-    test('stops when the session cannot be recovered', () async {
-      credentials.refreshed = null;
+    test('stops when the session is refused', () async {
+      credentials.outcome = const RefreshRejected();
 
       await manager.start();
 
@@ -208,6 +209,34 @@ void main() {
       // reconnect that recomputes the rooms.
       expect(credentials.refreshCalls, 0);
     });
+
+    test('keeps trying when the renewal could not be asked', () async {
+      credentials.outcome = const RefreshUnavailable();
+
+      await manager.start();
+
+      client.rejectCredential();
+      await pumpEventQueue();
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+
+      // Offline or throttled says nothing about the session. The socket stays
+      // wanted and tries again instead of reporting the member signed out --
+      // which is what this used to do on a dead network.
+      expect(manager.state, isNot(SocketConnectionState.unauthenticated));
+      expect(client.connectTokens.length, greaterThan(1));
+    });
+
+    test(
+      'passes an access change on, so the session can be read again',
+      () async {
+        await manager.start();
+        final Future<void> announced = manager.accessChanges.first;
+
+        client.changeAccess();
+
+        await expectLater(announced, completes);
+      },
+    );
 
     test('a transport error alone does not tear down the connection', () async {
       await manager.start();

@@ -151,7 +151,7 @@ void main() {
       final events = <AuthEvent>[];
       final subscription = coordinator.events.listen(events.add);
 
-      await coordinator.handleSessionExpired();
+      await coordinator.signOut(expired: true);
       await pumpEventQueue();
       await subscription.cancel();
 

@@ -5,6 +5,7 @@ import '../../domain/entities/user.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/value_objects/login_identifier.dart';
 import '../../domain/value_objects/password.dart';
+import '../../domain/value_objects/session_renewal.dart';
 import '../local/auth_local_data_source.dart';
 import '../remote/auth_remote_data_source.dart';
 
@@ -112,21 +113,40 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<String?> refreshAccessToken() async {
-    try {
-      await _remote.refresh();
+  Future<SessionRenewal> renewSession() async {
+    final Session session;
 
-      return await _local.readAccessToken();
+    try {
+      session = await _remote.refresh();
     } on HttpException catch (error) {
       _logger.info(
-        'session refresh failed',
-        data: <String, Object?>{'status': error.statusCode},
+        'session renewal failed',
+        data: <String, Object?>{
+          'status': error.statusCode,
+          'offline': error.isConnectionError,
+        },
       );
 
-      return null;
+      // Only the server refusing the refresh credential ends a session. This
+      // used to return null for every failure, and the socket signed members
+      // out whenever a refresh happened to meet a dead network.
+      return error.statusCode == 401
+          ? const SessionRenewalRejected()
+          : const SessionRenewalUnavailable();
     } on FormatException {
-      return null;
+      return const SessionRenewalUnavailable();
     }
+
+    // Stored before anyone is told: the renewed copy carries the permissions
+    // the server grants now, and a cold start has to read those, not the old.
+    await _local.saveSession(session, now: _clock());
+
+    final String? token = await _local.readAccessToken();
+
+    // An answer without a credential cannot be used, but it was not a refusal.
+    if (token == null) return const SessionRenewalUnavailable();
+
+    return SessionRenewed(session: session, accessToken: token);
   }
 
   @override

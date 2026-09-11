@@ -3,6 +3,7 @@ import '../entities/user.dart';
 import '../repositories/auth_repository.dart';
 import '../value_objects/login_identifier.dart';
 import '../value_objects/password.dart';
+import '../value_objects/session_renewal.dart';
 
 /// The business rules of signing in.
 ///
@@ -111,6 +112,14 @@ class AuthService {
   /// would render an empty list forever rather than telling the user why.
   bool canAccessWorkspace(Session? session) =>
       session != null && session.hasWorkspace;
+
+  /// Renews the credential; see [AuthRepository.renewSession].
+  Future<SessionRenewal> renew() => _repository.renewSession();
+
+  /// Re-reads the session from the server, for when the member's access may
+  /// have changed. Null when the server could not be asked or no longer knows
+  /// the session -- neither of which is for this call to act on.
+  Future<Session?> reload() => _repository.restoreSession();
 
   Future<void> signOut() => _repository.signOut();
 }

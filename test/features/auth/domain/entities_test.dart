@@ -61,6 +61,43 @@ void main() {
       );
     });
 
+    test('a permission granted or withdrawn makes a different user', () {
+      const granted = AuthenticatedUser(
+        id: 'u1',
+        name: 'Ada Lovelace',
+        email: 'ada@demo.test',
+        role: 'member',
+        locale: 'ar',
+        permissions: <String>{'read:Customer'},
+      );
+
+      // Permissions were once left out of equality, so a session re-read with
+      // a new grant compared equal to the old one and never reached a screen.
+      expect(_user, isNot(granted));
+    });
+
+    test('the order permissions arrive in does not matter', () {
+      const first = AuthenticatedUser(
+        id: 'u1',
+        name: 'Ada Lovelace',
+        email: 'ada@demo.test',
+        role: 'member',
+        locale: 'ar',
+        permissions: <String>{'read:Customer', 'read:Order'},
+      );
+      const second = AuthenticatedUser(
+        id: 'u1',
+        name: 'Ada Lovelace',
+        email: 'ada@demo.test',
+        role: 'member',
+        locale: 'ar',
+        permissions: <String>{'read:Order', 'read:Customer'},
+      );
+
+      expect(first, second);
+      expect(first.hashCode, second.hashCode);
+    });
+
     test('does not print anything identifying', () {
       // A user object interpolated into a log must not carry a name or email
       // into a third-party system.
