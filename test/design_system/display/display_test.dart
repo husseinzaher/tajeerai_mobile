@@ -30,6 +30,41 @@ void main() {
       expect(find.text('7'), findsOneWidget);
     });
 
+    testWidgets('a single-digit count is a circle, at every text size', (
+      WidgetTester tester,
+    ) async {
+      // The floor used to be a fixed 20 wide, and the typeface's leading made
+      // the pill 26 tall — a capsule standing on end. The floor is the badge's
+      // own height now, so it has to hold as the text grows.
+      for (final double scale in <double>[1, 1.3, 2]) {
+        await tester.pumpWidget(
+          wrapWidget(
+            UnconstrainedBox(child: AppBadge.count(3)),
+            textScaler: TextScaler.linear(scale),
+          ),
+        );
+        final Size one = tester.getSize(find.byType(AppBadge));
+        expect(
+          one.width,
+          moreOrLessEquals(one.height, epsilon: 0.5),
+          reason: 'one digit at text scale $scale',
+        );
+
+        await tester.pumpWidget(
+          wrapWidget(
+            UnconstrainedBox(child: AppBadge.count(12)),
+            textScaler: TextScaler.linear(scale),
+          ),
+        );
+        final Size two = tester.getSize(find.byType(AppBadge));
+        expect(
+          two.width,
+          greaterThanOrEqualTo(two.height),
+          reason: 'two digits at text scale $scale',
+        );
+      }
+    });
+
     testWidgets('a dot carries no text at all', (WidgetTester tester) async {
       await tester.pumpWidget(wrapWidget(const AppBadge.dot()));
       expect(find.byType(Text), findsNothing);

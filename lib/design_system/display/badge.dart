@@ -121,18 +121,36 @@ class AppBadge extends StatelessWidget {
     }
 
     final bool small = size == AppBadgeSize.small;
+    final TextStyle labelStyle = context.type.labelSm.copyWith(
+      fontFamily: TajeerTypography.sansFamily,
+      fontFamilyFallback: TajeerTypography.sansFallback,
+      color: foreground,
+    );
+    final EdgeInsetsDirectional padding = EdgeInsetsDirectional.symmetric(
+      horizontal: small ? TajeerSpacing.xs2 : TajeerSpacing.sm,
+      vertical: TajeerSpacing.xs2,
+    );
+    final Border outline = Border.fromBorderSide(BorderSide(color: border));
+
+    // A count is a circle until it needs to be a pill, so its floor is its own
+    // height: the label's line box, scaled, plus padding and edge. A fixed 20
+    // was outgrown by the typeface's generous leading, and a single digit came
+    // out taller than it was wide.
+    final double minSide = small
+        ? MediaQuery.textScalerOf(context).scale(labelStyle.fontSize!) *
+                  (labelStyle.height ?? 1) +
+              padding.vertical +
+              outline.dimensions.vertical
+        : 0;
 
     return Container(
-      constraints: BoxConstraints(minWidth: small ? 20 : 0),
+      constraints: BoxConstraints(minWidth: minSide),
       alignment: small ? Alignment.center : null,
-      padding: EdgeInsetsDirectional.symmetric(
-        horizontal: small ? TajeerSpacing.xs2 : TajeerSpacing.sm,
-        vertical: TajeerSpacing.xs2,
-      ),
+      padding: padding,
       decoration: BoxDecoration(
         color: background,
         borderRadius: small ? TajeerRadii.fullAll : TajeerRadii.mdAll,
-        border: Border.fromBorderSide(BorderSide(color: border)),
+        border: outline,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
