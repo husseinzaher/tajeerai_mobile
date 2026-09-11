@@ -53,6 +53,7 @@ lib/
 │   ├── primitives/ buttons/ inputs/ display/ cards/ feedback/ loaders/ overlays/ layouts/
 │   ├── auth/                  The frame and the parts of every unauthenticated screen.
 │   ├── shell/                 The toolbar, the navigation drawer, the bottom bar and the shell that holds them.
+│   ├── channels/              A channel's kind, its instance colour and what it can carry — never which feature owns it.
 │   ├── localization/          The copy components render on their own behalf.
 │   └── showcase/              The debug-only gallery. The same components, never copies.
 │
@@ -487,6 +488,36 @@ still reachable behind.
 the conversation screen moves onto `AppToolbar.conversation`, and loses it
 then. A scaffold with two ways to draw a title is how the next inconsistency
 starts.
+
+### Channels: which kind, which one, and what it can carry
+
+Three facts about a channel that are easy to blur into one, kept apart in
+`design_system/channels/`:
+
+- **Which kind** — `AppChannelKind`, drawn by `AppChannelGlyph` in the named
+  identity colours from `design/tokens.json` (`context.channels`). WhatsApp is
+  green in every preset. Six kinds, not the backend's seven types: the two
+  WhatsApp transports are one identity to a member.
+- **Which one of several** — the instance colour. The server resolves it: a
+  merchant's choice, or `CHANNEL_COLOR_PALETTE` hashed by channel id.
+  `AppChannelPalette` mirrors that list and that hash exactly, for a channel the
+  device knows only by id, and its test pins the same ids to the same slots as
+  the backend's spec. It is **not a token** — the backend decides it, in
+  `backend/src/modules/channel/contracts/channel-color.ts`, and the two change
+  together. No instance colour is a status or accent colour on either platform;
+  the backend spec lists the ones that are taken.
+- **What it can carry** — `AppChannelCapabilities`, one flag per backend
+  capability. A composer branches on these and never on the kind, so an SMS
+  thread gets a text-only composer with no `if (sms)` in it.
+
+`AppChannelBadge` names a channel on one line and **never draws its text in the
+channel colour**: most instance colours are below 4.5:1 as text on one theme or
+the other. The colour travels in the dot, and in a tint the badge's own test
+holds to body-text contrast for every colour, preset and theme.
+
+Nothing in `features/` draws these yet — `Conversation` carries only a
+`channelId`. Mapping the backend's channel types onto the six kinds belongs to
+the feature that first needs it.
 
 ## 13. Testing rules
 

@@ -171,6 +171,45 @@ void main() {
           }
         });
 
+        test('channel glyphs read as objects, on their wash and the page', () {
+          // The named channel colours are shared by every preset, so each one
+          // is measured against every preset's own surfaces. A glyph is an
+          // object rather than text: 3:1 is its floor.
+          final TajeerChannelColors channels = brightness == Brightness.dark
+              ? TajeerChannelColors.dark
+              : TajeerChannelColors.light;
+          for (final String kind in <String>[
+            'whatsapp',
+            'sms',
+            'email',
+            'instagram',
+            'messenger',
+            'liveChat',
+          ]) {
+            final Color ink = channels.asMap[kind]!;
+            final Color wash = channels.asMap['${kind}Soft']!;
+            expect(
+              _contrast(ink, wash),
+              greaterThanOrEqualTo(_object),
+              reason: '$label $kind on ${kind}Soft',
+            );
+            for (final MapEntry<String, Color> surface in <String, Color>{
+              'background': colors.background,
+              'surface': colors.surface,
+              'surfaceMuted': colors.surfaceMuted,
+            }.entries) {
+              final double ratio = _contrast(ink, surface.value);
+              expect(
+                ratio,
+                greaterThanOrEqualTo(_object),
+                reason:
+                    '$label $kind on ${surface.key} is '
+                    '${ratio.toStringAsFixed(2)}:1',
+              );
+            }
+          }
+        });
+
         test('the hairlines are visible, and ordered', () {
           for (final MapEntry<String, Color> line in <String, Color>{
             'border': colors.border,
