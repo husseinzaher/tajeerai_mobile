@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/bootstrap/dependencies.dart';
-import '../../../auth/application/contracts/session_capability.dart';
 import '../../application/state/sync_state.dart';
 import '../../domain/entities/conversation.dart';
 import '../../domain/services/conversation_service.dart';
@@ -77,12 +76,4 @@ class ConversationListController {
   /// Marks a thread read when it is opened.
   Future<void> markRead(Conversation conversation) =>
       _service.markRead(conversation);
-
-  /// Ends the session.
-  ///
-  /// Goes through [SessionCapability] -- the auth feature's published
-  /// contract -- rather than through an auth controller. The Inbox owns the
-  /// button; auth owns what signing out means; neither imports the other's
-  /// internals.
-  Future<void> signOut() => _ref.read(sessionCapabilityProvider).signOut();
 }

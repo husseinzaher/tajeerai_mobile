@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -9,6 +10,7 @@ import '../../features/conversations/presentation/screens/conversation_list_scre
 import '../../features/conversations/presentation/screens/conversation_screen.dart';
 import '../../design_system/loaders/app_splash.dart';
 import '../../design_system/showcase/showcase_app.dart';
+import '../shell/authenticated_shell.dart';
 import 'guards/auth_guard.dart';
 import 'routes.dart';
 
@@ -26,7 +28,12 @@ import 'routes.dart';
 final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((ref) {
   final refresh = _AuthRefreshNotifier(ref);
 
+  // The root navigator, so a route can be pushed over the whole shell rather
+  // than inside its body.
+  final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
+
   final router = GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: AppRoutes.splash,
     refreshListenable: refresh,
     redirect: (context, state) {
@@ -58,20 +65,31 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((ref) {
           name: AppRouteNames.designSystem,
           builder: (context, state) => const ShowcaseApp(),
         ),
-      GoRoute(
-        path: AppRoutes.conversations,
-        name: AppRouteNames.conversations,
-        builder: (context, state) => const ConversationListScreen(),
+      // The signed-in frame: the navigation drawer, and the bottom bar once
+      // there is more than one destination. Screens inside it draw in its
+      // body and keep their own toolbars.
+      ShellRoute(
+        builder: (context, state, child) => AuthenticatedShell(child: child),
         routes: <RouteBase>[
-          // Nested, so the thread pushes over the rail and back returns there.
-          // Deep-link ready: the id comes from the path, and the screen reads
-          // it from local storage before any network call.
           GoRoute(
-            path: AppRoutes.conversationDetail,
-            name: AppRouteNames.conversationDetail,
-            builder: (context, state) => ConversationScreen(
-              conversationId: state.pathParameters['conversationId']!,
-            ),
+            path: AppRoutes.conversations,
+            name: AppRouteNames.conversations,
+            builder: (context, state) => const ConversationListScreen(),
+            routes: <RouteBase>[
+              // Nested, so back returns to the rail. Pushed onto the root
+              // navigator, so the thread covers the shell rather than opening
+              // inside it with the drawer still reachable behind.
+              // Deep-link ready: the id comes from the path, and the screen
+              // reads it from local storage before any network call.
+              GoRoute(
+                path: AppRoutes.conversationDetail,
+                name: AppRouteNames.conversationDetail,
+                parentNavigatorKey: rootNavigatorKey,
+                builder: (context, state) => ConversationScreen(
+                  conversationId: state.pathParameters['conversationId']!,
+                ),
+              ),
+            ],
           ),
         ],
       ),

@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../design_system/design_system.dart';
 import '../../../../app/theme/theme.dart';
+import '../../../../app/localization/translations/app_strings.dart';
 import '../../../../app/router/routes.dart';
 import '../../application/state/sync_state.dart';
 import '../../domain/entities/conversation.dart';
@@ -52,16 +53,12 @@ class _ConversationListScreenState
     final sync = ref.watch(conversationSyncStateProvider);
 
     return AppScaffold(
-      title: 'Inbox',
-      actions: <Widget>[
-        AppButton.icon(
-          icon: const Icon(LucideIcons.logOut),
-          semanticLabel: 'Sign out',
-          onPressed: () =>
-              ref.read(conversationListControllerProvider).signOut(),
-        ),
-        const SizedBox(width: TajeerSpacing.xs),
-      ],
+      // The menu button is implied by the signed-in shell's drawer, which is
+      // also where signing out lives now.
+      toolbar: AppToolbar(
+        title: ref.watch(appStringsProvider).inbox,
+        centerTitle: true,
+      ),
       banner: switch (sync.value) {
         null => null,
         final state => _SyncBanner(state: state),
