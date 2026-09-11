@@ -4,12 +4,14 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tajeerai_mobile/app/bootstrap/dependencies.dart';
 import 'package:tajeerai_mobile/app/theme/theme.dart';
 import 'package:tajeerai_mobile/features/auth/application/coordinators/session_coordinator.dart';
 import 'package:tajeerai_mobile/features/auth/domain/services/auth_service.dart';
 import 'package:tajeerai_mobile/features/auth/presentation/screens/login_screen.dart';
 import 'package:tajeerai_mobile/infrastructure/logging/logger.dart';
+import 'package:tajeerai_mobile/infrastructure/storage/preferences_storage.dart';
 
 import '../../../support/golden_harness.dart';
 import '../../../support/widget_harness.dart';
@@ -24,8 +26,13 @@ void main() {
   setUpAll(loadFonts);
 
   late SessionCoordinator coordinator;
+  late PreferencesStorage preferences;
 
-  setUp(() {
+  setUp(() async {
+    // Nothing stored: a fresh install, which reads Arabic.
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    preferences = await PreferencesStorage.open();
+
     coordinator = SessionCoordinator(
       authService: AuthService(FakeAuthRepository()),
       logger: Logger('test', verbose: false),
@@ -44,12 +51,14 @@ void main() {
           ProviderScope(
             overrides: [
               sessionCoordinatorProvider.overrideWithValue(coordinator),
+              preferencesStorageProvider.overrideWithValue(preferences),
             ],
             child: wrapWidget(
               const LoginScreen(),
               preset: preset,
               brightness: brightness,
               textDirection: TextDirection.rtl,
+              locale: const Locale('ar'),
               size: const Size(390, 844),
             ),
           ),

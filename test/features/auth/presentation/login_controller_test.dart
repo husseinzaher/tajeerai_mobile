@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tajeerai_mobile/app/bootstrap/dependencies.dart';
 import 'package:tajeerai_mobile/failures/app_failure.dart';
 import 'package:tajeerai_mobile/features/auth/application/coordinators/session_coordinator.dart';
@@ -7,6 +8,7 @@ import 'package:tajeerai_mobile/features/auth/domain/entities/user.dart';
 import 'package:tajeerai_mobile/features/auth/domain/services/auth_service.dart';
 import 'package:tajeerai_mobile/features/auth/presentation/controllers/login_controller.dart';
 import 'package:tajeerai_mobile/infrastructure/logging/logger.dart';
+import 'package:tajeerai_mobile/infrastructure/storage/preferences_storage.dart';
 
 import '../domain/fakes/fake_auth_repository.dart';
 
@@ -24,8 +26,17 @@ void main() {
   late FakeAuthRepository repository;
   late SessionCoordinator coordinator;
   late ProviderContainer container;
+  late PreferencesStorage preferences;
 
-  setUp(() {
+  setUp(() async {
+    // English is stored explicitly so the assertions below read as they were
+    // written. The copy now comes from AppStrings, which follows the stored
+    // locale; the Arabic group at the bottom checks the other half.
+    SharedPreferences.setMockInitialValues(<String, Object>{
+      PreferencesStorage.localeKey: 'en',
+    });
+    preferences = await PreferencesStorage.open();
+
     repository = FakeAuthRepository();
 
     coordinator = SessionCoordinator(
@@ -36,7 +47,10 @@ void main() {
     // Only the coordinator is overridden: the controller's job is to drive it
     // and map what comes back, so everything below it stays real.
     container = ProviderContainer(
-      overrides: [sessionCoordinatorProvider.overrideWithValue(coordinator)],
+      overrides: [
+        sessionCoordinatorProvider.overrideWithValue(coordinator),
+        preferencesStorageProvider.overrideWithValue(preferences),
+      ],
     );
   });
 
@@ -144,7 +158,7 @@ void main() {
       await controller().submit(identifier: 'ab', password: 'x');
 
       // The domain emits stable keys so the rules stay free of presentation;
-      // the controller is where they become English.
+      // the controller is where they become copy, in the reader's language.
       expect(
         state().errorFor('identifier'),
         'That is too short to be an email or phone number.',
@@ -245,6 +259,68 @@ void main() {
       await controller().submit(identifier: 'ada@demo.test', password: 'right');
 
       expect(state().hasError, isFalse);
+    });
+  });
+
+  group('in Arabic', () {
+    late ProviderContainer arabic;
+
+    setUp(() async {
+      SharedPreferences.setMockInitialValues(<String, Object>{
+        PreferencesStorage.localeKey: 'ar',
+      });
+      final PreferencesStorage stored = await PreferencesStorage.open();
+
+      arabic = ProviderContainer(
+        overrides: [
+          sessionCoordinatorProvider.overrideWithValue(coordinator),
+          preferencesStorageProvider.overrideWithValue(stored),
+        ],
+      );
+    });
+
+    tearDown(() => arabic.dispose());
+
+    test('field errors read in the language the member chose', () async {
+      await arabic
+          .read(loginControllerProvider.notifier)
+          .submit(identifier: '', password: '');
+
+      final LoginState result = arabic.read(loginControllerProvider);
+      expect(
+        result.errorFor('identifier'),
+        'أدخل بريدك الإلكتروني أو رقم هاتفك.',
+      );
+      expect(result.errorFor('password'), 'أدخل كلمة المرور.');
+    });
+
+    test('a rejected sign-in explains itself in Arabic', () async {
+      repository.failureToThrow = const AuthenticationFailure(
+        message: 'Not recognised.',
+      );
+
+      await arabic
+          .read(loginControllerProvider.notifier)
+          .submit(identifier: 'ada@demo.test', password: 'wrong');
+
+      expect(
+        arabic.read(loginControllerProvider).errorMessage,
+        'لم نتعرّف على هذه البيانات. تحقّق منها وحاول مرة أخرى.',
+      );
+    });
+
+    test('an infrastructure detail stays hidden in either language', () async {
+      repository.failureToThrow = const DatabaseFailure(
+        message: 'SqliteException(787): FOREIGN KEY constraint failed',
+      );
+
+      await arabic
+          .read(loginControllerProvider.notifier)
+          .submit(identifier: 'ada@demo.test', password: 'x');
+
+      final String? message = arabic.read(loginControllerProvider).errorMessage;
+      expect(message, 'حدث خطأ ما. يرجى المحاولة مرة أخرى.');
+      expect(message, isNot(contains('Sqlite')));
     });
   });
 }

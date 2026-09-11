@@ -1,3 +1,4 @@
+import 'sections/authentication_section.dart';
 import 'sections/components_section.dart';
 import 'sections/foundations_section.dart';
 import 'showcase_section.dart';
@@ -13,4 +14,5 @@ List<ShowcaseSection> showcaseSections() => <ShowcaseSection>[
   displaySection(),
   statesSection(),
   overlaysSection(),
+  authenticationSection(),
 ];

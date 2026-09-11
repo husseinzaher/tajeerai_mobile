@@ -1,4 +1,16 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../locale_manager.dart';
+
+/// The application's copy, in the reader's language.
+///
+/// A widget reads `ref.watch(appStringsProvider)`, so a change of language
+/// redraws every screen that shows text without anybody threading a locale
+/// through.
+final Provider<AppStrings> appStringsProvider = Provider<AppStrings>(
+  (Ref ref) => AppStrings(ref.watch(localeProvider)),
+);
 
 /// The application's user-facing copy.
 ///
@@ -9,6 +21,11 @@ import '../locale_manager.dart';
 /// resolved from a locale -- so moving to it later is a mechanical change to
 /// this file and nothing else.
 ///
+/// **What does not live here.** The design system renders some copy on its own
+/// behalf — "Retry", "Sending", "Not sent" — and owns it in `AppMessages`. Those
+/// keys were in this table too, and were removed rather than kept in step: two
+/// tables that both own "Retry" disagree within a release.
+///
 /// Copy never lives in the domain layer. Services emit stable keys
 /// (`identifier.tooShort`); presentation resolves them here.
 class AppStrings {
@@ -18,21 +35,86 @@ class AppStrings {
 
   static const Map<String, Map<String, String>>
   _values = <String, Map<String, String>>{
+    // -- sign-in ------------------------------------------------------------
+    'signInTitle': <String, String>{
+      'en': 'Welcome back',
+      'ar': 'مرحباً بعودتك',
+    },
+    'signInSubtitle': <String, String>{
+      'en': 'Sign in to your account to keep up with your business.',
+      'ar': 'سجّل الدخول إلى حسابك لمتابعة أعمالك',
+    },
     'signIn': <String, String>{'en': 'Sign in', 'ar': 'تسجيل الدخول'},
     'signOut': <String, String>{'en': 'Sign out', 'ar': 'تسجيل الخروج'},
-    'signInSubtitle': <String, String>{
-      'en': 'Use your Tajeer AI workspace account.',
-      'ar': 'استخدم حساب مساحة العمل الخاصة بك.',
-    },
     'identifierLabel': <String, String>{
       'en': 'Email or phone',
       'ar': 'البريد الإلكتروني أو الهاتف',
     },
-    'passwordLabel': <String, String>{'en': 'Password', 'ar': 'كلمة المرور'},
-    'rememberMe': <String, String>{
-      'en': 'Keep me signed in',
-      'ar': 'أبقني مسجلاً للدخول',
+    // An example address, identical in both languages on purpose: it shows
+    // the *shape* of what to type, and that shape is Latin either way.
+    'identifierHint': <String, String>{
+      'en': 'name@yourstore.com',
+      'ar': 'name@yourstore.com',
     },
+    'passwordLabel': <String, String>{'en': 'Password', 'ar': 'كلمة المرور'},
+    'rememberMe': <String, String>{'en': 'Keep me signed in', 'ar': 'تذكرني'},
+    'language': <String, String>{'en': 'Language', 'ar': 'اللغة'},
+    // Only what is verifiably true. Sign-in travels over HTTPS — the committed
+    // environment files are tested to require it for every non-local host —
+    // so "encrypted" is a fact. "Always safe", which the reference says, is a
+    // promise nobody here can check.
+    'securityNotice': <String, String>{
+      'en': 'Your connection is encrypted.',
+      'ar': 'اتصالك مشفّر.',
+    },
+
+    // -- sign-in failures ---------------------------------------------------
+    'authNotRecognised': <String, String>{
+      'en': 'Those details were not recognised. Check them and try again.',
+      'ar': 'لم نتعرّف على هذه البيانات. تحقّق منها وحاول مرة أخرى.',
+    },
+    'authCheckDetails': <String, String>{
+      'en': 'Check the details you entered.',
+      'ar': 'تحقّق من البيانات التي أدخلتها.',
+    },
+    'authOffline': <String, String>{
+      'en': 'No connection. Check your network and try again.',
+      'ar': 'لا يوجد اتصال. تحقّق من الشبكة وحاول مرة أخرى.',
+    },
+    'authUnreachable': <String, String>{
+      'en': 'The server could not be reached. Try again.',
+      'ar': 'تعذّر الوصول إلى الخادم. حاول مرة أخرى.',
+    },
+    'authForbidden': <String, String>{
+      'en': 'This account cannot sign in here.',
+      'ar': 'لا يمكن لهذا الحساب تسجيل الدخول هنا.',
+    },
+    'authGeneric': <String, String>{
+      'en': 'Something went wrong. Please try again.',
+      'ar': 'حدث خطأ ما. يرجى المحاولة مرة أخرى.',
+    },
+    'identifierRequired': <String, String>{
+      'en': 'Enter your email or phone number.',
+      'ar': 'أدخل بريدك الإلكتروني أو رقم هاتفك.',
+    },
+    'identifierTooShort': <String, String>{
+      'en': 'That is too short to be an email or phone number.',
+      'ar': 'هذا أقصر من أن يكون بريداً إلكترونياً أو رقم هاتف.',
+    },
+    'identifierTooLong': <String, String>{
+      'en': 'That is too long.',
+      'ar': 'هذا طويل جداً.',
+    },
+    'passwordRequired': <String, String>{
+      'en': 'Enter your password.',
+      'ar': 'أدخل كلمة المرور.',
+    },
+    'passwordTooLong': <String, String>{
+      'en': 'That password is too long.',
+      'ar': 'كلمة المرور هذه طويلة جداً.',
+    },
+
+    // -- conversations ------------------------------------------------------
     'inbox': <String, String>{'en': 'Inbox', 'ar': 'صندوق الوارد'},
     'searchConversations': <String, String>{
       'en': 'Search conversations',
@@ -50,14 +132,6 @@ class AppStrings {
       'en': 'No messages yet',
       'ar': 'لا توجد رسائل بعد',
     },
-    'retry': <String, String>{'en': 'Retry', 'ar': 'إعادة المحاولة'},
-    'discard': <String, String>{'en': 'Discard', 'ar': 'تجاهل'},
-    'notSent': <String, String>{'en': 'Not sent', 'ar': 'لم تُرسل'},
-    'sending': <String, String>{'en': 'Sending', 'ar': 'جارٍ الإرسال'},
-    'waitingToSend': <String, String>{
-      'en': 'Waiting to send',
-      'ar': 'في انتظار الإرسال',
-    },
     'archivedReadOnly': <String, String>{
       'en': 'This conversation is archived and cannot receive new messages.',
       'ar': 'هذه المحادثة مؤرشفة ولا يمكنها استقبال رسائل جديدة.',
@@ -67,6 +141,10 @@ class AppStrings {
       'ar': 'عرض المحادثات المحفوظة. جارٍ إعادة الاتصال…',
     },
   };
+
+  /// The table itself, for the test that checks every entry is translated.
+  @visibleForTesting
+  static Map<String, Map<String, String>> get table => _values;
 
   /// The copy for [key], falling back to English and then to the key itself.
   ///
@@ -81,10 +159,24 @@ class AppStrings {
     return entry[locale.code] ?? entry['en'] ?? key;
   }
 
+  String get signInTitle => call('signInTitle');
+  String get signInSubtitle => call('signInSubtitle');
   String get signIn => call('signIn');
   String get signOut => call('signOut');
+  String get identifierLabel => call('identifierLabel');
+  String get identifierHint => call('identifierHint');
+  String get passwordLabel => call('passwordLabel');
+  String get rememberMe => call('rememberMe');
+  String get language => call('language');
+  String get securityNotice => call('securityNotice');
+
+  String get authNotRecognised => call('authNotRecognised');
+  String get authCheckDetails => call('authCheckDetails');
+  String get authOffline => call('authOffline');
+  String get authUnreachable => call('authUnreachable');
+  String get authForbidden => call('authForbidden');
+  String get authGeneric => call('authGeneric');
+
   String get inbox => call('inbox');
   String get writeMessage => call('writeMessage');
-  String get retry => call('retry');
-  String get discard => call('discard');
 }

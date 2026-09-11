@@ -2,16 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../../../design_system/design_system.dart';
+import '../../../../app/localization/translations/app_strings.dart';
 import '../../../../app/theme/theme.dart';
+import '../../../../design_system/design_system.dart';
 import '../controllers/login_controller.dart';
 
 /// The sign-in form.
 ///
-/// Built entirely from the design system -- [AppTextField], [AppButton],
-/// [AppInlineError]. No colour, radius or spacing literal appears below; every
-/// value comes from a token, which is what makes the screen correct in dark
-/// mode without a second implementation.
+/// Built entirely from the design system. It used to hand-roll two things the
+/// system now owns: a password reveal wired to a bare `GestureDetector`, and a
+/// "keep me signed in" row wrapping a raw Material `Checkbox` just so its label
+/// could be tapped. Both are [AppPasswordField] and [AppCheckbox] now, which
+/// carry real 44px targets and correct semantics instead of re-deriving them
+/// here — and which RULE 35 will require once it is switched on.
 class LoginForm extends ConsumerStatefulWidget {
   const LoginForm({super.key});
 
@@ -23,8 +26,6 @@ class _LoginFormState extends ConsumerState<LoginForm> {
   final TextEditingController _identifier = TextEditingController();
   final TextEditingController _password = TextEditingController();
   final FocusNode _passwordFocus = FocusNode();
-
-  bool _obscure = true;
 
   @override
   void dispose() {
@@ -46,8 +47,12 @@ class _LoginFormState extends ConsumerState<LoginForm> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(loginControllerProvider);
-    final controller = ref.read(loginControllerProvider.notifier);
+    final LoginState state = ref.watch(loginControllerProvider);
+    final LoginController controller = ref.read(
+      loginControllerProvider.notifier,
+    );
+    final AppStrings strings = ref.watch(appStringsProvider);
+    final bool rtl = Directionality.of(context) == TextDirection.rtl;
 
     return AutofillGroup(
       child: Column(
@@ -59,8 +64,8 @@ class _LoginFormState extends ConsumerState<LoginForm> {
             AppInlineError(message: state.errorMessage!),
           AppTextField(
             controller: _identifier,
-            label: 'Email or phone',
-            hintText: 'you@example.com',
+            label: strings.identifierLabel,
+            hintText: strings.identifierHint,
             errorText: state.errorFor('identifier'),
             enabled: !state.isSubmitting,
             autofocus: true,
@@ -69,101 +74,41 @@ class _LoginFormState extends ConsumerState<LoginForm> {
             autofillHints: const <String>[AutofillHints.username],
             onChanged: (_) => controller.clearErrors(),
             onSubmitted: (_) => _passwordFocus.requestFocus(),
-            leading: const Icon(LucideIcons.atSign),
+            leading: const Icon(LucideIcons.mail),
           ),
-          AppTextField(
+          AppPasswordField(
             controller: _password,
             focusNode: _passwordFocus,
-            label: 'Password',
-            obscureText: _obscure,
+            label: strings.passwordLabel,
             errorText: state.errorFor('password'),
             enabled: !state.isSubmitting,
             textInputAction: TextInputAction.done,
-            autofillHints: const <String>[AutofillHints.password],
             onChanged: (_) => controller.clearErrors(),
             onSubmitted: (_) => _submit(),
-            leading: const Icon(LucideIcons.lockKeyhole),
-            trailing: GestureDetector(
-              onTap: () => setState(() => _obscure = !_obscure),
-              behavior: HitTestBehavior.opaque,
-              child: Semantics(
-                button: true,
-                label: _obscure ? 'Show password' : 'Hide password',
-                child: Icon(_obscure ? LucideIcons.eye : LucideIcons.eyeOff),
-              ),
-            ),
           ),
-          _RememberRow(
+          // Maps to `loginSchema.remember`, which the backend uses to decide the
+          // refresh token's lifetime — so it changes how long the session
+          // survives, not merely whether a field is prefilled.
+          AppCheckbox(
             value: state.remember,
+            label: strings.rememberMe,
             enabled: !state.isSubmitting,
-            onChanged: (value) => controller.setRemember(remember: value),
+            onChanged: (bool value) => controller.setRemember(remember: value),
           ),
           AppButton(
-            label: 'Sign in',
+            label: strings.signIn,
             onPressed: state.isSubmitting ? null : _submit,
             loading: state.isSubmitting,
             size: AppButtonSize.large,
             expand: true,
+            // Forward is toward the end of the line, which is the left in
+            // Arabic.
+            trailing: Icon(
+              rtl ? LucideIcons.arrowLeft : LucideIcons.arrowRight,
+            ),
           ),
         ],
       ),
-    );
-  }
-}
-
-/// The "keep me signed in" row.
-///
-/// Maps to `loginSchema.remember`, which the backend uses to decide the
-/// refresh token's lifetime -- so it changes how long the session survives,
-/// not merely whether a field is prefilled.
-class _RememberRow extends StatelessWidget {
-  const _RememberRow({
-    required this.value,
-    required this.onChanged,
-    required this.enabled,
-  });
-
-  final bool value;
-  final ValueChanged<bool> onChanged;
-  final bool enabled;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-
-    return Row(
-      children: <Widget>[
-        // The whole row is the target, not just the 20px box -- a checkbox is
-        // below the comfortable touch minimum on its own.
-        Expanded(
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: enabled ? () => onChanged(!value) : null,
-            child: Row(
-              spacing: TajeerSpacing.xs,
-              children: <Widget>[
-                Checkbox(
-                  value: value,
-                  onChanged: enabled
-                      ? (next) => onChanged(next ?? false)
-                      : null,
-                  activeColor: colors.primary,
-                  checkColor: colors.primaryForeground,
-                  side: BorderSide(color: colors.border),
-                  visualDensity: VisualDensity.compact,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                Text(
-                  'Keep me signed in',
-                  style: context.text.bodyMedium?.copyWith(
-                    color: colors.textMuted,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

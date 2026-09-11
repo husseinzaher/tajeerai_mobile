@@ -3,10 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tajeerai_mobile/app/bootstrap/dependencies.dart';
+import 'package:tajeerai_mobile/design_system/auth/social_button.dart';
 import 'package:tajeerai_mobile/design_system/buttons/app_button.dart';
 import 'package:tajeerai_mobile/design_system/feedback/inline_error.dart';
+import 'package:tajeerai_mobile/design_system/inputs/app_checkbox.dart';
 import 'package:tajeerai_mobile/design_system/inputs/app_text_field.dart';
+import 'package:tajeerai_mobile/design_system/inputs/password_field.dart';
 import 'package:tajeerai_mobile/design_system/loaders/spinner.dart';
 import 'package:tajeerai_mobile/failures/app_failure.dart';
 import 'package:tajeerai_mobile/features/auth/application/coordinators/session_coordinator.dart';
@@ -14,6 +18,7 @@ import 'package:tajeerai_mobile/features/auth/domain/entities/user.dart';
 import 'package:tajeerai_mobile/features/auth/domain/services/auth_service.dart';
 import 'package:tajeerai_mobile/features/auth/presentation/screens/login_screen.dart';
 import 'package:tajeerai_mobile/infrastructure/logging/logger.dart';
+import 'package:tajeerai_mobile/infrastructure/storage/preferences_storage.dart';
 
 import '../../../support/widget_harness.dart';
 import '../domain/fakes/fake_auth_repository.dart';
@@ -31,8 +36,16 @@ Session _session() => const Session(
 void main() {
   late FakeAuthRepository repository;
   late SessionCoordinator coordinator;
+  late PreferencesStorage preferences;
 
-  setUp(() {
+  setUp(() async {
+    // English is stored explicitly: these assertions predate the Arabic copy
+    // and read in English. A fresh install reads Arabic, and has its own test.
+    SharedPreferences.setMockInitialValues(<String, Object>{
+      PreferencesStorage.localeKey: 'en',
+    });
+    preferences = await PreferencesStorage.open();
+
     repository = FakeAuthRepository();
 
     coordinator = SessionCoordinator(
@@ -47,7 +60,10 @@ void main() {
   /// exercises the whole presentation path rather than a stubbed controller.
   Widget subject({Brightness brightness = Brightness.light}) {
     return ProviderScope(
-      overrides: [sessionCoordinatorProvider.overrideWithValue(coordinator)],
+      overrides: [
+        sessionCoordinatorProvider.overrideWithValue(coordinator),
+        preferencesStorageProvider.overrideWithValue(preferences),
+      ],
       child: wrapWidget(const LoginScreen(), brightness: brightness),
     );
   }
@@ -71,9 +87,10 @@ void main() {
       expect(find.text('Email or phone'), findsOneWidget);
       expect(find.text('Password'), findsOneWidget);
 
-      // Built from design-system parts, not bespoke widgets.
+      // Built from design-system parts, not bespoke widgets. Two buttons: the
+      // submit, and the language switcher in the corner.
       expect(find.byType(AppTextField), findsNWidgets(2));
-      expect(find.byType(AppButton), findsOneWidget);
+      expect(find.byType(AppButton), findsNWidgets(2));
     });
 
     testWidgets('renders in dark mode', (tester) async {
@@ -249,6 +266,66 @@ void main() {
 
       // It changes the refresh token's lifetime server-side.
       expect(repository.lastRemember, isTrue);
+    });
+  });
+
+  group('the reference design', () {
+    testWidgets('greets, and is built from the auth family', (tester) async {
+      await tester.pumpWidget(subject());
+
+      expect(find.text('Welcome back'), findsOneWidget);
+      expect(find.byType(AppPasswordField), findsOneWidget);
+      expect(find.byType(AppCheckbox), findsOneWidget);
+    });
+
+    testWidgets('offers no social sign-in, because mobile has no OAuth flow', (
+      tester,
+    ) async {
+      // A provider button that does nothing is worse than an absent one.
+      await tester.pumpWidget(subject());
+      expect(find.byType(AppSocialButton), findsNothing);
+    });
+  });
+
+  group('language', () {
+    testWidgets('a fresh install reads Arabic', (tester) async {
+      late PreferencesStorage fresh;
+      await tester.runAsync(() async {
+        SharedPreferences.setMockInitialValues(<String, Object>{});
+        fresh = await PreferencesStorage.open();
+      });
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            sessionCoordinatorProvider.overrideWithValue(coordinator),
+            preferencesStorageProvider.overrideWithValue(fresh),
+          ],
+          child: wrapWidget(
+            const LoginScreen(),
+            locale: const Locale('ar'),
+            textDirection: TextDirection.rtl,
+          ),
+        ),
+      );
+
+      expect(find.text('مرحباً بعودتك'), findsOneWidget);
+      expect(find.text('تسجيل الدخول'), findsOneWidget);
+    });
+
+    testWidgets('the switcher changes the copy without leaving the screen', (
+      tester,
+    ) async {
+      await tester.pumpWidget(subject());
+      expect(find.text('Welcome back'), findsOneWidget);
+
+      await tester.tap(find.bySemanticsLabel('Language: English'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('العربية'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('مرحباً بعودتك'), findsOneWidget);
+      expect(preferences.readString(PreferencesStorage.localeKey), 'ar');
     });
   });
 }

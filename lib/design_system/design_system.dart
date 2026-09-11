@@ -24,6 +24,10 @@
 /// adding sixty files.
 library;
 
+export 'auth/auth_header.dart';
+export 'auth/auth_layout.dart';
+export 'auth/brand_logo.dart';
+export 'auth/social_button.dart';
 export 'buttons/app_button.dart';
 export 'cards/app_card.dart';
 export 'display/avatar.dart';

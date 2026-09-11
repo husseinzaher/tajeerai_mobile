@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/bootstrap/dependencies.dart';
+import '../../../../app/localization/translations/app_strings.dart';
 import '../../../../failures/app_failure.dart';
 
 /// The login form's state.
@@ -136,11 +137,13 @@ class LoginController extends Notifier<LoginState> {
 
       return true;
     } on AppFailure catch (failure) {
+      final AppStrings strings = ref.read(appStringsProvider);
+
       state = state.copyWith(
         isSubmitting: false,
-        errorMessage: _messageFor(failure),
+        errorMessage: _messageFor(failure, strings),
         fieldErrors: failure is ValidationFailure
-            ? _localise(failure.fieldErrors)
+            ? _localise(failure.fieldErrors, strings)
             : const <String, List<String>>{},
       );
 
@@ -152,40 +155,44 @@ class LoginController extends Notifier<LoginState> {
   ///
   /// Infrastructure detail never reaches the screen: the user is told what to
   /// do, not which layer failed.
-  static String _messageFor(AppFailure failure) {
+  static String _messageFor(AppFailure failure, AppStrings strings) {
     return switch (failure) {
-      AuthenticationFailure() =>
-        'Those details were not recognised. Check them and try again.',
-      ValidationFailure() => 'Check the details you entered.',
-      TransportFailure(isOffline: true) =>
-        'No connection. Check your network and try again.',
-      TransportFailure() => 'The server could not be reached. Try again.',
-      AuthorizationFailure() => 'This account cannot sign in here.',
-      _ => 'Something went wrong. Please try again.',
+      AuthenticationFailure() => strings.authNotRecognised,
+      ValidationFailure() => strings.authCheckDetails,
+      TransportFailure(isOffline: true) => strings.authOffline,
+      TransportFailure() => strings.authUnreachable,
+      AuthorizationFailure() => strings.authForbidden,
+      _ => strings.authGeneric,
     };
   }
 
-  /// Maps the domain's error keys to display copy.
+  /// Maps the domain's error keys to display copy, in the reader's language.
   ///
   /// The domain emits stable keys (`identifier.tooShort`) rather than English,
-  /// so the rules stay free of presentation and a translation table can slot
-  /// in here without touching a service.
+  /// so the rules stay free of presentation. This used to map them straight to
+  /// English strings in an Arabic-first app, and the translation table the
+  /// comment here promised could slot in has now slotted in.
+  ///
+  /// An unknown key still renders as itself rather than as a blank: a raw key
+  /// under a field is a bug report, an empty space is a mystery.
   static Map<String, List<String>> _localise(
     Map<String, List<String>> fieldErrors,
+    AppStrings strings,
   ) {
-    const copy = <String, String>{
-      'identifier.required': 'Enter your email or phone number.',
-      'identifier.tooShort':
-          'That is too short to be an email or phone number.',
-      'identifier.tooLong': 'That is too long.',
-      'password.required': 'Enter your password.',
-      'password.tooLong': 'That password is too long.',
+    const Map<String, String> copyKeys = <String, String>{
+      'identifier.required': 'identifierRequired',
+      'identifier.tooShort': 'identifierTooShort',
+      'identifier.tooLong': 'identifierTooLong',
+      'password.required': 'passwordRequired',
+      'password.tooLong': 'passwordTooLong',
     };
 
     return fieldErrors.map(
       (field, keys) => MapEntry(
         field,
-        keys.map((key) => copy[key] ?? key).toList(growable: false),
+        keys
+            .map((key) => strings(copyKeys[key] ?? key))
+            .toList(growable: false),
       ),
     );
   }

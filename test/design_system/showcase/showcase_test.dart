@@ -35,6 +35,7 @@ List<String> _showcaseSources() {
     'lib/design_system/showcase/showcase_registry.dart',
     'lib/design_system/showcase/sections/foundations_section.dart',
     'lib/design_system/showcase/sections/components_section.dart',
+    'lib/design_system/showcase/sections/authentication_section.dart',
   ];
   return <String>[
     for (final String path in paths) File(path).readAsStringSync(),

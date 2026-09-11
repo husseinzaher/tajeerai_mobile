@@ -11,13 +11,21 @@ import '../../infrastructure/storage/preferences_storage.dart';
 /// Every layout in this app uses logical directions (`start`/`end`,
 /// `EdgeInsetsDirectional`) so the same widgets mirror without a second build.
 enum AppLocale {
-  arabic('ar', TextDirection.rtl),
-  english('en', TextDirection.ltr);
+  arabic('ar', TextDirection.rtl, 'العربية'),
+  english('en', TextDirection.ltr, 'English');
 
-  const AppLocale(this.code, this.direction);
+  const AppLocale(this.code, this.direction, this.nativeName);
 
   final String code;
   final TextDirection direction;
+
+  /// The language's name in that language: `العربية`, `English`.
+  ///
+  /// A property of the locale, not a translation. A language switcher lists
+  /// each option in its own script so that somebody who cannot read the
+  /// current one can still find theirs — which is the entire point of the
+  /// control.
+  final String nativeName;
 
   Locale get locale => Locale(code);
 
