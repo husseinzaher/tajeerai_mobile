@@ -3,13 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/localization/translations/app_strings.dart';
-import '../../../../app/theme/theme.dart';
 import '../../../../design_system/design_system.dart';
 import '../../domain/entities/conversation.dart';
 import '../../domain/entities/message.dart';
 import '../controllers/conversation_thread_controller.dart';
 import '../widgets/async_view_state.dart';
-import '../widgets/message_composer.dart';
+import '../widgets/conversation_view_data.dart';
 import '../widgets/message_view_data.dart';
 
 /// One conversation.
@@ -19,9 +18,11 @@ import '../widgets/message_view_data.dart';
 /// reactive query re-emitted -- this screen has no socket subscription and no
 /// message list of its own to keep in step.
 ///
-/// The thread itself is the design system's `AppMessageTimeline`, drawn from
-/// `message_view_data.dart`. The composer and the header move onto the design
-/// system next.
+/// Composition, and nothing else: the header, the thread, the composer and the
+/// long-press menu are the design system's. What this screen owns is which
+/// actions exist. Today a member can send text, copy, retry and discard; the
+/// composer's paperclip, microphone and reply strip appear the day the send
+/// path can carry a file, a voice note or a reply.
 class ConversationScreen extends ConsumerStatefulWidget {
   const ConversationScreen({required this.conversationId, super.key});
 
@@ -33,95 +34,104 @@ class ConversationScreen extends ConsumerStatefulWidget {
 
 class _ConversationScreenState extends ConsumerState<ConversationScreen> {
   final ScrollController _scroll = ScrollController();
+  final AppComposerController _composer = AppComposerController();
+
+  /// What the send path carries today: words.
+  static const AppChannelCapabilities _capabilities =
+      AppChannelCapabilities.textOnly;
 
   @override
   void dispose() {
     _scroll.dispose();
+    _composer.dispose();
     super.dispose();
   }
+
+  ConversationThreadController get _thread => ref.read(
+    conversationThreadControllerProvider(widget.conversationId).notifier,
+  );
 
   @override
   Widget build(BuildContext context) {
     final AppStrings strings = ref.watch(appStringsProvider);
-    final conversation = ref.watch(
-      threadConversationProvider(widget.conversationId),
-    );
+    final Conversation? thread = ref
+        .watch(threadConversationProvider(widget.conversationId))
+        .value;
     final messages = ref.watch(threadMessagesProvider(widget.conversationId));
-    final composer = ref.watch(
+    final ComposerState composer = ref.watch(
       conversationThreadControllerProvider(widget.conversationId),
     );
 
-    // Composer errors are transient notices, not a screen state -- the thread
+    // Composer failures are transient notices, not a screen state -- the thread
     // behind them is still perfectly readable.
     ref.listen(conversationThreadControllerProvider(widget.conversationId), (
-      previous,
-      next,
+      ComposerState? previous,
+      ComposerState next,
     ) {
-      final message = next.errorMessage;
-
-      if (message == null || message == previous?.errorMessage) return;
+      final ComposerError? error = next.error;
+      if (error == null || error == previous?.error) return;
 
       AppSnackbar.show(
         context,
-        message: message,
+        message: _describe(error, strings),
         tone: AppSnackbarTone.warning,
       );
-
-      ref
-          .read(
-            conversationThreadControllerProvider(widget.conversationId)
-                .notifier,
-          )
-          .clearError();
+      _thread.clearError();
     });
 
-    final thread = conversation.value;
-
-    return AppScaffold(
-      showBack: true,
-      onBack: () => context.pop(),
-      titleWidget: thread == null ? null : _ThreadTitle(conversation: thread),
-      body: Column(
-        children: <Widget>[
-          Expanded(
-            child: AppMessageTimeline(
-              state: messages.toViewState(
-                (List<Message> items) => <AppMessageData>[
-                  for (final Message item in items) item.toMessageData(),
-                ],
-                failure: strings.threadUnreadable,
-                onRetry: () => ref.invalidate(
-                  threadMessagesProvider(widget.conversationId),
-                ),
-              ),
-              emptyTitle: strings.noMessages,
-              emptyDescription: strings.sendFirstMessage,
-              controller: _scroll,
-              onRetry: (AppMessageData data) => _act(data, _retry),
-              onDiscard: (AppMessageData data) => _act(data, _discard),
+    return AppConversationShell(
+      toolbar: thread == null
+          ? AppToolbar(showBack: true, onBack: () => context.pop())
+          : AppToolbar.conversation(
+              title: thread.toSummary(strings).title,
+              avatarUrl: thread.customerAvatarUrl,
+              onBack: () => context.pop(),
             ),
-          ),
-          MessageComposer(
-            enabled: thread?.acceptsNewMessages ?? false,
-            disabledReason: thread == null
-                ? 'Loading conversation…'
-                : 'This conversation is archived and cannot receive new '
-                      'messages.',
-            isSending: composer.isSending,
-            onSend: (body) => ref
-                .read(
-                  conversationThreadControllerProvider(widget.conversationId)
-                      .notifier,
-                )
-                .send(body),
-          ),
-        ],
+      timeline: AppMessageTimeline(
+        state: messages.toViewState(
+          (List<Message> items) => <AppMessageData>[
+            for (final Message item in items) item.toMessageData(),
+          ],
+          failure: strings.threadUnreadable,
+          onRetry: () =>
+              ref.invalidate(threadMessagesProvider(widget.conversationId)),
+        ),
+        emptyTitle: strings.noMessages,
+        emptyDescription: strings.sendFirstMessage,
+        controller: _scroll,
+        onRetry: (AppMessageData data) => _act(data, _thread.retry),
+        onDiscard: (AppMessageData data) => _act(data, _thread.discard),
+        onLongPress: (AppMessageData data) => AppMessageActions.show(
+          context,
+          message: data,
+          onRetry: () => _act(data, _thread.retry),
+          onDiscard: () => _act(data, _thread.discard),
+        ),
+      ),
+      composer: AppComposer(
+        controller: _composer,
+        capabilities: _capabilities,
+        enabled: thread?.acceptsNewMessages ?? false,
+        disabledReason: thread == null
+            ? context.strings.loading
+            : strings.archivedReadOnly,
+        sending: composer.isSending,
+        hintText: strings.writeMessage,
+        onSend: (AppComposerDraft draft) => _thread.send(draft.text),
       ),
     );
   }
 
+  static String _describe(ComposerError error, AppStrings strings) =>
+      switch (error) {
+        ComposerError.refused => strings.sendRefused,
+        ComposerError.offline => strings.sendOffline,
+        ComposerError.notSaved => strings.sendNotSaved,
+        ComposerError.unknown => strings.sendFailed,
+      };
+
   /// Runs [action] on the domain message a bubble was drawn from.
-  void _act(AppMessageData data, void Function(Message message) action) {
+  void _act(AppMessageData data, Future<void> Function(Message) action) {
     final Message? message = ref
         .read(threadMessagesProvider(widget.conversationId))
         .value
@@ -130,49 +140,5 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     if (message != null) {
       action(message);
     }
-  }
-
-  void _retry(Message message) {
-    ref
-        .read(
-          conversationThreadControllerProvider(widget.conversationId).notifier,
-        )
-        .retry(message);
-  }
-
-  void _discard(Message message) {
-    ref
-        .read(
-          conversationThreadControllerProvider(widget.conversationId).notifier,
-        )
-        .discard(message);
-  }
-}
-
-class _ThreadTitle extends StatelessWidget {
-  const _ThreadTitle({required this.conversation});
-
-  final Conversation conversation;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      spacing: TajeerSpacing.sm,
-      children: <Widget>[
-        AppAvatar(
-          name: conversation.displayName,
-          imageUrl: conversation.customerAvatarUrl,
-          size: 32,
-        ),
-        Expanded(
-          child: Text(
-            conversation.displayName,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: context.text.titleMedium,
-          ),
-        ),
-      ],
-    );
   }
 }

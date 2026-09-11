@@ -159,6 +159,24 @@ class AppStrings {
       'en': 'Unknown customer',
       'ar': 'عميل غير معروف',
     },
+    // Why a send did not go through. The controller reports a reason; these
+    // are the words for it.
+    'sendRefused': <String, String>{
+      'en': 'That message could not be sent.',
+      'ar': 'تعذّر إرسال هذه الرسالة.',
+    },
+    'sendOffline': <String, String>{
+      'en': 'You are offline. The message will send when you reconnect.',
+      'ar': 'أنت غير متصل. ستُرسل الرسالة عند عودة الاتصال.',
+    },
+    'sendNotSaved': <String, String>{
+      'en': 'The message could not be saved on this device.',
+      'ar': 'تعذّر حفظ الرسالة على هذا الجهاز.',
+    },
+    'sendFailed': <String, String>{
+      'en': 'Something went wrong. Please try again.',
+      'ar': 'حدث خطأ ما. يرجى المحاولة مرة أخرى.',
+    },
     'archivedReadOnly': <String, String>{
       'en': 'This conversation is archived and cannot receive new messages.',
       'ar': 'هذه المحادثة مؤرشفة ولا يمكنها استقبال رسائل جديدة.',
@@ -211,4 +229,9 @@ class AppStrings {
   String get sendFirstMessage => call('sendFirstMessage');
   String get unknownCustomer => call('unknownCustomer');
   String get writeMessage => call('writeMessage');
+  String get archivedReadOnly => call('archivedReadOnly');
+  String get sendRefused => call('sendRefused');
+  String get sendOffline => call('sendOffline');
+  String get sendNotSaved => call('sendNotSaved');
+  String get sendFailed => call('sendFailed');
 }

@@ -26,25 +26,52 @@ Stream<Conversation?> threadConversation(Ref ref, String conversationId) {
       .watchConversation(conversationId);
 }
 
+/// Why the composer's last action did not go through.
+///
+/// A reason, not a sentence. The words are the screen's to choose, in the
+/// member's language; a controller that held English sentences put English on
+/// an Arabic screen.
+enum ComposerError {
+  /// The server or the rules refused this message.
+  refused,
+
+  /// No connection. The message is queued and will go when there is one.
+  offline,
+
+  /// The device could not store it.
+  notSaved,
+
+  /// Anything else.
+  unknown,
+}
+
+/// The reason for [failure], as the composer reports it.
+ComposerError composerErrorFor(AppFailure failure) => switch (failure) {
+  ConflictFailure() || ValidationFailure() => ComposerError.refused,
+  TransportFailure(isOffline: true) || SocketFailure() => ComposerError.offline,
+  DatabaseFailure() => ComposerError.notSaved,
+  _ => ComposerError.unknown,
+};
+
 /// The composer's state.
 final class ComposerState {
-  const ComposerState({this.isSending = false, this.errorMessage});
+  const ComposerState({this.isSending = false, this.error});
 
   /// True only while `compose` is writing the row. It is *not* "waiting for
   /// the server": the message is durable the moment the row exists, and the
   /// outbox takes it from there.
   final bool isSending;
 
-  final String? errorMessage;
+  final ComposerError? error;
 
   ComposerState copyWith({
     bool? isSending,
-    String? errorMessage,
+    ComposerError? error,
     bool clearError = false,
   }) {
     return ComposerState(
       isSending: isSending ?? this.isSending,
-      errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
+      error: clearError ? null : (error ?? this.error),
     );
   }
 
@@ -52,10 +79,10 @@ final class ComposerState {
   bool operator ==(Object other) =>
       other is ComposerState &&
       other.isSending == isSending &&
-      other.errorMessage == errorMessage;
+      other.error == error;
 
   @override
-  int get hashCode => Object.hash(isSending, errorMessage);
+  int get hashCode => Object.hash(isSending, error);
 }
 
 /// Owns the thread screen's actions.
@@ -108,7 +135,7 @@ class ConversationThreadController extends _$ConversationThreadController {
     } on AppFailure catch (failure) {
       state = state.copyWith(
         isSending: false,
-        errorMessage: _messageFor(failure),
+        error: composerErrorFor(failure),
       );
 
       return false;
@@ -122,7 +149,7 @@ class ConversationThreadController extends _$ConversationThreadController {
     try {
       await ref.read(outboxCoordinatorProvider).retry(key);
     } on AppFailure catch (failure) {
-      state = state.copyWith(errorMessage: _messageFor(failure));
+      state = state.copyWith(error: composerErrorFor(failure));
     }
   }
 
@@ -143,24 +170,13 @@ class ConversationThreadController extends _$ConversationThreadController {
           .read(messageRepositoryProvider)
           .loadOlder(conversationId: conversationId, before: before);
     } on AppFailure catch (failure) {
-      state = state.copyWith(errorMessage: _messageFor(failure));
+      state = state.copyWith(error: composerErrorFor(failure));
     }
   }
 
   void clearError() {
-    if (state.errorMessage == null) return;
+    if (state.error == null) return;
 
     state = state.copyWith(clearError: true);
-  }
-
-  static String _messageFor(AppFailure failure) {
-    return switch (failure) {
-      ConflictFailure(:final message) => message,
-      ValidationFailure() => 'That message could not be sent.',
-      TransportFailure(isOffline: true) || SocketFailure() =>
-        'You are offline. The message will send when you reconnect.',
-      DatabaseFailure() => 'The message could not be saved on this device.',
-      _ => 'Something went wrong. Please try again.',
-    };
   }
 }
