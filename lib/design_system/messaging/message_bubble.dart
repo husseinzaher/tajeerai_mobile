@@ -8,8 +8,11 @@ import '../localization/ds_localization.dart';
 import '../localization/ds_messages.dart';
 import '../primitives/bidi_text.dart';
 import '../primitives/pressable.dart';
+import 'attachment_previews.dart';
 import 'message_data.dart';
+import 'message_reactions.dart';
 import 'message_status_icon.dart';
+import 'reply_preview.dart';
 
 /// One message in a thread.
 ///
@@ -33,6 +36,9 @@ class AppMessageBubble extends StatelessWidget {
     this.onRetry,
     this.onDiscard,
     this.onLongPress,
+    this.onOpenAttachment,
+    this.audioController,
+    this.onToggleReaction,
     super.key,
   });
 
@@ -49,6 +55,14 @@ class AppMessageBubble extends StatelessWidget {
   final VoidCallback? onRetry;
   final VoidCallback? onDiscard;
   final VoidCallback? onLongPress;
+
+  /// A picture or a file was tapped. Opening it is the app's.
+  final VoidCallback? onOpenAttachment;
+
+  /// Plays voice notes. Without one a voice note is drawn but cannot play.
+  final AppAudioController? audioController;
+
+  final ValueChanged<String>? onToggleReaction;
 
   /// How much of the thread's width a bubble may take. Wider than this a
   /// message is hard to read and hides which side it came from.
@@ -159,9 +173,18 @@ class AppMessageBubble extends StatelessWidget {
                   borderRadius: radius,
                   border: Border.fromBorderSide(BorderSide(color: edge)),
                 ),
-                child: _Content(message: message),
+                child: _Content(
+                  message: message,
+                  onOpen: onOpenAttachment,
+                  audioController: audioController,
+                ),
               ),
             ),
+            if (message.reactions.isNotEmpty)
+              AppMessageReactions(
+                reactions: message.reactions,
+                onToggle: onToggleReaction,
+              ),
             if (endsRun || _speaksUp(message.status))
               ExcludeSemantics(
                 // Wraps rather than overflows: at large text the time and a
@@ -210,6 +233,10 @@ class AppMessageBubble extends StatelessWidget {
   String _sentence(AppMessages strings, String? author, String time) =>
       <String?>[
         author,
+        if (message.replyTo != null)
+          AppMessages.interpolate(strings.replyingTo, <String, Object?>{
+            'name': message.replyTo!.authorName,
+          }),
         _Content.describe(message, strings),
         time,
         if (message.side == AppMessageSide.outgoing)
@@ -219,13 +246,15 @@ class AppMessageBubble extends StatelessWidget {
 
 /// What is inside a bubble.
 ///
-/// Media draws as a labelled line for now — a picture's thumbnail, a voice
-/// note's player and a file's card are the next milestone's — so a message the
-/// app can name is never an empty bubble, and one it cannot is never a crash.
+/// A picture, a file or a voice note draws its preview when the message
+/// carries the file; without one — a type the server named but sent no file
+/// for — it is a labelled line, never an empty bubble and never a crash.
 class _Content extends StatelessWidget {
-  const _Content({required this.message});
+  const _Content({required this.message, this.onOpen, this.audioController});
 
   final AppMessageData message;
+  final VoidCallback? onOpen;
+  final AppAudioController? audioController;
 
   static (IconData, String)? _media(AppMessageKind kind, AppMessages strings) =>
       switch (kind) {
@@ -261,38 +290,71 @@ class _Content extends StatelessWidget {
     );
     final (IconData, String)? media = _media(message.kind, strings);
     final String? text = message.text;
+    final AppAttachmentData? file = message.attachment;
 
+    final Widget? preview = switch (message.kind) {
+      AppMessageKind.image when file != null => AppImagePreview(
+        attachment: file,
+        onOpen: onOpen,
+      ),
+      AppMessageKind.document when file != null => AppFilePreview(
+        attachment: file,
+        onOpen: onOpen,
+      ),
+      AppMessageKind.audio when file != null => AppAudioMessage(
+        attachment: file,
+        controller: audioController,
+      ),
+      _ => null,
+    };
+
+    final Widget body;
     if (message.kind == AppMessageKind.unsupported ||
         (media == null && text == null)) {
-      return Text(
+      body = Text(
         strings.unsupportedMessage,
         style: words.copyWith(color: colors.textMuted),
       );
+    } else if (media == null) {
+      body = AppBidiText(text!, style: words);
+    } else {
+      body = Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: TajeerSpacing.xs2,
+        children: <Widget>[
+          preview ??
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                spacing: TajeerSpacing.xs,
+                children: <Widget>[
+                  Icon(media.$1, size: 18, color: colors.textSecondary),
+                  Flexible(
+                    child: Text(
+                      media.$2,
+                      style: context.type.labelMd.copyWith(
+                        color: colors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+          if (text != null) AppBidiText(text, style: words),
+        ],
+      );
     }
-    if (media == null) {
-      return AppBidiText(text!, style: words);
+
+    final AppReplyData? reply = message.replyTo;
+    if (reply == null) {
+      return body;
     }
     return Column(
       mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      spacing: TajeerSpacing.xs2,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: TajeerSpacing.xs,
       children: <Widget>[
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          spacing: TajeerSpacing.xs,
-          children: <Widget>[
-            Icon(media.$1, size: 18, color: colors.textSecondary),
-            Flexible(
-              child: Text(
-                media.$2,
-                style: context.type.labelMd.copyWith(
-                  color: colors.textSecondary,
-                ),
-              ),
-            ),
-          ],
-        ),
-        if (text != null) AppBidiText(text, style: words),
+        AppReplyPreview(reply: reply),
+        body,
       ],
     );
   }

@@ -9,6 +9,7 @@ import '../feedback/error_state.dart';
 import '../loaders/skeleton.dart';
 import '../localization/ds_localization.dart';
 import '../localization/ds_messages.dart';
+import 'attachment_previews.dart';
 import 'day_and_system_lines.dart';
 import 'message_bubble.dart';
 import 'message_data.dart';
@@ -32,6 +33,9 @@ class AppMessageTimeline extends StatelessWidget {
     this.onRetry,
     this.onDiscard,
     this.onLongPress,
+    this.onOpenAttachment,
+    this.audioController,
+    this.onToggleReaction,
     this.controller,
     this.now,
     super.key,
@@ -54,6 +58,9 @@ class AppMessageTimeline extends StatelessWidget {
   final ValueChanged<AppMessageData>? onRetry;
   final ValueChanged<AppMessageData>? onDiscard;
   final ValueChanged<AppMessageData>? onLongPress;
+  final ValueChanged<AppMessageData>? onOpenAttachment;
+  final AppAudioController? audioController;
+  final void Function(AppMessageData message, String emoji)? onToggleReaction;
 
   final ScrollController? controller;
 
@@ -150,6 +157,13 @@ class AppMessageTimeline extends StatelessWidget {
                       onLongPress: onLongPress == null
                           ? null
                           : () => onLongPress!(message),
+                      onOpenAttachment: onOpenAttachment == null
+                          ? null
+                          : () => onOpenAttachment!(message),
+                      audioController: audioController,
+                      onToggleReaction: onToggleReaction == null
+                          ? null
+                          : (String emoji) => onToggleReaction!(message, emoji),
                     ),
                   ),
         };

@@ -100,6 +100,31 @@ class AppReplyData {
   int get hashCode => Object.hash(authorName, text, kind);
 }
 
+/// One reaction on a message: the emoji, how many chose it, and whether this
+/// member is one of them.
+@immutable
+class AppReactionData {
+  const AppReactionData({
+    required this.emoji,
+    required this.count,
+    this.mine = false,
+  });
+
+  final String emoji;
+  final int count;
+  final bool mine;
+
+  @override
+  bool operator ==(Object other) =>
+      other is AppReactionData &&
+      other.emoji == emoji &&
+      other.count == count &&
+      other.mine == mine;
+
+  @override
+  int get hashCode => Object.hash(emoji, count, mine);
+}
+
 /// One message, as the thread draws it.
 ///
 /// Presentation data, not the domain's `Message` — the same boundary the Inbox
@@ -118,6 +143,7 @@ class AppMessageData {
     this.isFromBot = false,
     this.attachment,
     this.replyTo,
+    this.reactions = const <AppReactionData>[],
   });
 
   final String id;
@@ -141,6 +167,9 @@ class AppMessageData {
   final AppAttachmentData? attachment;
   final AppReplyData? replyTo;
 
+  /// In the order to draw them.
+  final List<AppReactionData> reactions;
+
   /// Whether the bubble offers a retry.
   bool get canRetry => status == AppMessageStatus.notSent;
 
@@ -157,7 +186,8 @@ class AppMessageData {
       other.authorName == authorName &&
       other.isFromBot == isFromBot &&
       other.attachment == attachment &&
-      other.replyTo == replyTo;
+      other.replyTo == replyTo &&
+      listEquals(other.reactions, reactions);
 
   @override
   int get hashCode => Object.hash(
@@ -172,5 +202,6 @@ class AppMessageData {
     isFromBot,
     attachment,
     replyTo,
+    Object.hashAll(reactions),
   );
 }

@@ -49,6 +49,18 @@ class AppMessages {
     required this.location,
     required this.unsupportedMessage,
     required this.bot,
+    required this.copy,
+    required this.copied,
+    required this.reply,
+    required this.replyingTo,
+    required this.remove,
+    required this.play,
+    required this.pause,
+    required this.recording,
+    required this.slideToCancel,
+    required this.readOnly,
+    required this.youReacted,
+    required this.suggestedReplies,
     required this.today,
     required this.yesterday,
     required this.queued,
@@ -119,6 +131,26 @@ class AppMessages {
 
   /// Who wrote a message the assistant sent.
   final String bot;
+
+  // Composing and acting on a message.
+  final String copy;
+  final String copied;
+  final String reply;
+
+  /// Takes `{name}`.
+  final String replyingTo;
+
+  final String remove;
+  final String play;
+  final String pause;
+  final String recording;
+  final String slideToCancel;
+
+  /// Why a composer is not there: the conversation takes no new messages.
+  final String readOnly;
+
+  final String youReacted;
+  final String suggestedReplies;
   final String today;
   final String yesterday;
 
