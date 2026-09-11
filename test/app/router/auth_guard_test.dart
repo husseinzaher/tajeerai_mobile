@@ -131,16 +131,30 @@ void main() {
       ),
     );
 
-    test('still lands on the first destination', () {
+    test('lands on Settings, which needs no permission', () {
       expect(
         AuthGuard.redirect(state: state, location: AppRoutes.login),
-        AppRoutes.conversations,
+        AppRoutes.settings,
       );
     });
 
-    test('is not sent away from the one place left, which would loop', () {
+    test('is moved off a destination they may not open', () {
       expect(
         AuthGuard.redirect(state: state, location: AppRoutes.conversations),
+        AppRoutes.settings,
+      );
+      expect(
+        AuthGuard.redirect(
+          state: state,
+          location: AppRoutes.conversationDetailPath('c1'),
+        ),
+        AppRoutes.settings,
+      );
+    });
+
+    test('and is left where they landed, which would otherwise loop', () {
+      expect(
+        AuthGuard.redirect(state: state, location: AppRoutes.settings),
         isNull,
       );
     });

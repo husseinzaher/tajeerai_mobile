@@ -10,6 +10,7 @@ import '../../features/conversations/presentation/screens/conversation_list_scre
 import '../../features/conversations/presentation/screens/conversation_screen.dart';
 import '../../design_system/loaders/app_splash.dart';
 import '../../design_system/showcase/showcase_app.dart';
+import '../settings/settings_screen.dart';
 import '../shell/authenticated_shell.dart';
 import '../shell/shell_destination.dart';
 import 'guards/auth_guard.dart';
@@ -122,6 +123,13 @@ List<RouteBase> _destinationRoutes(
             ),
           ),
         ],
+      ),
+    ],
+    ShellDestination.settings => <RouteBase>[
+      GoRoute(
+        path: destination.path,
+        name: AppRouteNames.settings,
+        builder: (context, state) => const SettingsScreen(),
       ),
     ],
   };

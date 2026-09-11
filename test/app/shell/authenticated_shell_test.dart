@@ -8,9 +8,10 @@ import 'package:tajeerai_mobile/app/bootstrap/dependencies.dart';
 import 'package:tajeerai_mobile/app/shell/authenticated_shell.dart';
 import 'package:tajeerai_mobile/app/shell/shell_destination.dart';
 import 'package:tajeerai_mobile/app/theme/theme.dart';
-import 'package:tajeerai_mobile/design_system/display/list_item.dart';
+import 'package:tajeerai_mobile/design_system/display/profile_header.dart';
 import 'package:tajeerai_mobile/design_system/layouts/app_scaffold.dart';
 import 'package:tajeerai_mobile/design_system/shell/bottom_navigation.dart';
+import 'package:tajeerai_mobile/design_system/shell/navigation_drawer.dart';
 import 'package:tajeerai_mobile/design_system/shell/toolbar.dart';
 import 'package:tajeerai_mobile/features/auth/application/state/auth_state.dart';
 import 'package:tajeerai_mobile/features/auth/domain/entities/user.dart';
@@ -58,6 +59,12 @@ class _Session extends AuthController {
 Widget _screen(String body) => AppScaffold(
   toolbar: const AppToolbar(title: 'Screen'),
   body: Center(child: Text(body)),
+);
+
+/// [text] inside the open drawer, not the same word on the bottom bar.
+Finder _inDrawer(String text) => find.descendant(
+  of: find.byType(AppNavigationDrawer),
+  matching: find.text(text),
 );
 
 Future<void> _openDrawer(WidgetTester tester) async {
@@ -166,17 +173,34 @@ void main() {
       await tester.pumpWidget(subject(session: null));
       await _openDrawer(tester);
 
-      expect(find.byType(AppListItem), findsNothing);
+      expect(find.byType(AppProfileHeader), findsNothing);
       expect(find.text('Inbox'), findsNothing);
       expect(find.text('Sign out'), findsOneWidget);
     });
 
-    testWidgets('one destination on offer, so there is no bottom bar', (
+    testWidgets('two destinations on offer, so the bottom bar appears', (
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(subject());
 
-      expect(find.byType(AppBottomNavigation), findsNothing);
+      expect(find.byType(AppBottomNavigation), findsOneWidget);
+    });
+
+    testWidgets('the bottom bar moves between destinations', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(subject());
+
+      await tester.tap(
+        find.descendant(
+          of: find.byType(AppBottomNavigation),
+          matching: find.text('Settings'),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.text('settings start'), findsOneWidget);
     });
 
     testWidgets(
@@ -185,7 +209,7 @@ void main() {
         await tester.pumpWidget(subject());
         await _openDrawer(tester);
 
-        await tester.tap(find.text('Inbox'));
+        await tester.tap(_inDrawer('Inbox'));
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 500));
 
@@ -193,7 +217,20 @@ void main() {
       },
     );
 
-    testWidgets('a member without the permission is not offered the Inbox', (
+    testWidgets('the account at the top of the drawer opens Settings', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(subject());
+      await _openDrawer(tester);
+
+      await tester.tap(find.text('Ada Lovelace'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.text('settings start'), findsOneWidget);
+    });
+
+    testWidgets('a member without the permission is offered Settings alone', (
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(
@@ -210,10 +247,15 @@ void main() {
           ),
         ),
       );
+
+      // One destination is a label, not a tab bar.
+      expect(find.byType(AppBottomNavigation), findsNothing);
+
       await _openDrawer(tester);
 
       expect(find.text('Grace Hopper'), findsOneWidget);
       expect(find.text('Inbox'), findsNothing);
+      expect(_inDrawer('Settings'), findsOneWidget);
     });
 
     testWidgets('signing out ends the session and navigates nowhere itself', (
@@ -242,7 +284,8 @@ void main() {
       await tester.pumpWidget(subject());
       await _openDrawer(tester);
 
-      expect(find.text('صندوق الوارد'), findsOneWidget);
+      expect(_inDrawer('صندوق الوارد'), findsOneWidget);
+      expect(_inDrawer('الإعدادات'), findsOneWidget);
       expect(find.text('تسجيل الخروج'), findsOneWidget);
     });
   });

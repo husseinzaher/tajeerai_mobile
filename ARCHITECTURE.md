@@ -46,6 +46,7 @@ lib/
 │   │   └── environment.dart   Which deployment this build points at.
 │   ├── theme/                 Generated from design/tokens.json, plus the accessors and the preset lookup.
 │   ├── shell/                 The signed-in frame: the design system's AppShell joined to the session and the routes.
+│   ├── settings/              The member's own settings: account, appearance, language, the way out.
 │   └── localization/          Locale selection and copy.
 │
 ├── design_system/             Business-agnostic UI. Imports no feature: a conversation reaches it as presentation data.

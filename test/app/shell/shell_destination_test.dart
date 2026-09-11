@@ -89,10 +89,24 @@ void main() {
       );
     });
 
-    test('is still the first destination when none is open', () {
+    test('is Settings for a member granted nothing', () {
       expect(
         ShellDestination.homeFor(_holding(const <String>{})),
-        ShellDestination.values.first,
+        ShellDestination.settings,
+      );
+    });
+
+    test('Settings is open to every member, whatever was withheld', () {
+      // Which is what guarantees every member somewhere to land.
+      expect(
+        ShellDestination.settings.isOpenTo(_holding(const <String>{})),
+        isTrue,
+      );
+      expect(
+        ShellDestination.settings.isOpenTo(
+          _holding(<String>{'manage:all'}, denied: <String>{'read:all'}),
+        ),
+        isTrue,
       );
     });
   });

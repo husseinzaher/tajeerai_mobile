@@ -52,6 +52,7 @@ class AuthenticatedShell extends ConsumerWidget {
                 // with more than one needs to know first.
                 subtitle: session.workspace?.name ?? session.user.email,
                 avatarUrl: session.user.avatarUrl,
+                onTap: () => _select(ShellDestination.settings.name),
               ),
         selectedId: current.name,
         onSelect: _select,
@@ -97,6 +98,11 @@ class AuthenticatedShell extends ConsumerWidget {
         id: destination.name,
         label: strings.inbox,
         icon: LucideIcons.messagesSquare,
+      ),
+      ShellDestination.settings => AppNavDestination(
+        id: destination.name,
+        label: strings.settings,
+        icon: LucideIcons.settings,
       ),
     };
   }

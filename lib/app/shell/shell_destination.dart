@@ -13,7 +13,11 @@ import '../router/routes.dart';
 /// before: an entry for a screen that is not built is a control that goes
 /// nowhere.
 enum ShellDestination {
-  inbox(AppRoutes.conversations, permission: 'read:Conversation');
+  inbox(AppRoutes.conversations, permission: 'read:Conversation'),
+
+  /// Last, and open to every member: whatever a role withholds, the account
+  /// and the way out are always reachable.
+  settings(AppRoutes.settings);
 
   const ShellDestination(this.path, {this.permission});
 
@@ -46,10 +50,9 @@ enum ShellDestination {
 
   /// Where [user] lands once signed in: the first destination open to them.
   ///
-  /// When none is -- a role granted nothing -- the first destination still
-  /// takes them, and its screen shows what the server refuses. There is no
-  /// better place to send them, and sending them nowhere leaves the router
-  /// with no route at all.
+  /// Settings needs no permission, so there always is one. The fallback is
+  /// for a list edited to lose that: the first destination still takes the
+  /// member, because sending them nowhere leaves the router with no route.
   static ShellDestination homeFor(AuthenticatedUser user) {
     for (final ShellDestination destination in values) {
       if (destination.isOpenTo(user)) return destination;

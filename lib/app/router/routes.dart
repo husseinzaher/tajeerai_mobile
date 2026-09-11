@@ -19,6 +19,9 @@ abstract final class AppRoutes {
   static String conversationDetailPath(String conversationId) =>
       '$conversations/thread/$conversationId';
 
+  /// The member's own settings: account, appearance, language, the way out.
+  static const String settings = '/settings';
+
   /// The design system's own documentation surface.
   ///
   /// Registered only under `kDebugMode`, so it never ships to a merchant. The
@@ -40,6 +43,7 @@ abstract final class AppRouteNames {
   static const String login = 'login';
   static const String conversations = 'conversations';
   static const String conversationDetail = 'conversation-detail';
+  static const String settings = 'settings';
   static const String designSystem = 'design-system';
   static const String splash = 'splash';
 }

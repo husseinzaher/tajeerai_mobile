@@ -6,9 +6,8 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../app/theme/theme.dart';
 import '../auth/brand_logo.dart';
 import '../buttons/app_button.dart';
-import '../display/avatar.dart';
 import '../display/badge.dart';
-import '../display/list_item.dart';
+import '../display/profile_header.dart';
 import '../display/separator.dart';
 import '../localization/ds_localization.dart';
 import '../primitives/pressable.dart';
@@ -138,17 +137,18 @@ class AppNavigationDrawer extends StatelessWidget {
               ),
             ),
             if (profile != null) ...<Widget>[
-              AppListItem(
-                leading: AppAvatar(
-                  name: profile!.name,
-                  imageUrl: profile!.avatarUrl,
-                  size: 44,
-                ),
-                title: Text(profile!.name),
-                subtitle: profile!.subtitle == null
+              AppProfileHeader(
+                name: profile!.name,
+                subtitle: profile!.subtitle,
+                avatarUrl: profile!.avatarUrl,
+                compact: true,
+                // Closed first, like a destination: what it opens is behind.
+                onTap: profile!.onTap == null
                     ? null
-                    : Text(profile!.subtitle!),
-                onTap: profile!.onTap,
+                    : () {
+                        _close(context);
+                        profile!.onTap!();
+                      },
               ),
               const AppSeparator(),
             ],

@@ -181,6 +181,38 @@ class AppStrings {
       'en': 'This conversation is archived and cannot receive new messages.',
       'ar': 'هذه المحادثة مؤرشفة ولا يمكنها استقبال رسائل جديدة.',
     },
+
+    // -- settings -----------------------------------------------------------
+    'settings': <String, String>{'en': 'Settings', 'ar': 'الإعدادات'},
+    'account': <String, String>{'en': 'Account', 'ar': 'الحساب'},
+    'email': <String, String>{'en': 'Email', 'ar': 'البريد الإلكتروني'},
+    'phone': <String, String>{'en': 'Phone', 'ar': 'الهاتف'},
+    'workspace': <String, String>{'en': 'Store', 'ar': 'المتجر'},
+    // The roles as the web dashboard names them, so a member reads the same
+    // word for themselves on both.
+    'roleOwner': <String, String>{'en': 'Owner', 'ar': 'المالك'},
+    'roleAdmin': <String, String>{'en': 'Administrator', 'ar': 'مدير'},
+    'roleAgent': <String, String>{'en': 'Agent', 'ar': 'موظف'},
+    'roleViewer': <String, String>{'en': 'Viewer', 'ar': 'مشاهد'},
+    'appearance': <String, String>{'en': 'Appearance', 'ar': 'المظهر'},
+    // The web dashboard's words for the same choice.
+    'themeSystem': <String, String>{'en': 'System', 'ar': 'النظام'},
+    'themeLight': <String, String>{'en': 'Light', 'ar': 'فاتح'},
+    'themeDark': <String, String>{'en': 'Dark', 'ar': 'داكن'},
+    'about': <String, String>{'en': 'About', 'ar': 'حول التطبيق'},
+    'appVersion': <String, String>{'en': 'Version', 'ar': 'الإصدار'},
+    'signOutConfirmTitle': <String, String>{
+      'en': 'Sign out?',
+      'ar': 'تسجيل الخروج؟',
+    },
+    // Only what is true: signing out empties this device, outbox included, and
+    // nothing on the account itself.
+    'signOutConfirmMessage': <String, String>{
+      'en':
+          'Messages that have not been sent yet will be lost. Your '
+          'conversations stay safe on your account.',
+      'ar': 'ستفقد الرسائل التي لم تُرسل بعد. تبقى محادثاتك محفوظة في حسابك.',
+    },
   };
 
   /// The table itself, for the test that checks every entry is translated.
@@ -234,4 +266,28 @@ class AppStrings {
   String get sendOffline => call('sendOffline');
   String get sendNotSaved => call('sendNotSaved');
   String get sendFailed => call('sendFailed');
+
+  String get settings => call('settings');
+  String get account => call('account');
+  String get email => call('email');
+  String get phone => call('phone');
+  String get workspace => call('workspace');
+  String get appearance => call('appearance');
+  String get themeSystem => call('themeSystem');
+  String get themeLight => call('themeLight');
+  String get themeDark => call('themeDark');
+  String get about => call('about');
+  String get appVersion => call('appVersion');
+  String get signOutConfirmTitle => call('signOutConfirmTitle');
+  String get signOutConfirmMessage => call('signOutConfirmMessage');
+
+  /// A member's role, named the way the web dashboard names it. A role this
+  /// build does not know yet is shown as the server wrote it, not as nothing.
+  String roleName(String role) => switch (role) {
+    'owner' => call('roleOwner'),
+    'admin' => call('roleAdmin'),
+    'agent' => call('roleAgent'),
+    'viewer' => call('roleViewer'),
+    _ => role,
+  };
 }

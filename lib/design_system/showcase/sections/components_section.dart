@@ -331,6 +331,78 @@ ShowcaseSection displaySection() => ShowcaseSection(
       ),
     ),
     ShowcaseExample(
+      name: 'Profile header',
+      description:
+          'Who a record is about, at the top of its page. Compact is the same '
+          'facts as a row, which is how the drawer draws its account. Three '
+          'actions at most: a fourth is a menu, and belongs further down.',
+      builder: (BuildContext context) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: TajeerSpacing.md,
+        children: <Widget>[
+          AppProfileHeader(
+            name: ShowcaseFixtures.customer,
+            subtitle: ShowcaseFixtures.store,
+            badges: const <Widget>[
+              AppBadge(label: 'عميل مميز', variant: AppBadgeVariant.secondary),
+            ],
+            actions: <AppProfileAction>[
+              AppProfileAction(
+                icon: LucideIcons.phone,
+                label: 'اتصال',
+                onPressed: () {},
+              ),
+              AppProfileAction(
+                icon: LucideIcons.messageCircle,
+                label: 'رسالة',
+                onPressed: () {},
+              ),
+              AppProfileAction(
+                icon: LucideIcons.notebookPen,
+                label: 'ملاحظة',
+                onPressed: () {},
+              ),
+            ],
+          ),
+          const AppProfileHeader(
+            name: ShowcaseFixtures.secondCustomer,
+            subtitle: ShowcaseFixtures.store,
+            compact: true,
+          ),
+          const AppProfileHeader.placeholder(compact: true),
+        ],
+      ),
+    ),
+    ShowcaseExample(
+      name: 'Detail rows',
+      description:
+          'How a record reads: a quiet label, then the value. A phone number '
+          'or an email stays left to right on an Arabic page, or its "+" moves '
+          'to the far end. Values wrap; they never clip.',
+      builder: (BuildContext context) => const AppListSection(
+        children: <Widget>[
+          AppDetailRow(
+            label: 'الهاتف',
+            value: '+966 55 123 4567',
+            icon: LucideIcons.phone,
+            identifier: true,
+            copyable: true,
+          ),
+          AppDetailRow(
+            label: 'البريد الإلكتروني',
+            value: 'sara@example.com',
+            icon: LucideIcons.mail,
+            identifier: true,
+          ),
+          AppDetailRow(
+            label: 'العنوان',
+            value: 'حي النرجس، طريق الملك عبدالعزيز، الرياض ١٣٣٢٧',
+            icon: LucideIcons.mapPin,
+          ),
+        ],
+      ),
+    ),
+    ShowcaseExample(
       name: 'List items',
       description:
           'Emphasis is a flag, not something each list styles for itself — '
