@@ -54,6 +54,34 @@ class AppListItem extends StatelessWidget {
     final TajeerColors colors = context.colors;
     final bool summarised = semanticLabel != null;
 
+    final TextStyle titleStyle = emphasised
+        ? context.type.titleSm.copyWith(fontWeight: FontWeight.w700)
+        : context.type.titleSm;
+    final Widget titleLine = DefaultTextStyle.merge(
+      style: titleStyle,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      child: title,
+    );
+    final Widget? metaLine = meta == null
+        ? null
+        : DefaultTextStyle.merge(
+            style: context.type.caption.copyWith(
+              color: emphasised ? colors.textSecondary : colors.textMuted,
+            ),
+            child: meta!,
+          );
+
+    // Past the control clamp, the meta moves under the title instead of
+    // fighting it for one line. At 2× a timestamp beside a name leaves the name
+    // no room and then overflows the row; stacked, the row grows, which is
+    // dynamic type working rather than failing. Measured at the title's own
+    // size, because a platform's scaling need not be linear.
+    final double titleSize = titleStyle.fontSize ?? 16;
+    final bool stacked =
+        MediaQuery.textScalerOf(context).scale(titleSize) / titleSize >
+        TajeerTypography.controlMaxScale;
+
     return Semantics(
       // With a label the row is one sentence, so its own title, subtitle and
       // meta are not read again after it, fragment by fragment. Excluding them
@@ -103,33 +131,15 @@ class AppListItem extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     spacing: TajeerSpacing.xs2,
                     children: <Widget>[
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        spacing: TajeerSpacing.xs,
-                        children: <Widget>[
-                          Expanded(
-                            child: DefaultTextStyle.merge(
-                              style: emphasised
-                                  ? context.type.titleSm.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                    )
-                                  : context.type.titleSm,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              child: title,
-                            ),
-                          ),
-                          if (meta != null)
-                            DefaultTextStyle.merge(
-                              style: context.type.caption.copyWith(
-                                color: emphasised
-                                    ? colors.textSecondary
-                                    : colors.textMuted,
-                              ),
-                              child: meta!,
-                            ),
-                        ],
-                      ),
+                      if (stacked) ...<Widget>[titleLine, ?metaLine] else
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          spacing: TajeerSpacing.xs,
+                          children: <Widget>[
+                            Expanded(child: titleLine),
+                            ?metaLine,
+                          ],
+                        ),
                       if (subtitle != null)
                         DefaultTextStyle.merge(
                           style: context.type.bodySm.copyWith(

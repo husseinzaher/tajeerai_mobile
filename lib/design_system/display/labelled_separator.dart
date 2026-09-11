@@ -27,13 +27,30 @@ class AppLabelledSeparator extends StatelessWidget {
       AppSeparatorTone.primary => (colors.focus, colors.primaryBorder),
     };
 
-    return Row(
-      spacing: TajeerSpacing.sm,
-      children: <Widget>[
-        Expanded(child: Divider(color: line, height: 1, thickness: 1)),
-        Text(label, style: context.type.labelSm.copyWith(color: ink)),
-        Expanded(child: Divider(color: line, height: 1, thickness: 1)),
-      ],
+    // The word wraps rather than pushing the rules off the row, and the rules
+    // keep a stub on each side at any text size — so it still reads as a rule
+    // with a word in it, not as a sentence floating on its own.
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        final double room =
+            constraints.maxWidth - 2 * (TajeerSpacing.sm + TajeerSpacing.lg);
+
+        return Row(
+          spacing: TajeerSpacing.sm,
+          children: <Widget>[
+            Expanded(child: Divider(color: line, height: 1, thickness: 1)),
+            ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: room > 0 ? room : 0),
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                style: context.type.labelSm.copyWith(color: ink),
+              ),
+            ),
+            Expanded(child: Divider(color: line, height: 1, thickness: 1)),
+          ],
+        );
+      },
     );
   }
 }

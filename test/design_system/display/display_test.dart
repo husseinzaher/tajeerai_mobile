@@ -7,6 +7,7 @@ import 'package:tajeerai_mobile/design_system/display/avatar.dart';
 import 'package:tajeerai_mobile/design_system/display/avatar_group.dart';
 import 'package:tajeerai_mobile/design_system/display/badge.dart';
 import 'package:tajeerai_mobile/design_system/display/chip.dart';
+import 'package:tajeerai_mobile/design_system/display/labelled_separator.dart';
 import 'package:tajeerai_mobile/design_system/display/list_item.dart';
 import 'package:tajeerai_mobile/design_system/display/list_section.dart';
 import 'package:tajeerai_mobile/design_system/display/segmented_control.dart';
@@ -83,6 +84,114 @@ void main() {
           },
         );
       }
+    });
+  });
+
+  group('at twice the text size, nothing is pushed off a phone', () {
+    // Each of these overflowed the first time the showcase smoke test laid a
+    // section out at a phone's real width. The SizedBox is what gives them
+    // that width: wrapWidget's size only changes what MediaQuery reports.
+    Widget atPhoneWidth(Widget child, {double scale = 2}) => wrapWidget(
+      Align(
+        alignment: AlignmentDirectional.topStart,
+        child: SizedBox(width: 360, child: child),
+      ),
+      textScaler: TextScaler.linear(scale),
+    );
+
+    testWidgets('a list row moves its time under the title, past the clamp', (
+      WidgetTester tester,
+    ) async {
+      const AppListItem item = AppListItem(
+        leading: AppAvatar(name: 'سارة أحمد'),
+        title: Text('سارة أحمد'),
+        meta: Text('10:24'),
+        subtitle: Text('هل الطلب جاهز للاستلام اليوم؟'),
+        trailing: AppBadge(label: '3'),
+      );
+
+      for (final double scale in <double>[
+        1,
+        TajeerTypography.controlMaxScale,
+      ]) {
+        await tester.pumpWidget(atPhoneWidth(item, scale: scale));
+        expect(
+          tester.getTopLeft(find.text('10:24')).dy,
+          moreOrLessEquals(tester.getTopLeft(find.text('سارة أحمد')).dy),
+          reason: 'at text scale $scale the time shares the title line',
+        );
+      }
+
+      await tester.pumpWidget(atPhoneWidth(item));
+      expect(tester.takeException(), isNull);
+      expect(
+        tester.getTopLeft(find.text('10:24')).dy,
+        greaterThanOrEqualTo(tester.getBottomLeft(find.text('سارة أحمد')).dy),
+        reason: 'at 2× the time sits under the title, and the row grows',
+      );
+    });
+
+    testWidgets('a labelled separator wraps its word and keeps both rules', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        atPhoneWidth(
+          const AppLabelledSeparator(label: 'أو تابع باستخدام حساب آخر لديك'),
+        ),
+      );
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(Divider), findsNWidgets(2));
+      for (final Finder rule in <Finder>[
+        find.byType(Divider).first,
+        find.byType(Divider).last,
+      ]) {
+        expect(
+          tester.getSize(rule).width,
+          greaterThanOrEqualTo(TajeerSpacing.lg),
+        );
+      }
+    });
+
+    testWidgets('a segmented control shares the row instead of leaving it', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        atPhoneWidth(
+          AppSegmentedControl<int>(
+            value: 0,
+            onChanged: (int value) {},
+            options: const <int, String>{
+              0: 'Light appearance',
+              1: 'Dark appearance',
+              2: 'Follow the system',
+            },
+          ),
+        ),
+      );
+
+      expect(tester.takeException(), isNull);
+
+      // With room to spare it is as wide as its labels, not as wide as the
+      // row: sharing is for when there is not enough. The Align loosens the
+      // phone's width, which would otherwise force the control to fill it.
+      await tester.pumpWidget(
+        atPhoneWidth(
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: AppSegmentedControl<int>(
+              value: 0,
+              onChanged: (int value) {},
+              options: const <int, String>{0: 'A', 1: 'B'},
+            ),
+          ),
+          scale: 1,
+        ),
+      );
+      expect(
+        tester.getSize(find.byType(AppSegmentedControl<int>)).width,
+        lessThan(180),
+      );
     });
   });
 

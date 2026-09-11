@@ -12,7 +12,7 @@ import '../../support/widget_harness.dart';
 
 /// The showcase, used as a test harness rather than only as documentation.
 ///
-/// Every section is pumped across four independent axes rather than their
+/// Every section is pumped across five independent axes rather than their
 /// cross-product — the product would be hundreds of cases for very little more
 /// signal. `takeException` is the assertion that earns its keep: it catches
 /// RenderFlex overflows, missing Directionality, missing Material ancestors and
@@ -25,6 +25,68 @@ Future<void> _pump(WidgetTester tester, Widget child) async {
   await tester.pumpWidget(child);
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 300));
+}
+
+/// How tall a section's surface is in the smoke test.
+///
+/// `ShowcaseSectionView` is a ListView, and a ListView builds only what is near
+/// its viewport. At a phone's real height most of a section's examples were
+/// never built, so nothing in them could throw: every axis below was checking
+/// the first screenful. This is not a claim about any device. It is a height
+/// at which every example is laid out, and [_pumpSection] fails the day it
+/// stops being enough.
+const double _tall = 16000;
+
+/// Pumps one section [width] logical pixels wide, tall enough to build all of
+/// it, and checks that nothing threw.
+///
+/// The width is set on the test view, not only on `MediaQuery`. A size handed
+/// to `MediaQuery` alone changes what a widget *reads* and nothing about the
+/// constraints it is laid out in — which is how a "360px" axis once laid every
+/// section out at the test binding's default 800.
+Future<void> _pumpSection(
+  WidgetTester tester,
+  ShowcaseSection section, {
+  required String variant,
+  double width = 390,
+  TajeerPreset preset = TajeerPreset.fallback,
+  Brightness brightness = Brightness.light,
+  TextDirection textDirection = TextDirection.ltr,
+  Locale locale = const Locale('en'),
+  TextScaler textScaler = TextScaler.noScaling,
+  bool disableAnimations = false,
+}) async {
+  final Size size = Size(width, _tall);
+  tester.view
+    ..physicalSize = size
+    ..devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+
+  await _pump(
+    tester,
+    wrapWidget(
+      KeyedSubtree(
+        key: ValueKey<String>(variant),
+        child: ShowcaseSectionView(section: section),
+      ),
+      preset: preset,
+      brightness: brightness,
+      textDirection: textDirection,
+      locale: locale,
+      textScaler: textScaler,
+      disableAnimations: disableAnimations,
+      size: size,
+    ),
+  );
+
+  expect(tester.takeException(), isNull, reason: '${section.title}, $variant');
+  expect(
+    find.text(section.examples.last.name),
+    findsWidgets,
+    reason:
+        '${section.title}, $variant: the last example was never built, so '
+        'the checks covered part of the section. Raise _tall.',
+  );
 }
 
 /// Every Dart file under showcase/, found rather than listed, so a section
@@ -53,22 +115,12 @@ void main() {
       ) async {
         for (final TajeerPreset preset in TajeerPreset.values) {
           for (final Brightness brightness in Brightness.values) {
-            await _pump(
+            await _pumpSection(
               tester,
-              wrapWidget(
-                KeyedSubtree(
-                  key: ValueKey<String>('${preset.name}-${brightness.name}'),
-                  child: ShowcaseSectionView(section: section),
-                ),
-                preset: preset,
-                brightness: brightness,
-                size: const Size(390, 844),
-              ),
-            );
-            expect(
-              tester.takeException(),
-              isNull,
-              reason: '${section.title} in ${preset.name}/${brightness.name}',
+              section,
+              variant: '${preset.name}/${brightness.name}',
+              preset: preset,
+              brightness: brightness,
             );
           }
         }
@@ -78,21 +130,15 @@ void main() {
         WidgetTester tester,
       ) async {
         for (final TextDirection direction in TextDirection.values) {
-          await _pump(
+          await _pumpSection(
             tester,
-            wrapWidget(
-              KeyedSubtree(
-                key: ValueKey<TextDirection>(direction),
-                child: ShowcaseSectionView(section: section),
-              ),
-              textDirection: direction,
-              locale: direction == TextDirection.rtl
-                  ? const Locale('ar')
-                  : const Locale('en'),
-              size: const Size(390, 844),
-            ),
+            section,
+            variant: direction.name,
+            textDirection: direction,
+            locale: direction == TextDirection.rtl
+                ? const Locale('ar')
+                : const Locale('en'),
           );
-          expect(tester.takeException(), isNull, reason: direction.name);
         }
       });
 
@@ -100,17 +146,12 @@ void main() {
         WidgetTester tester,
       ) async {
         for (final double width in <double>[360, 390, 430, 768]) {
-          await _pump(
+          await _pumpSection(
             tester,
-            wrapWidget(
-              KeyedSubtree(
-                key: ValueKey<double>(width),
-                child: ShowcaseSectionView(section: section),
-              ),
-              size: Size(width, 844),
-            ),
+            section,
+            variant: '${width}px',
+            width: width,
           );
-          expect(tester.takeException(), isNull, reason: '${width}px');
         }
       });
 
@@ -121,18 +162,12 @@ void main() {
         // text". A control that pins its height fails here rather than on
         // somebody's phone with large type turned on.
         for (final double scale in <double>[1.3, 2]) {
-          await _pump(
+          await _pumpSection(
             tester,
-            wrapWidget(
-              KeyedSubtree(
-                key: ValueKey<double>(scale),
-                child: ShowcaseSectionView(section: section),
-              ),
-              textScaler: TextScaler.linear(scale),
-              size: const Size(390, 844),
-            ),
+            section,
+            variant: 'text scale $scale',
+            textScaler: TextScaler.linear(scale),
           );
-          expect(tester.takeException(), isNull, reason: 'text scale $scale');
         }
       });
 
@@ -142,15 +177,12 @@ void main() {
         // Reduced motion swaps what `context.motion` returns for zero
         // durations and no press scale. A component that quietly assumed
         // time passes breaks only for the people who turned animations off.
-        await _pump(
+        await _pumpSection(
           tester,
-          wrapWidget(
-            ShowcaseSectionView(section: section),
-            disableAnimations: true,
-            size: const Size(390, 844),
-          ),
+          section,
+          variant: 'reduced motion',
+          disableAnimations: true,
         );
-        expect(tester.takeException(), isNull, reason: 'reduced motion');
       });
     }
   });
