@@ -48,12 +48,13 @@ lib/
 │   ├── shell/                 The signed-in frame: the design system's AppShell joined to the session and the routes.
 │   └── localization/          Locale selection and copy.
 │
-├── design_system/             Business-agnostic UI. Knows nothing about conversations or auth.
+├── design_system/             Business-agnostic UI. Imports no feature: a conversation reaches it as presentation data.
 │   ├── design_system.dart     The barrel. The only door a feature may use.
 │   ├── primitives/ buttons/ inputs/ display/ cards/ feedback/ loaders/ overlays/ layouts/
 │   ├── auth/                  The frame and the parts of every unauthenticated screen.
 │   ├── shell/                 The toolbar, the navigation drawer, the bottom bar and the shell that holds them.
 │   ├── channels/              A channel's kind, its instance colour and what it can carry — never which feature owns it.
+│   ├── inbox/                 The Inbox's row and list, drawn from AppConversationSummary rather than a domain type.
 │   ├── localization/          The copy components render on their own behalf.
 │   └── showcase/              The debug-only gallery. The same components, never copies.
 │
@@ -518,6 +519,31 @@ holds to body-text contrast for every colour, preset and theme.
 Nothing in `features/` draws these yet — `Conversation` carries only a
 `channelId`. Mapping the backend's channel types onto the six kinds belongs to
 the feature that first needs it.
+
+### Presentation data, and who maps into it
+
+The design system draws conversations without knowing what a `Conversation`
+is. RULE 18 forbids the import, and a row has no use for the rules behind it
+anyway. So the design system owns plain presentation types and the feature
+owns the mapping into them:
+
+| The design system draws | The feature maps, in `presentation/widgets/` |
+| --- | --- |
+| `AppConversationSummary` | `conversation_view_data.dart` — `Conversation.toSummary` |
+| `AppConnectionStatus` | `conversation_view_data.dart` — `ConversationSyncState.connectionStatus` |
+| `AppViewState<T>` | `async_view_state.dart` — `AsyncValue.toViewState` |
+
+The mapper is where fallbacks are decided and translated. A row's title is the
+customer's name, then the thread's subject, then the app's "Unknown customer"
+in the reader's language — not the domain's `displayName`, whose English last
+resort is for logs. The async adapter is where offline-first shows on screen:
+a value present in any state is drawn as loaded, so a refresh that is running,
+or one that failed, never replaces rows with a spinner.
+
+A screen built this way is composition. `conversation_list_screen.dart` holds
+no row, no skeleton, no banner and no four-state `.when`. The row it used to
+draw coloured its timestamp with the brand yellow at 1.53:1 — the kind of
+decision a feature should not be in a position to make.
 
 ## 13. Testing rules
 
