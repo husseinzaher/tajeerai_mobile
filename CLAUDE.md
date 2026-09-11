@@ -53,8 +53,10 @@ no socket, no device APIs in `domain/`. Business rules must be testable with a
 fake repository and nothing else.
 
 **Do not make HTTP the default transport.** WebSocket carries business data.
-HTTP is for the sign-in exchange, file transfer, and endpoints the socket does
-not expose. A new HTTP call needs a reason recorded in `ARCHITECTURE.md` §11.
+HTTP is for the sign-in exchange, file transfer, and the workspace data §11
+lists because the socket does not expose it. A new kind of HTTP call needs a
+reason recorded in `ARCHITECTURE.md` §11, and RULE 36 keeps every call in a
+feature's `data/remote/`.
 
 **Preserve realtime-first.** Socket events are written to the database by a
 feature's realtime handler; the UI watches the database. A widget must never

@@ -52,8 +52,7 @@ Map<String, Object?> _sessionPayload() => <String, Object?>{
 /// is concrete, and extracting an interface purely to satisfy a test is the
 /// premature abstraction the architecture warns against.
 class FakeAuthRemote extends AuthRemoteDataSource {
-  FakeAuthRemote({required super.http, required super.secureStorage})
-    : super(baseUrl: 'http://localhost');
+  FakeAuthRemote({required super.http, required super.secureStorage});
 
   Map<String, Object?>? nextPayload = _sessionPayload();
   Object? failureToThrow;

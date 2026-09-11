@@ -363,10 +363,27 @@ HTTP is **secondary**. It is used for exactly three things:
    token is what signing in produces — there is no connection to send
    credentials over yet.
 2. **File upload and download.** Streamed bodies, not frames.
-3. **Endpoints the socket genuinely does not expose.** There are none today.
+3. **Workspace data the socket does not expose** — customers, orders and
+   products, and a note appended to a customer. The backend has no socket
+   commands for those modules, and adding a transport to it for a few read
+   screens would be a larger change than the screens. They sync into the local
+   database like everything else, so the screens still read offline.
 
 A new HTTP call for anything else is an architectural decision that belongs in
 this document, not a convenience.
+
+**RULE 36** keeps every call where that decision can be reviewed. `HttpClient`
+is imported only by a feature's `data/remote/` sources, the network layer and
+the composition root, and nothing outside `infrastructure/network/` names Dio
+or a cookie jar. Which endpoint a data source calls is still a question for
+review; the guard makes sure every call sits where the review looks.
+
+A 401 renews the session once, through the same single-flight renewal the socket
+uses, and repeats the request. It has to be shared: the backend's refresh tokens
+are single-use (`JwtTokenIssuer.rotate()` revokes one as it issues the next), so
+two transports renewing on their own would sign members out. Only the server
+refusing the refresh token ends a session; being offline, throttled or answered
+with a server error does not.
 
 ---
 
@@ -670,7 +687,7 @@ a connection's lifecycle and nothing else.
 
 ## 15. Enforcement
 
-`tool/check_architecture.dart` implements 35 rules across seven rule files. Each
+`tool/check_architecture.dart` implements 36 rules across eight rule files. Each
 violation prints the rule, the source file and line, the forbidden dependency,
 why it is wrong, and what to use instead. Non-zero exit fails CI.
 
@@ -681,7 +698,7 @@ dart run tool/check_architecture.dart
 Rules are objects, not branches in a long function: adding one is adding a file
 under `tool/architecture/rules/` and a line in `_fileRules`.
 
-### The 35 rules
+### The 36 rules
 
 1–5 Presentation must not import data, infrastructure, repository
 implementations, database APIs or socket infrastructure.
@@ -709,6 +726,8 @@ or storage package.
 family, and no number where a radius or spacing token belongs.
 35 Outside the design system and the theme: no Material widget the design
 system already wraps, and none of the functions that open one.
+36 HTTP is reached only from a feature's `data/remote/`, the network layer and
+the composition root; only the network layer names Dio or a cookie jar.
 
 Rules 31–33 close holes rule 18 left open: it checked only that a design-system
 file did not import a *feature*, so `app/bootstrap/dependencies.dart`, the

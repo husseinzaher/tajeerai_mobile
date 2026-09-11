@@ -18,6 +18,7 @@ import 'architecture/rules/design_system_boundary_rule.dart';
 import 'architecture/rules/design_system_usage_rule.dart';
 import 'architecture/rules/feature_boundary_rule.dart';
 import 'architecture/rules/forbidden_directory_rule.dart';
+import 'architecture/rules/http_transport_rule.dart';
 import 'architecture/rules/infrastructure_rule.dart';
 import 'architecture/rules/layer_dependency_rule.dart';
 import 'architecture/rules/presentation_access_rule.dart';
@@ -34,6 +35,7 @@ const List<ArchitectureRule> _fileRules = <ArchitectureRule>[
   DesignSystemPackageRule(),
   RawDesignValueRule(),
   MaterialWidgetRule(),
+  HttpTransportRule(),
 ];
 
 /// Rules that inspect project structure rather than one file's imports.

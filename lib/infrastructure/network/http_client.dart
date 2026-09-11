@@ -12,29 +12,30 @@ import 'token_refresher.dart';
 
 /// The HTTP transport.
 ///
-/// **HTTP is the secondary transport in this application.** It exists for the
-/// operations the socket genuinely cannot carry, and every caller has to
-/// justify itself:
+/// **HTTP is the secondary transport in this application.** It carries what
+/// `ARCHITECTURE.md` §11 lists, and nothing else:
 ///
 /// - the sign-in exchange, because a socket handshake needs a token and the
 ///   token is what signing in produces -- there is no connection to send the
 ///   credentials over yet;
 /// - session refresh and sign-out, for the same reason;
-/// - file upload and download, which are streamed bodies, not frames.
+/// - file upload and download, which are streamed bodies, not frames;
+/// - the workspace data the socket does not expose -- customers, orders and
+///   products -- which sync into the local database like everything else.
 ///
-/// Business reads and writes go over the socket. A new HTTP call for anything
-/// else is an architectural decision that belongs in `ARCHITECTURE.md`, not a
-/// convenience.
+/// Anything more is an architectural decision that belongs in §11 first.
+/// RULE 36 keeps every caller in a feature's `data/remote/`, where that
+/// decision can be reviewed.
 ///
 /// ## Cookies
 ///
 /// The backend issues its session as `httpOnly` cookies (`tj_access`,
 /// `tj_refresh`) and returns only `{user, tenant}` in the body -- it was built
 /// for a browser. A [CookieJar] therefore captures the exchange, and
-/// `AuthRemoteDataSource` reads the access cookie back out to hand to the
-/// socket handshake, which accepts `auth.token`. That keeps the mobile client
-/// working against the deployed API with no server change; see
-/// `ARCHITECTURE.md` -> Backend assumptions.
+/// `AuthRemoteDataSource` reads the access cookie back out through
+/// [readCookies] to hand to the socket handshake, which accepts `auth.token`.
+/// That keeps the mobile client working against the deployed API with no
+/// server change; see `ARCHITECTURE.md` -> Backend assumptions.
 ///
 /// ## An expired credential
 ///
@@ -44,7 +45,8 @@ import 'token_refresher.dart';
 class HttpClient {
   HttpClient._(
     this._dio,
-    this.cookieJar, {
+    this._cookieJar,
+    this._cookieOrigin, {
     required Future<RefreshOutcome> Function()? renewCredential,
     required void Function()? onForbidden,
     required DateTime Function() clock,
@@ -91,6 +93,7 @@ class HttpClient {
     return HttpClient._(
       dio,
       jar,
+      Uri.parse(config.apiBaseUrl),
       renewCredential: renewCredential,
       onForbidden: onForbidden,
       clock: clock,
@@ -99,9 +102,11 @@ class HttpClient {
 
   final Dio _dio;
 
-  /// Holds the session cookies. Read by the auth data source to recover the
-  /// access token for the socket handshake.
-  final CookieJar cookieJar;
+  /// Holds the session cookies between requests.
+  final CookieJar _cookieJar;
+
+  /// Where the session cookies are scoped: the API's origin.
+  final Uri _cookieOrigin;
 
   /// Renews the session when a request comes back 401.
   ///
@@ -130,6 +135,30 @@ class HttpClient {
   Future<Map<String, Object?>> patch(String path, {Object? body}) {
     return _send(path, () => _dio.patch<Object?>(path, data: body));
   }
+
+  /// Puts cookies back in the jar, by name and value.
+  ///
+  /// The jar lives in memory, so a cold start has none, and every request
+  /// would 401 even though the tokens survived in secure storage.
+  Future<void> seedCookies(Map<String, String> cookies) async {
+    if (cookies.isEmpty) return;
+
+    await _cookieJar.saveFromResponse(_cookieOrigin, <Cookie>[
+      for (final MapEntry<String, String> cookie in cookies.entries)
+        Cookie(cookie.key, cookie.value)..path = '/',
+    ]);
+  }
+
+  /// The cookies the next request to the API would carry, by name.
+  Future<Map<String, String>> readCookies() async {
+    final List<Cookie> cookies = await _cookieJar.loadForRequest(_cookieOrigin);
+
+    return <String, String>{
+      for (final Cookie cookie in cookies) cookie.name: cookie.value,
+    };
+  }
+
+  Future<void> clearCookies() => _cookieJar.deleteAll();
 
   /// Sends a request and normalises everything that can go wrong into
   /// [HttpException].

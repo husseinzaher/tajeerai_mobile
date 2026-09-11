@@ -306,6 +306,48 @@ void main() {
     });
   });
 
+  group('cookies', () {
+    test('seeded cookies ride on the next request', () async {
+      final _ScriptedAdapter adapter = _ScriptedAdapter()..script.add(_ok());
+      final HttpClient client = _client(adapter);
+
+      await client.seedCookies(<String, String>{'tj_access': 'access-1'});
+      await client.get('/v1/customers');
+
+      expect(
+        adapter.requests.single.headers['cookie'],
+        contains('tj_access=access-1'),
+      );
+    });
+
+    test('a cookie the server sets can be read back by name', () async {
+      final _ScriptedAdapter adapter = _ScriptedAdapter()
+        ..script.add((
+          status: 200,
+          body: const <String, Object?>{},
+          headers: <String, List<String>>{
+            'set-cookie': <String>['tj_access=access-2; Path=/; HttpOnly'],
+          },
+        ));
+      final HttpClient client = _client(adapter);
+
+      await client.post('/v1/auth/login');
+
+      expect(await client.readCookies(), <String, String>{
+        'tj_access': 'access-2',
+      });
+    });
+
+    test('clearing forgets every cookie', () async {
+      final HttpClient client = _client(_ScriptedAdapter());
+
+      await client.seedCookies(<String, String>{'tj_refresh': 'refresh-1'});
+      await client.clearCookies();
+
+      expect(await client.readCookies(), isEmpty);
+    });
+  });
+
   test('patch sends a PATCH carrying its body', () async {
     final _ScriptedAdapter adapter = _ScriptedAdapter()..script.add(_ok());
     final HttpClient client = _client(adapter);

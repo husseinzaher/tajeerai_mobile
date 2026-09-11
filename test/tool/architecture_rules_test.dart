@@ -7,6 +7,7 @@ import '../../tool/architecture/rules/design_system_boundary_rule.dart';
 import '../../tool/architecture/rules/design_system_usage_rule.dart';
 import '../../tool/architecture/rules/feature_boundary_rule.dart';
 import '../../tool/architecture/rules/forbidden_directory_rule.dart';
+import '../../tool/architecture/rules/http_transport_rule.dart';
 import '../../tool/architecture/rules/infrastructure_rule.dart';
 import '../../tool/architecture/rules/layer_dependency_rule.dart';
 import '../../tool/architecture/rules/presentation_access_rule.dart';
@@ -566,6 +567,67 @@ void main() {
         ),
         isEmpty,
       );
+    });
+  });
+
+  group('RULE 36 -- HTTP is reached only where its policy is reviewed', () {
+    const String client = 'lib/infrastructure/network/http_client.dart';
+
+    List<Violation> check(
+      String path, {
+      List<String> imports = const <String>[],
+      List<String> packages = const <String>[],
+    }) => const HttpTransportRule().check(
+      contextFor(path, imports, packages: packages),
+    );
+
+    test('a feature data source may use the HTTP client', () {
+      expect(
+        check(
+          'lib/features/customers/data/remote/customer_remote_data_source.dart',
+          imports: <String>[client],
+        ),
+        isEmpty,
+      );
+    });
+
+    test('a controller, a repository or a coordinator may not', () {
+      for (final String path in <String>[
+        'lib/features/customers/presentation/controllers/customers_controller.dart',
+        'lib/features/customers/data/repositories/customer_repository_impl.dart',
+        'lib/features/customers/application/coordinators/customer_sync.dart',
+      ]) {
+        final violations = check(path, imports: <String>[client]);
+
+        expect(violations, hasLength(1), reason: path);
+        expect(violations.single.rule, contains('RULE 36'));
+      }
+    });
+
+    test('the composition root and the network layer may', () {
+      expect(
+        check('lib/app/bootstrap/dependencies.dart', imports: <String>[client]),
+        isEmpty,
+      );
+      expect(
+        check(
+          'lib/infrastructure/network/interceptors/logging_interceptor.dart',
+          packages: <String>['dio'],
+        ),
+        isEmpty,
+      );
+    });
+
+    test('nothing outside the network layer names the HTTP library', () {
+      final violations = check(
+        'lib/features/auth/data/remote/auth_remote_data_source.dart',
+        packages: <String>['cookie_jar', 'dio'],
+      );
+
+      // Not even a data source: it calls HttpClient, and never builds a Dio
+      // or reads a cookie jar of its own.
+      expect(violations, hasLength(2));
+      expect(violations.first.allowedAlternative, contains('HttpClient'));
     });
   });
 

@@ -181,7 +181,6 @@ final Provider<AuthRemoteDataSource> authRemoteDataSourceProvider =
       return AuthRemoteDataSource(
         http: ref.watch(httpClientProvider),
         secureStorage: ref.watch(secureStorageProvider),
-        baseUrl: ref.watch(appConfigProvider).apiBaseUrl,
       );
     });
 
