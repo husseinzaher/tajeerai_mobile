@@ -56,6 +56,7 @@ void main() {
           // Never pumpAndSettle: AppSpinner and AppSkeleton repeat() forever.
           await tester.pump();
           await tester.pump(const Duration(milliseconds: 300));
+          await precacheImages(tester);
 
           // A golden blesses whatever it is handed, overflow stripes included.
           expect(tester.takeException(), isNull);

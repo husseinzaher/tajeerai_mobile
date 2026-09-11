@@ -95,6 +95,11 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  # Only the generated copies ship. The brand exports beside them are the source
+  # and stay out of the binary — see assets/brand/README.md.
+  assets:
+    - assets/brand/app/
+
   # Bundled, not fetched. An offline-first client that downloads its typeface
   # renders the fallback stack on a cold first launch; see assets/fonts/README.md
   # for why these three weights and no others.

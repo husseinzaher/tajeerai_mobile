@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Loads the bundled typeface into the test binding.
@@ -51,4 +52,20 @@ void useDevice(WidgetTester tester, {Size size = const Size(390, 844)}) {
     ..physicalSize = size
     ..devicePixelRatio = 1;
   addTearDown(tester.view.reset);
+}
+
+/// Decodes every image on screen before a capture.
+///
+/// Text is laid out synchronously; images are not. An asset is read and
+/// decoded off the frame, so a golden captured straight after `pump` records an
+/// empty box where the logo belongs — and blesses it. Decoding has to happen
+/// outside the fake clock, which is what `runAsync` is for.
+Future<void> precacheImages(WidgetTester tester) async {
+  await tester.runAsync(() async {
+    for (final Element element in find.byType(Image).evaluate()) {
+      final Image image = element.widget as Image;
+      await precacheImage(image.image, element);
+    }
+  });
+  await tester.pump();
 }

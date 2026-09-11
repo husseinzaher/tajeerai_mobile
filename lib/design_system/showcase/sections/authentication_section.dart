@@ -27,17 +27,18 @@ ShowcaseSection authenticationSection() => ShowcaseSection(
     ShowcaseExample(
       name: 'Brand logo',
       description:
-          'A placeholder until the real mark ships as an asset — deliberately '
-          'obvious, because a near-miss logo is worse than a plain stand-in. '
-          'The lockup stays left-to-right in Arabic: a logo is a fixed graphic, '
-          'not a sentence.',
-      builder: (BuildContext context) => const Wrap(
-        spacing: TajeerSpacing.md,
-        runSpacing: TajeerSpacing.md,
-        crossAxisAlignment: WrapCrossAlignment.center,
+          'Drawn from the brand\'s own exports, never redrawn. The vertical logo '
+          'comes in four — an Arabic or Latin wordmark, yellow on a light canvas '
+          'and white on a dark one — and the component picks between them, so no '
+          'screen has to. The horizontal logo and the mark read on either canvas. '
+          'None of them mirrors: a logo is a fixed graphic, not a sentence.',
+      builder: (BuildContext context) => const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: TajeerSpacing.lg,
         children: <Widget>[
           AppBrandLogo(),
-          AppBrandLogo(variant: AppBrandLogoVariant.mark, size: 40),
+          AppBrandLogo(variant: AppBrandLogoVariant.horizontal),
+          AppBrandLogo(variant: AppBrandLogoVariant.mark),
         ],
       ),
     ),

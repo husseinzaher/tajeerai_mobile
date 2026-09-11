@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -10,18 +12,76 @@ import '../../support/widget_harness.dart';
 
 void main() {
   group('AppBrandLogo', () {
-    testWidgets('the full lockup shows the name; the mark alone does not', (
+    String? assetOf(Image image) {
+      ImageProvider<Object> provider = image.image;
+      if (provider is ResizeImage) {
+        provider = provider.imageProvider;
+      }
+      return provider is AssetImage ? provider.assetName : null;
+    }
+
+    test('the vertical logo follows the language and the canvas', () {
+      String vertical(Brightness brightness, String languageCode) =>
+          AppBrandLogo.assetFor(
+            AppBrandLogoVariant.vertical,
+            brightness: brightness,
+            languageCode: languageCode,
+          );
+
+      expect(vertical(Brightness.light, 'en'), AppBrandLogo.verticalEnLight);
+      expect(vertical(Brightness.dark, 'en'), AppBrandLogo.verticalEnDark);
+      expect(vertical(Brightness.light, 'ar'), AppBrandLogo.verticalArLight);
+      expect(vertical(Brightness.dark, 'ar'), AppBrandLogo.verticalArDark);
+      // A language the brand has no wordmark for reads the Latin one.
+      expect(vertical(Brightness.dark, 'fr'), AppBrandLogo.verticalEnDark);
+    });
+
+    test('the mark and the horizontal logo read on either canvas', () {
+      for (final Brightness brightness in Brightness.values) {
+        for (final String languageCode in <String>['en', 'ar']) {
+          expect(
+            AppBrandLogo.assetFor(
+              AppBrandLogoVariant.mark,
+              brightness: brightness,
+              languageCode: languageCode,
+            ),
+            AppBrandLogo.markAsset,
+          );
+          expect(
+            AppBrandLogo.assetFor(
+              AppBrandLogoVariant.horizontal,
+              brightness: brightness,
+              languageCode: languageCode,
+            ),
+            AppBrandLogo.horizontalAsset,
+          );
+        }
+      }
+    });
+
+    test('every file it can choose exists', () {
+      // A path that resolves in code and not on disk draws nothing, silently.
+      for (final String path in AppBrandLogo.assets) {
+        expect(File(path).existsSync(), isTrue, reason: path);
+      }
+    });
+
+    testWidgets('draws the file for the screen it is on', (
       WidgetTester tester,
     ) async {
-      await tester.pumpWidget(wrapWidget(const Center(child: AppBrandLogo())));
-      expect(find.text('Tajeer AI'), findsOneWidget);
-
       await tester.pumpWidget(
         wrapWidget(
-          const Center(child: AppBrandLogo(variant: AppBrandLogoVariant.mark)),
+          const Center(child: AppBrandLogo()),
+          brightness: Brightness.dark,
+          locale: const Locale('ar'),
+          textDirection: TextDirection.rtl,
         ),
       );
-      expect(find.text('Tajeer AI'), findsNothing);
+
+      expect(
+        assetOf(tester.widget<Image>(find.byType(Image))),
+        AppBrandLogo.verticalArDark,
+      );
     });
 
     testWidgets('is one image to a screen reader, named for the product', (
@@ -34,28 +94,33 @@ void main() {
       );
     });
 
-    testWidgets('the lockup does not mirror in Arabic', (
-      WidgetTester tester,
-    ) async {
-      // A logo is a fixed graphic. Mirroring would put the name before the
-      // mark — a lockup the brand does not have.
-      for (final TextDirection direction in TextDirection.values) {
-        await tester.pumpWidget(
-          wrapWidget(
-            KeyedSubtree(
-              key: ValueKey<TextDirection>(direction),
-              child: const Center(child: AppBrandLogo()),
-            ),
-            textDirection: direction,
-          ),
-        );
+    testWidgets('never mirrors in Arabic', (WidgetTester tester) async {
+      // A logo is a fixed graphic, not a sentence.
+      await tester.pumpWidget(
+        wrapWidget(
+          const Center(child: AppBrandLogo()),
+          locale: const Locale('ar'),
+          textDirection: TextDirection.rtl,
+        ),
+      );
+      expect(
+        tester.widget<Image>(find.byType(Image)).matchTextDirection,
+        isFalse,
+      );
+    });
 
-        final double mark = tester
-            .getCenter(find.byIcon(LucideIcons.shoppingBag))
-            .dx;
-        final double name = tester.getCenter(find.text('Tajeer AI')).dx;
-        expect(mark, lessThan(name), reason: direction.name);
-      }
+    testWidgets('draws at the height it is given', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        wrapWidget(
+          const Center(
+            child: AppBrandLogo(
+              variant: AppBrandLogoVariant.horizontal,
+              height: 40,
+            ),
+          ),
+        ),
+      );
+      expect(tester.widget<Image>(find.byType(Image)).height, 40);
     });
   });
 
