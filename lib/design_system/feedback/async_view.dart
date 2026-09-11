@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../../app/theme/theme.dart';
 import '../localization/ds_localization.dart';
-import '../loaders/spinner.dart';
 import 'empty_state.dart';
 import 'error_state.dart';
+import 'loading_state.dart';
 
 /// What a screen has, at this moment, for one thing it is showing.
 ///
@@ -70,14 +69,7 @@ class AppAsyncView<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return switch (state) {
-      AppViewLoading<T>() =>
-        loading?.call(context) ??
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.all(TajeerSpacing.lg),
-                child: AppSpinner(),
-              ),
-            ),
+      AppViewLoading<T>() => loading?.call(context) ?? const AppLoadingState(),
       final AppViewFailed<T> failure =>
         error?.call(failure) ??
             AppErrorState(

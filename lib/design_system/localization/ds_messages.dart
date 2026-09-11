@@ -51,6 +51,10 @@ class AppMessages {
     required this.readReceipt,
     required this.removed,
     required this.unreadCount,
+    required this.pinned,
+    required this.muted,
+    required this.sendingCount,
+    required this.notSentCount,
     required this.offline,
     required this.reconnecting,
     required this.syncing,
@@ -108,6 +112,14 @@ class AppMessages {
 
   /// Takes `{count}`.
   final String unreadCount;
+
+  /// A row kept at the top, and a row whose notifications are off.
+  final String pinned;
+  final String muted;
+
+  /// Take `{count}`: changes still on their way out, and changes that gave up.
+  final String sendingCount;
+  final String notSentCount;
 
   // Connection.
   final String offline;
