@@ -96,6 +96,9 @@ tests. See `ARCHITECTURE.md` §13 for what each layer requires.
 - Offline behaviour gets read-offline, write-offline, retry-after-reconnect and
   acknowledgement tests.
 - Widgets get loading, error, empty and success state tests.
+- A change that moves pixels regenerates its goldens with `make golden-update`,
+  and every image that changed is looked at before it is committed
+  (`ARCHITECTURE.md` §13).
 - Bug fixes are test-first: reproduce in a failing test, then fix.
 
 Do not write tests that only move the coverage number.

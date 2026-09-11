@@ -38,6 +38,12 @@ Future<void> loadIcons() async {
 }
 
 /// Everything a golden needs before it can be trusted.
+///
+/// Except emoji. `flutter test` carries no emoji font, so a reaction's
+/// thumbs-up captures as an empty box. Bundling one would put about 10 MB into
+/// the repository to draw it, and loading the machine's own would make the
+/// image depend on which machine made it — so the box is the known, stable
+/// picture, and a reviewer should read it as "an emoji goes here".
 Future<void> loadFonts() async {
   await loadTajawal();
   await loadIcons();
@@ -53,6 +59,35 @@ void useDevice(WidgetTester tester, {Size size = const Size(390, 844)}) {
     ..devicePixelRatio = 1;
   addTearDown(tester.view.reset);
 }
+
+/// One of the two ways every golden is captured.
+typedef GoldenVariant = ({
+  String name,
+  TextDirection direction,
+  Locale locale,
+  Brightness brightness,
+});
+
+/// English, left to right, light — and Arabic, right to left, dark.
+///
+/// Two variants rather than the four-way cross-product of direction and
+/// appearance. Between them they hold both directions and both appearances —
+/// a mirrored icon, a hard-coded left, a colour that only works on white all
+/// show in one or the other — at half the images a reviewer has to look at.
+const List<GoldenVariant> goldenVariants = <GoldenVariant>[
+  (
+    name: 'ltr_light',
+    direction: TextDirection.ltr,
+    locale: Locale('en'),
+    brightness: Brightness.light,
+  ),
+  (
+    name: 'rtl_dark',
+    direction: TextDirection.rtl,
+    locale: Locale('ar'),
+    brightness: Brightness.dark,
+  ),
+];
 
 /// Decodes every image on screen before a capture.
 ///

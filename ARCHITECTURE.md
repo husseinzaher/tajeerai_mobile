@@ -625,6 +625,29 @@ floors on domain, application, realtime, the DAOs and the failure taxonomy.
 Coverage is a guardrail, not a goal; a test written only to move the number is
 worse than the gap it fills.
 
+### Goldens
+
+Pixel comparisons are few on purpose, and each one is meant to be looked at.
+
+- `test/design_system/showcase/showcase_goldens_test.dart` captures every
+  showcase section **whole**, every example top to bottom. A phone-sized
+  capture of a scrolling page holds its first screenful and nothing else.
+- Every golden comes in two variants, not four: `ltr_light` (English, left to
+  right, light) and `rtl_dark` (Arabic, right to left, dark). Between them they
+  hold both directions and both appearances. The cross-product doubles the
+  images and adds almost nothing a reviewer would catch.
+- The product preset, plus Foundations under `aurora`. A component that reads
+  tokens is right under any preset that declares them, and the palette page is
+  where a preset's tokens are all on screen at once.
+- The sign-in screen and the searchable select's open sheet have their own,
+  because no showcase page shows either.
+
+They carry the `golden` tag. `make golden-update` regenerates them, and a
+regenerated image is a design change: look at every one that moved, and commit
+it with the change that moved it. A machine that cannot reproduce the reference
+rendering runs `flutter test --exclude-tags golden` rather than blessing a
+diff.
+
 ---
 
 ## 14. Naming

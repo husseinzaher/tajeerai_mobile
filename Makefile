@@ -104,7 +104,8 @@ golden:
 	flutter test --tags golden
 
 # Deliberate, never a reflex: a regenerated image is a design change, and the
-# point of having only a handful of them is that a human can review each one.
+# point of two variants per page rather than four is that a human can review
+# every one that moved. See ARCHITECTURE.md §13.
 golden-update:
 	flutter test --tags golden --update-goldens
 

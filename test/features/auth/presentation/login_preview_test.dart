@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tajeerai_mobile/app/bootstrap/dependencies.dart';
-import 'package:tajeerai_mobile/app/theme/theme.dart';
 import 'package:tajeerai_mobile/features/auth/application/coordinators/session_coordinator.dart';
 import 'package:tajeerai_mobile/features/auth/domain/services/auth_service.dart';
 import 'package:tajeerai_mobile/features/auth/presentation/screens/login_screen.dart';
@@ -17,22 +16,18 @@ import '../../../support/golden_harness.dart';
 import '../../../support/widget_harness.dart';
 import '../domain/fakes/fake_auth_repository.dart';
 
-/// The production sign-in screen, under every preset and both appearances.
+/// The production sign-in screen, in both golden variants.
 ///
 /// Deliberately the real screen over a fake repository rather than a mock-up:
-/// the point of a preset is that the screen nobody rewrote comes out looking
-/// like the new product, and a preview built specially would prove nothing.
+/// the screen nobody rewrote has to come out looking like the product, and a
+/// preview built specially would prove nothing. The second preset's palette is
+/// pinned by the Foundations capture rather than repeated here.
 void main() {
   setUpAll(loadFonts);
 
   late SessionCoordinator coordinator;
-  late PreferencesStorage preferences;
 
-  setUp(() async {
-    // Nothing stored: a fresh install, which reads Arabic.
-    SharedPreferences.setMockInitialValues(<String, Object>{});
-    preferences = await PreferencesStorage.open();
-
+  setUp(() {
     coordinator = SessionCoordinator(
       authService: AuthService(FakeAuthRepository()),
       logger: Logger('test', verbose: false),
@@ -41,40 +36,41 @@ void main() {
 
   tearDown(() => coordinator.dispose());
 
-  for (final TajeerPreset preset in TajeerPreset.values) {
-    for (final Brightness brightness in Brightness.values) {
-      testWidgets('login ${preset.name} ${brightness.name}', (
-        WidgetTester tester,
-      ) async {
-        useDevice(tester);
-        await tester.pumpWidget(
-          ProviderScope(
-            overrides: [
-              sessionCoordinatorProvider.overrideWithValue(coordinator),
-              preferencesStorageProvider.overrideWithValue(preferences),
-            ],
-            child: wrapWidget(
-              const LoginScreen(),
-              preset: preset,
-              brightness: brightness,
-              textDirection: TextDirection.rtl,
-              locale: const Locale('ar'),
-              size: const Size(390, 844),
-            ),
-          ),
-        );
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 300));
-        await precacheImages(tester);
-
-        expect(tester.takeException(), isNull);
-        await expectLater(
-          find.byType(MaterialApp),
-          matchesGoldenFile(
-            '../../../goldens/login_${preset.name}_${brightness.name}.png',
-          ),
-        );
+  for (final GoldenVariant variant in goldenVariants) {
+    testWidgets('login ${variant.name}', (WidgetTester tester) async {
+      // Arabic is a fresh install, with nothing stored. English is a member
+      // who chose it, so the screen's own copy reads the way the layout runs.
+      SharedPreferences.setMockInitialValues(<String, Object>{
+        if (variant.locale.languageCode != 'ar')
+          PreferencesStorage.localeKey: variant.locale.languageCode,
       });
-    }
+      final PreferencesStorage preferences = await PreferencesStorage.open();
+
+      useDevice(tester);
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            sessionCoordinatorProvider.overrideWithValue(coordinator),
+            preferencesStorageProvider.overrideWithValue(preferences),
+          ],
+          child: wrapWidget(
+            const LoginScreen(),
+            brightness: variant.brightness,
+            textDirection: variant.direction,
+            locale: variant.locale,
+            size: const Size(390, 844),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      await precacheImages(tester);
+
+      expect(tester.takeException(), isNull);
+      await expectLater(
+        find.byType(MaterialApp),
+        matchesGoldenFile('../../../goldens/login_${variant.name}.png'),
+      );
+    });
   }
 }
