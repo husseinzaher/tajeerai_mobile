@@ -150,6 +150,13 @@ class _PressableState extends State<AppPressable> {
       button: interactive,
       enabled: widget.enabled,
       excludeSemantics: widget.excludeSemantics,
+      // Excluding the subtree drops the gesture detector's tap action with it,
+      // so the node carries its own. Without this a screen reader reads the
+      // control out and cannot press it.
+      onTap: widget.excludeSemantics && interactive ? widget.onTap : null,
+      onLongPress: widget.excludeSemantics && interactive
+          ? widget.onLongPress
+          : null,
       child: Focus(
         focusNode: widget.focusNode,
         autofocus: widget.autofocus,

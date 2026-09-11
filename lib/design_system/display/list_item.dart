@@ -52,12 +52,21 @@ class AppListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final TajeerColors colors = context.colors;
+    final bool summarised = semanticLabel != null;
 
     return Semantics(
+      // With a label the row is one sentence, so its own title, subtitle and
+      // meta are not read again after it, fragment by fragment. Excluding them
+      // drops the gesture's tap action as well, which is why the node carries
+      // its own: otherwise a screen reader hears the row and cannot open it.
+      container: summarised,
+      excludeSemantics: summarised,
       selected: selected,
       enabled: enabled,
       button: onTap != null,
       label: semanticLabel,
+      onTap: summarised && enabled ? onTap : null,
+      onLongPress: summarised && enabled ? onLongPress : null,
       child: Opacity(
         opacity: enabled ? 1 : 0.5,
         child: AppPressable(
