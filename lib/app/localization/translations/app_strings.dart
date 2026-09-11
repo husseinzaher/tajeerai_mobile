@@ -128,17 +128,32 @@ class AppStrings {
       'en': 'No conversations yet',
       'ar': 'لا توجد محادثات بعد',
     },
+    'noConversationsDescription': <String, String>{
+      'en': 'New conversations appear here as customers get in touch.',
+      'ar': 'تظهر هنا المحادثات الجديدة عندما يتواصل معك العملاء.',
+    },
+    'noSearchMatches': <String, String>{
+      'en': 'Nothing on this device matches that search.',
+      'ar': 'لا شيء على هذا الجهاز يطابق هذا البحث.',
+    },
+    'conversationsUnreadable': <String, String>{
+      'en': 'The conversation list could not be read.',
+      'ar': 'تعذّرت قراءة قائمة المحادثات.',
+    },
     'noMessages': <String, String>{
       'en': 'No messages yet',
       'ar': 'لا توجد رسائل بعد',
     },
+    // A row's name when the customer has none and the thread has no subject.
+    // The domain keeps an English fallback of its own, for logs; a row read in
+    // Arabic must not show it.
+    'unknownCustomer': <String, String>{
+      'en': 'Unknown customer',
+      'ar': 'عميل غير معروف',
+    },
     'archivedReadOnly': <String, String>{
       'en': 'This conversation is archived and cannot receive new messages.',
       'ar': 'هذه المحادثة مؤرشفة ولا يمكنها استقبال رسائل جديدة.',
-    },
-    'offlineShowingSaved': <String, String>{
-      'en': 'Showing saved conversations. Reconnecting…',
-      'ar': 'عرض المحادثات المحفوظة. جارٍ إعادة الاتصال…',
     },
   };
 
@@ -178,5 +193,12 @@ class AppStrings {
   String get authGeneric => call('authGeneric');
 
   String get inbox => call('inbox');
+  String get searchConversations => call('searchConversations');
+  String get noConversations => call('noConversations');
+  String get noConversationsDescription => call('noConversationsDescription');
+  String get noSearchMatches => call('noSearchMatches');
+  String get conversationsUnreadable => call('conversationsUnreadable');
+  String get noMessages => call('noMessages');
+  String get unknownCustomer => call('unknownCustomer');
   String get writeMessage => call('writeMessage');
 }
