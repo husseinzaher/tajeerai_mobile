@@ -45,12 +45,14 @@ lib/
 │   │   ├── app_config.dart    Resolved configuration for one run.
 │   │   └── environment.dart   Which deployment this build points at.
 │   ├── theme/                 Generated from design/tokens.json, plus the accessors and the preset lookup.
+│   ├── shell/                 The signed-in frame: the design system's AppShell joined to the session and the routes.
 │   └── localization/          Locale selection and copy.
 │
 ├── design_system/             Business-agnostic UI. Knows nothing about conversations or auth.
 │   ├── design_system.dart     The barrel. The only door a feature may use.
 │   ├── primitives/ buttons/ inputs/ display/ cards/ feedback/ loaders/ overlays/ layouts/
 │   ├── auth/                  The frame and the parts of every unauthenticated screen.
+│   ├── shell/                 The toolbar, the navigation drawer, the bottom bar and the shell that holds them.
 │   ├── localization/          The copy components render on their own behalf.
 │   └── showcase/              The debug-only gallery. The same components, never copies.
 │
@@ -190,7 +192,7 @@ presentation, not its data, not its realtime, not even its domain.
 **The only supported door is `application/contracts/`.**
 
 Worked example, and the one in the codebase: the Conversations feature needs the
-signed-in user's id, and offers a sign-out button. It depends on
+signed-in user's id. It depends on
 `features/auth/application/contracts/session_capability.dart` — an interface
 saying what it needs. `SessionCoordinator` implements it, and
 `dependencies.dart` joins the two. Conversations does not know
@@ -446,6 +448,45 @@ barrel moved overall coverage from 87.2% to 82.9% against an 80% floor, because
 added to the design system is counted from the day it lands, tested or not.**
 Plan for it: components and their tests land together, or the gate fails on the
 next one.
+
+### The shell, and who owns the toolbar
+
+`AppShell` is the frame around the signed-in app: the navigation drawer, and the
+bottom bar once there are two destinations. **It does not draw the toolbar.**
+Each screen passes its own to `AppScaffold(toolbar:)`, because the toolbar is
+the part that changes from screen to screen — a search mode on one, a
+conversation header on another, a selection count on a third — and a shell that
+drew it would have to know every screen.
+
+The two meet through `AppShellScope`, which carries one fact and one callback:
+whether there is a drawer, and how to open it. An `AppToolbar` inside a shell
+with a drawer shows the menu button on its own. No screen wires it.
+
+- `AppToolbar` is **one widget with a mode** — `normal`, `search`,
+  `selection` — and the conversation header is its `AppToolbar.conversation`
+  preset, not a fourth toolbar. Its back chevron points toward the start of the
+  line, so it mirrors in Arabic; Material's `BackButton` does that for free, a
+  custom toolbar does not.
+- `AppNavigationDrawer` is placed as a `Scaffold.drawer`, which opens from the
+  start edge — the right, in Arabic. A test asserts the edge rather than
+  trusting it.
+- `AppBottomNavigation` takes two to five destinations and asserts it.
+  `AppShell` draws no bar below two: a tab bar with one tab is a label.
+- The current destination is marked by tint, weight and the selected semantics
+  flag together — never by colour alone.
+
+`app/shell/authenticated_shell.dart` joins the shell to the session and the
+routes. That is composition, which is why it lives in `app/` rather than in a
+feature. It mounts **only destinations that exist** — today the Inbox, and
+signing out — and no bottom bar: a drawer entry for a screen that is not built
+is a control that goes nowhere. A conversation thread is pushed onto the root
+navigator, so it covers the shell instead of opening inside it with the drawer
+still reachable behind.
+
+`AppScaffold` keeps its older `title`/`actions`/`leading`/`showBack` bar until
+the conversation screen moves onto `AppToolbar.conversation`, and loses it
+then. A scaffold with two ways to draw a title is how the next inconsistency
+starts.
 
 ## 13. Testing rules
 
