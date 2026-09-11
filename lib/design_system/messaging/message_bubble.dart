@@ -126,9 +126,9 @@ class AppMessageBubble extends StatelessWidget {
           children: <Widget>[
             if (author != null)
               ExcludeSemantics(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+                child: Wrap(
                   spacing: TajeerSpacing.xs2,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: <Widget>[
                     if (message.isFromBot)
                       Icon(LucideIcons.bot, size: 12, color: colors.textMuted),
@@ -164,9 +164,11 @@ class AppMessageBubble extends StatelessWidget {
             ),
             if (endsRun || _speaksUp(message.status))
               ExcludeSemantics(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+                // Wraps rather than overflows: at large text the time and a
+                // worded status do not fit on one line of a bubble.
+                child: Wrap(
                   spacing: TajeerSpacing.xs2,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: <Widget>[
                     Text(
                       time,

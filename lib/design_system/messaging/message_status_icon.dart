@@ -97,7 +97,12 @@ class AppMessageStatusIcon extends StatelessWidget {
           children: <Widget>[
             mark,
             if (worded)
-              Text(label, style: context.type.caption.copyWith(color: ink)),
+              Flexible(
+                child: Text(
+                  label,
+                  style: context.type.caption.copyWith(color: ink),
+                ),
+              ),
           ],
         ),
       ),

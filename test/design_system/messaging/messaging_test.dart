@@ -254,17 +254,19 @@ void main() {
     ) async {
       await tester.pumpWidget(
         wrapWidget(
-          SizedBox(
-            width: 360,
-            child: AppMessageBubble(
-              message: _message(
-                text:
-                    'A message long enough to wrap across several lines once '
-                    'the reader has turned their text size all the way up',
-                status: AppMessageStatus.notSent,
+          SingleChildScrollView(
+            child: SizedBox(
+              width: 360,
+              child: AppMessageBubble(
+                message: _message(
+                  text:
+                      'A message long enough to wrap across several lines once '
+                      'the reader has turned their text size all the way up',
+                  status: AppMessageStatus.notSent,
+                ),
+                onRetry: () {},
+                onDiscard: () {},
               ),
-              onRetry: () {},
-              onDiscard: () {},
             ),
           ),
           textScaler: const TextScaler.linear(2),
