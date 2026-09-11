@@ -33,13 +33,15 @@ void main() {
     sections.firstWhere((ShowcaseSection s) => s.title == 'Forms'),
     sections.firstWhere((ShowcaseSection s) => s.title == 'Display'),
     sections.firstWhere((ShowcaseSection s) => s.title == 'Authentication'),
+    sections.firstWhere((ShowcaseSection s) => s.title == 'App shell'),
   ];
 
   for (final ShowcaseSection section in captured) {
     for (final TajeerPreset preset in TajeerPreset.values) {
       for (final Brightness brightness in Brightness.values) {
-        final String name =
-            '${section.title.toLowerCase()}_${preset.name}_${brightness.name}';
+        // "App shell" would otherwise put a space in a file name.
+        final String slug = section.title.toLowerCase().replaceAll(' ', '_');
+        final String name = '${slug}_${preset.name}_${brightness.name}';
 
         testWidgets(name, (WidgetTester tester) async {
           useDevice(tester);
