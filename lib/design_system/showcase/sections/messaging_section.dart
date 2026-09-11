@@ -4,6 +4,8 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../app/theme/theme.dart';
 import '../../display/labelled_separator.dart';
 import '../../feedback/async_view.dart';
+import '../../localization/ds_localization.dart';
+import '../../localization/ds_messages.dart';
 import '../../messaging/day_and_system_lines.dart';
 import '../../messaging/message_bubble.dart';
 import '../../messaging/message_data.dart';
@@ -263,8 +265,13 @@ ShowcaseSection messagingSection() => ShowcaseSection(
           AppDateSeparator(day: DateTime(2026, 3, 12), now: _now),
           AppDateSeparator(day: DateTime(2026, 3, 11), now: _now),
           AppDateSeparator(day: DateTime(2026, 2, 3), now: _now),
-          const AppLabelledSeparator(
-            label: '2 غير مقروءة',
+          // The design system's own words, as the timeline says them, so the
+          // English page does not show an Arabic count.
+          AppLabelledSeparator(
+            label: AppMessages.interpolate(
+              context.strings.unreadCount,
+              <String, Object?>{'count': 2},
+            ),
             tone: AppSeparatorTone.primary,
           ),
           const AppSystemMessage(

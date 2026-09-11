@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../app/theme/theme.dart';
+import '../primitives/bidi_text.dart';
 import 'showcase_section.dart';
 
 /// Renders one section's examples.
@@ -22,12 +23,21 @@ class ShowcaseSectionView extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.all(TajeerSpacing.md),
         children: <Widget>[
-          Text(section.title, style: context.type.headlineLg),
+          // The documentation is English on an Arabic page too. Laid out in
+          // the page's direction, a sentence's full stop and brackets take the
+          // wrong end of the line; AppBidiText keeps the sentence's own
+          // direction and still lines it up with the page.
+          AppBidiText(
+            section.title,
+            style: context.type.headlineLg,
+            alignToAmbient: true,
+          ),
           if (section.description != null) ...<Widget>[
             const SizedBox(height: TajeerSpacing.xs),
-            Text(
+            AppBidiText(
               section.description!,
               style: context.type.bodyMd.copyWith(color: colors.textMuted),
+              alignToAmbient: true,
             ),
           ],
           const SizedBox(height: TajeerSpacing.lg),
@@ -53,15 +63,17 @@ class _Example extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          Text(
+          AppBidiText(
             example.name,
             style: context.type.labelMd.copyWith(color: colors.textMuted),
+            alignToAmbient: true,
           ),
           if (example.description != null) ...<Widget>[
             const SizedBox(height: TajeerSpacing.xs2),
-            Text(
+            AppBidiText(
               example.description!,
               style: context.type.bodySm.copyWith(color: colors.textMuted),
+              alignToAmbient: true,
             ),
           ],
           const SizedBox(height: TajeerSpacing.xs),

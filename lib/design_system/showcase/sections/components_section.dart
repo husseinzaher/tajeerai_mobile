@@ -364,9 +364,13 @@ ShowcaseSection displaySection() => ShowcaseSection(
       description:
           'Long-press only — there is no hover on a phone. The semantic label '
           'is the real accessibility answer; this is the extra sentence.',
-      builder: (BuildContext context) => AppTooltip(
-        message: 'تمت المزامنة قبل دقيقتين',
-        child: AppBadge(label: 'متزامن', variant: AppBadgeVariant.muted),
+      // Aligned, or the example's frame stretches the badge across the page.
+      builder: (BuildContext context) => Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: AppTooltip(
+          message: 'تمت المزامنة قبل دقيقتين',
+          child: AppBadge(label: 'متزامن', variant: AppBadgeVariant.muted),
+        ),
       ),
     ),
     ShowcaseExample(

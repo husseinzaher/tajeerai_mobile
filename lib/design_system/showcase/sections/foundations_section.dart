@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/theme.dart';
+import '../../primitives/bidi_text.dart';
 import '../showcase_section.dart';
 
 /// The tokens, drawn from the same maps the components read.
@@ -98,7 +99,12 @@ class _Swatches extends StatelessWidget {
                 ),
                 const SizedBox(height: TajeerSpacing.xs2),
                 Text(
-                  entry.key,
+                  // A zero-width space at each camelCase join, so a long token
+                  // name wraps between its words rather than mid-word.
+                  entry.key.replaceAllMapped(
+                    RegExp('(?<=[a-z])(?=[A-Z])'),
+                    (Match match) => '​',
+                  ),
                   style: context.type.caption,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -148,7 +154,13 @@ class _TypeScale extends StatelessWidget {
                   color: context.colors.textMuted,
                 ),
               ),
-              Text('تواصل. إدارة. نمو. — Aa', style: step.value),
+              // Mostly Arabic, so it reads right to left on an English page
+              // too, instead of handing its full stops to the wrong words.
+              AppBidiText(
+                'تواصل. إدارة. نمو. — Aa',
+                style: step.value,
+                alignToAmbient: true,
+              ),
             ],
           ),
       ],
