@@ -386,7 +386,10 @@ and never emitted fails the build rather than going unnoticed.
 
 Rules:
 
-- No hardcoded colour, radius, font stack or off-scale spacing in a component.
+- No hardcoded colour, radius, font stack or off-scale spacing in a component —
+  and outside the design system and the theme, none anywhere (RULE 34).
+- Outside the design system, never build a Material widget it already wraps
+  (RULE 35). A capability the component lacks is added to the component.
 - Both light and dark are complete and must both be verified.
 - Layouts use logical directions (`start`/`end`, `EdgeInsetsDirectional`) so
   Arabic and English share one implementation.
@@ -644,7 +647,7 @@ a connection's lifecycle and nothing else.
 
 ## 15. Enforcement
 
-`tool/check_architecture.dart` implements 33 rules across six rule classes. Each
+`tool/check_architecture.dart` implements 35 rules across seven rule files. Each
 violation prints the rule, the source file and line, the forbidden dependency,
 why it is wrong, and what to use instead. Non-zero exit fails CI.
 
@@ -655,7 +658,7 @@ dart run tool/check_architecture.dart
 Rules are objects, not branches in a long function: adding one is adding a file
 under `tool/architecture/rules/` and a line in `_fileRules`.
 
-### The 33 rules
+### The 35 rules
 
 1–5 Presentation must not import data, infrastructure, repository
 implementations, database APIs or socket infrastructure.
@@ -679,10 +682,23 @@ boundary cannot be evaded by switching import style.
 32 The design system may import `app/theme/`, and nothing else under `app/`.
 33 The design system must not import a state-management, routing, networking
 or storage package.
+34 Outside the design system and the theme: no raw colour, no font size or
+family, and no number where a radius or spacing token belongs.
+35 Outside the design system and the theme: no Material widget the design
+system already wraps, and none of the functions that open one.
 
 Rules 31–33 close holes rule 18 left open: it checked only that a design-system
 file did not import a *feature*, so `app/bootstrap/dependencies.dart`, the
 router, Riverpod and even Dio were all reachable from a component.
+
+Rules 34 and 35 are a weaker kind of check, and that is written down rather
+than left for somebody to discover. Every other rule reads resolved imports.
+These read source text, with comments and string contents blanked by
+`tool/architecture/source_text.dart`, and match shapes. They see through a
+prefixed import, type arguments and a named constructor; a local constant
+(`const gap = 16;`), a tear-off or a typedef walks past them. They were switched
+on against a tree that already passed, so they carry no allowlist, and adding
+one is not how a violation gets past them.
 
 ---
 

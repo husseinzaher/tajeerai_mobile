@@ -4,6 +4,7 @@ import '../../tool/architecture/architecture_rule.dart';
 import '../../tool/architecture/import_analyzer.dart';
 import '../../tool/architecture/path_classifier.dart';
 import '../../tool/architecture/rules/design_system_boundary_rule.dart';
+import '../../tool/architecture/rules/design_system_usage_rule.dart';
 import '../../tool/architecture/rules/feature_boundary_rule.dart';
 import '../../tool/architecture/rules/forbidden_directory_rule.dart';
 import '../../tool/architecture/rules/infrastructure_rule.dart';
@@ -12,12 +13,13 @@ import '../../tool/architecture/rules/presentation_access_rule.dart';
 
 /// Builds a context for a hypothetical file with hypothetical imports.
 ///
-/// The rules are pure functions of (file, imports), which is what lets every
-/// one of them be tested without writing a Dart file to disk.
+/// The rules are pure functions of (file, imports, source), which is what lets
+/// every one of them be tested without writing a Dart file to disk.
 ArchitectureContext contextFor(
   String path,
   List<String> importPaths, {
   List<String> packages = const <String>[],
+  String source = '',
 }) {
   final imports = <ResolvedImport>[
     for (var index = 0; index < importPaths.length; index++)
@@ -38,6 +40,7 @@ ArchitectureContext contextFor(
     file: PathClassifier.classify(path),
     imports: imports,
     allFiles: const <FileLocation>[],
+    source: source,
   );
 }
 
@@ -387,6 +390,182 @@ void main() {
       );
 
       expect(violations, isEmpty);
+    });
+  });
+
+  group('RULE 34 -- no raw design values outside the design system', () {
+    const String screen =
+        'lib/features/conversations/presentation/screens/list.dart';
+
+    List<Violation> check(String source, {String path = screen}) =>
+        const RawDesignValueRule().check(
+          contextFor(path, <String>[], source: source),
+        );
+
+    test('flags a colour literal and a palette colour, on their lines', () {
+      final violations = check(
+        'final a = 1;\n'
+        'final b = Color(0xFF112233);\n'
+        'final c = Colors.red;\n',
+      );
+
+      expect(violations, hasLength(2));
+      expect(violations.first.rule, contains('RULE 34'));
+      expect(violations.map((Violation v) => v.line), <int>[2, 3]);
+      expect(violations.first.forbiddenDependency, 'Color(0xFF112233)');
+      expect(violations.first.allowedAlternative, contains('context.colors'));
+    });
+
+    test('flags a hand-set font size or family', () {
+      expect(
+        check("const TextStyle(fontSize: 14, fontFamily: 'Tajawal');"),
+        hasLength(2),
+      );
+    });
+
+    test('flags a number where a spacing or radius token belongs', () {
+      final violations = check(
+        'EdgeInsets.all(16);\n'
+        'EdgeInsetsDirectional.only(start: TajeerSpacing.md, end: 8);\n'
+        'BorderRadius.circular(12);\n',
+      );
+
+      expect(violations.map((Violation v) => v.line), <int>[1, 2, 3]);
+      expect(violations.first.allowedAlternative, contains('TajeerSpacing'));
+      expect(violations.last.allowedAlternative, contains('TajeerRadii'));
+    });
+
+    test('allows the tokens themselves, and zero', () {
+      expect(
+        check(
+          'EdgeInsets.all(TajeerSpacing.md);\n'
+          'EdgeInsetsDirectional.symmetric(horizontal: TajeerSpacing.xl2);\n'
+          'EdgeInsets.only(top: 0);\n'
+          'BorderRadius.circular(0);\n'
+          'final c = context.colors.surface;\n'
+          'final s = context.type.labelSm;\n',
+        ),
+        isEmpty,
+      );
+    });
+
+    test('reads code, not what a comment or a string says about it', () {
+      expect(
+        check(
+          '/// Never write Color(0xFF000000) here.\n'
+          "final hint = 'Colors.red and EdgeInsets.all(16)';\n"
+          '// fontSize: 12\n',
+        ),
+        isEmpty,
+      );
+      // An interpolation is code, whatever quotes it sits between.
+      expect(check(r"final s = '${Colors.red}';"), hasLength(1));
+    });
+
+    test('holds app/ to it, but not the theme or the design system', () {
+      const String source = 'final c = Colors.red;';
+
+      expect(
+        check(source, path: 'lib/app/shell/authenticated_shell.dart'),
+        hasLength(1),
+      );
+      expect(check(source, path: 'lib/app/theme/app_theme.dart'), isEmpty);
+      expect(
+        check(source, path: 'lib/design_system/display/badge.dart'),
+        isEmpty,
+      );
+    });
+  });
+
+  group('RULE 35 -- no raw Material widget the design system wraps', () {
+    const String form =
+        'lib/features/auth/presentation/widgets/login_form.dart';
+
+    List<Violation> check(String source, {String path = form}) =>
+        const MaterialWidgetRule().check(
+          contextFor(path, <String>[], source: source),
+        );
+
+    test('flags a raw Checkbox and names what to use instead', () {
+      final violations = check(
+        'Widget build() {\n'
+        '  return Checkbox(value: true, onChanged: null);\n'
+        '}\n',
+      );
+
+      expect(violations, hasLength(1));
+      expect(violations.single.rule, contains('RULE 35'));
+      expect(violations.single.line, 2);
+      expect(violations.single.forbiddenDependency, 'Checkbox(');
+      expect(violations.single.allowedAlternative, startsWith('AppCheckbox'));
+    });
+
+    test('sees through type arguments, named constructors and prefixes', () {
+      final violations = check(
+        'TextButton.icon(onPressed: null, label: x, icon: y);\n'
+        'Radio<int>(value: 1);\n'
+        'material.Card(child: x);\n'
+        'const Divider();\n',
+      );
+
+      expect(violations.map((Violation v) => v.forbiddenDependency), <String>[
+        'TextButton.icon(',
+        'Radio<int>(',
+        'Card(',
+        'Divider(',
+      ]);
+    });
+
+    test('reports a longer name as itself, not as its prefix', () {
+      expect(
+        check('RadioListTile(value: 1);').single.forbiddenDependency,
+        'RadioListTile(',
+      );
+    });
+
+    test('flags the functions that open a raw dialog, sheet or snackbar', () {
+      final violations = check(
+        'showDialog(context: context, builder: b);\n'
+        'showModalBottomSheet<void>(context: context, builder: b);\n'
+        'ScaffoldMessenger.of(context).showSnackBar(bar);\n',
+      );
+
+      expect(violations.map((Violation v) => v.line), <int>[1, 2, 3]);
+      expect(violations.first.allowedAlternative, contains('AppDialog'));
+    });
+
+    test("allows the design system, a lookup, and Dart's own switch", () {
+      expect(
+        check(
+          'AppCheckbox(value: true, onChanged: null);\n'
+          'AppCard(child: x);\n'
+          'AppButton.icon(icon: i, onPressed: null);\n'
+          'Scaffold.of(context);\n'
+          'switch (value) { case 1: break; }\n'
+          'final ChipThemeData theme = t;\n',
+        ),
+        isEmpty,
+      );
+    });
+
+    test('reads code, not comments or strings', () {
+      expect(
+        check(
+          '/// It used to wrap a raw Checkbox( here.\n'
+          "final hint = 'use a TextField( instead';\n",
+        ),
+        isEmpty,
+      );
+    });
+
+    test('leaves the design system alone, which is what wraps them', () {
+      expect(
+        check(
+          'Checkbox(value: true, onChanged: null);',
+          path: 'lib/design_system/inputs/app_checkbox.dart',
+        ),
+        isEmpty,
+      );
     });
   });
 

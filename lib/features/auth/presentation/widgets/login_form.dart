@@ -14,7 +14,7 @@ import '../controllers/login_controller.dart';
 /// "keep me signed in" row wrapping a raw Material `Checkbox` just so its label
 /// could be tapped. Both are [AppPasswordField] and [AppCheckbox] now, which
 /// carry real 44px targets and correct semantics instead of re-deriving them
-/// here — and which RULE 35 will require once it is switched on.
+/// here — and RULE 35 now fails the build if either comes back.
 class LoginForm extends ConsumerStatefulWidget {
   const LoginForm({super.key});
 

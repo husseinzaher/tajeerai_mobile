@@ -66,7 +66,11 @@ offline and survive the process dying.
 
 **Use the design system.** Import it through `design_system/design_system.dart`
 — that is the only door a feature has, and RULE 31 enforces it. Semantic tokens
-only, never a hex or an off-scale number. Both appearances of **both presets**:
+only, never a hex or an off-scale number: outside `design_system/` and
+`app/theme/`, RULE 34 fails a raw colour, font size or family, and a number
+where a radius or spacing token belongs, and RULE 35 fails a Material widget
+the system already wraps (`Checkbox(`, `ListTile(`, `showDialog(`), naming the
+component to use. Both appearances of **both presets**:
 `aurora` and `tajeer` declare the same names, so a component that reads tokens
 is correct in all four without knowing which it is in. Logical directions so
 Arabic and English share one implementation.

@@ -15,6 +15,7 @@ import 'architecture/architecture_rule.dart';
 import 'architecture/import_analyzer.dart';
 import 'architecture/path_classifier.dart';
 import 'architecture/rules/design_system_boundary_rule.dart';
+import 'architecture/rules/design_system_usage_rule.dart';
 import 'architecture/rules/feature_boundary_rule.dart';
 import 'architecture/rules/forbidden_directory_rule.dart';
 import 'architecture/rules/infrastructure_rule.dart';
@@ -31,6 +32,8 @@ const List<ArchitectureRule> _fileRules = <ArchitectureRule>[
   DesignSystemBarrelRule(),
   DesignSystemAppAccessRule(),
   DesignSystemPackageRule(),
+  RawDesignValueRule(),
+  MaterialWidgetRule(),
 ];
 
 /// Rules that inspect project structure rather than one file's imports.
@@ -95,9 +98,11 @@ Future<void> main(List<String> arguments) async {
     }
 
     final List<ResolvedImport> imports;
+    final String source;
 
     try {
       imports = analyzer.analyze(file);
+      source = file.readAsStringSync();
     } on FileSystemException catch (error) {
       stderr.writeln('Could not read ${location.path}: ${error.message}');
       exit(2);
@@ -107,6 +112,7 @@ Future<void> main(List<String> arguments) async {
       file: location,
       imports: imports,
       allFiles: locations,
+      source: source,
     );
 
     for (final rule in _fileRules) {

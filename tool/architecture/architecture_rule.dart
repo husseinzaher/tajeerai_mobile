@@ -53,6 +53,7 @@ class ArchitectureContext {
     required this.file,
     required this.imports,
     required this.allFiles,
+    this.source = '',
   });
 
   /// The file being checked.
@@ -64,6 +65,10 @@ class ArchitectureContext {
   /// Every file in the project, for rules that reason about structure rather
   /// than about one file's imports (forbidden directories, for instance).
   final List<FileLocation> allFiles;
+
+  /// The file's text, for the rules that read what a file does rather than
+  /// what it imports (RULES 34 and 35). Empty when there is none to give.
+  final String source;
 
   /// The classification of an imported project file, or null when the import
   /// is external or unresolvable.
