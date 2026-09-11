@@ -38,7 +38,10 @@ BoxDecoration _bubbleOf(WidgetTester tester, String text) =>
     tester
             .widget<Container>(
               find
-                  .ancestor(of: find.text(text), matching: find.byType(Container))
+                  .ancestor(
+                    of: find.text(text),
+                    matching: find.byType(Container),
+                  )
                   .first,
             )
             .decoration!
@@ -46,33 +49,38 @@ BoxDecoration _bubbleOf(WidgetTester tester, String text) =>
 
 void main() {
   group('AppMessageBubble', () {
-    testWidgets('incoming on a card at the start; outgoing on the wash at the end', (
-      WidgetTester tester,
-    ) async {
-      await tester.pumpWidget(
-        wrapWidget(
-          Column(
-            children: <Widget>[
-              AppMessageBubble(
-                message: _message(side: AppMessageSide.incoming, text: 'hi'),
-              ),
-              AppMessageBubble(
-                message: _message(text: 'hello', status: AppMessageStatus.sent),
-              ),
-            ],
+    testWidgets(
+      'incoming on a card at the start; outgoing on the wash at the end',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(
+          wrapWidget(
+            Column(
+              children: <Widget>[
+                AppMessageBubble(
+                  message: _message(side: AppMessageSide.incoming, text: 'hi'),
+                ),
+                AppMessageBubble(
+                  message: _message(
+                    text: 'hello',
+                    status: AppMessageStatus.sent,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      );
+        );
 
-      final BuildContext context = tester.element(find.text('hi'));
-      final double middle = tester.getSize(find.byType(Column).first).width / 2;
+        final BuildContext context = tester.element(find.text('hi'));
+        final double middle =
+            tester.getSize(find.byType(Column).first).width / 2;
 
-      expect(tester.getCenter(find.text('hi')).dx, lessThan(middle));
-      expect(tester.getCenter(find.text('hello')).dx, greaterThan(middle));
-      expect(_bubbleOf(tester, 'hi').color, context.elevation.card.tone);
-      // The token file names this wash for exactly this: the outgoing bubble.
-      expect(_bubbleOf(tester, 'hello').color, context.colors.primarySoft);
-    });
+        expect(tester.getCenter(find.text('hi')).dx, lessThan(middle));
+        expect(tester.getCenter(find.text('hello')).dx, greaterThan(middle));
+        expect(_bubbleOf(tester, 'hi').color, context.elevation.card.tone);
+        // The token file names this wash for exactly this: the outgoing bubble.
+        expect(_bubbleOf(tester, 'hello').color, context.colors.primarySoft);
+      },
+    );
 
     test('the tail is the speaker\'s bottom corner, and it mirrors', () {
       const Radius round = Radius.circular(TajeerRadii.lg);
@@ -163,7 +171,9 @@ void main() {
       );
 
       expect(
-        find.bySemanticsLabel('See you then, 10:24, ${appMessagesEn.readReceipt}'),
+        find.bySemanticsLabel(
+          'See you then, 10:24, ${appMessagesEn.readReceipt}',
+        ),
         findsOneWidget,
       );
     });

@@ -4,7 +4,9 @@ import 'package:intl/intl.dart' show Bidi;
 /// The direction a piece of writing reads in, from its own words.
 abstract final class AppBidi {
   static TextDirection directionOf(String text) =>
-      Bidi.detectRtlDirectionality(text) ? TextDirection.rtl : TextDirection.ltr;
+      Bidi.detectRtlDirectionality(text)
+      ? TextDirection.rtl
+      : TextDirection.ltr;
 }
 
 /// Text somebody else wrote, read in its own direction.

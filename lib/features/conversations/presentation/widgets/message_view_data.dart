@@ -25,9 +25,8 @@ extension MessagePresentation on Message {
   /// degrades — to text if there are words, to a file if there is media, and
   /// otherwise to "can't be shown" — rather than to an empty bubble.
   AppMessageKind get _kind => switch (type) {
-    'text' => _present(body) == null
-        ? AppMessageKind.unsupported
-        : AppMessageKind.text,
+    'text' =>
+      _present(body) == null ? AppMessageKind.unsupported : AppMessageKind.text,
     'image' || 'sticker' => AppMessageKind.image,
     'video' => AppMessageKind.video,
     'audio' || 'voice' || 'ptt' => AppMessageKind.audio,

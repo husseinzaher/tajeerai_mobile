@@ -143,9 +143,7 @@ class AppMessageTimeline extends StatelessWidget {
                       message: message,
                       startsRun: startsRun,
                       endsRun: endsRun,
-                      onRetry: onRetry == null
-                          ? null
-                          : () => onRetry!(message),
+                      onRetry: onRetry == null ? null : () => onRetry!(message),
                       onDiscard: onDiscard == null
                           ? null
                           : () => onDiscard!(message),

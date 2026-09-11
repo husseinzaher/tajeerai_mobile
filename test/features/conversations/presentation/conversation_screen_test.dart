@@ -81,12 +81,10 @@ void main() {
     overrides: [
       preferencesStorageProvider.overrideWithValue(preferences),
       threadMessagesProvider(_id).overrideWith((Ref ref) => messages.stream),
-      threadConversationProvider(
-        _id,
-      ).overrideWith((Ref ref) => conversation.stream),
-      conversationThreadControllerProvider(
-        _id,
-      ).overrideWith(() => thread = _Thread()),
+      threadConversationProvider(_id)
+          .overrideWith((Ref ref) => conversation.stream),
+      conversationThreadControllerProvider(_id)
+          .overrideWith(() => thread = _Thread()),
     ],
     child: MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -128,24 +126,28 @@ void main() {
       );
     });
 
-    testWidgets('a thread that cannot be read offers a retry that reads again', (
-      WidgetTester tester,
-    ) async {
-      await tester.pumpWidget(subject());
-      await tester.pump();
-      messages.addError(StateError('the database is locked'));
-      await settle(tester);
+    testWidgets(
+      'a thread that cannot be read offers a retry that reads again',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(subject());
+        await tester.pump();
+        messages.addError(StateError('the database is locked'));
+        await settle(tester);
 
-      expect(find.text('This conversation could not be read.'), findsOneWidget);
-      expect(find.textContaining('locked'), findsNothing);
+        expect(
+          find.text('This conversation could not be read.'),
+          findsOneWidget,
+        );
+        expect(find.textContaining('locked'), findsNothing);
 
-      await tester.tap(find.text(appMessagesEn.tryAgain));
-      await tester.pump();
-      messages.add(<Message>[_message('m1')]);
-      await settle(tester);
+        await tester.tap(find.text(appMessagesEn.tryAgain));
+        await tester.pump();
+        messages.add(<Message>[_message('m1')]);
+        await settle(tester);
 
-      expect(find.text('Hello'), findsOneWidget);
-    });
+        expect(find.text('Hello'), findsOneWidget);
+      },
+    );
 
     testWidgets('messages are bubbles, newest at the bottom', (
       WidgetTester tester,

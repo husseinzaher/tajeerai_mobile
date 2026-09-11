@@ -278,8 +278,7 @@ ShowcaseSection messagingSection() => ShowcaseSection(
       description:
           'Where their message is about to land. Still under reduced motion; '
           'announced as a live region.',
-      builder: (BuildContext context) =>
-          const AppTypingIndicator(name: 'سارة'),
+      builder: (BuildContext context) => const AppTypingIndicator(name: 'سارة'),
     ),
     ShowcaseExample(
       name: 'Loading, empty, failed',

@@ -83,7 +83,9 @@ class AppConversationListItem extends StatelessWidget {
         ],
       ),
       meta: time == null ? null : Text(time),
-      subtitle: summary.preview == null ? null : AppBidiText(summary.preview!, alignToAmbient: true),
+      subtitle: summary.preview == null
+          ? null
+          : AppBidiText(summary.preview!, alignToAmbient: true),
       trailing: summary.hasUnread || summary.isMuted
           ? Column(
               mainAxisSize: MainAxisSize.min,

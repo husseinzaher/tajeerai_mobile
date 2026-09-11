@@ -68,9 +68,11 @@ void main() {
       String type, {
       String? body = 'caption',
       String? mediaUrl,
-    }) => _message(type: type, body: body, mediaUrl: mediaUrl)
-        .toMessageData()
-        .kind;
+    }) => _message(
+      type: type,
+      body: body,
+      mediaUrl: mediaUrl,
+    ).toMessageData().kind;
 
     expect(kindOf('text'), AppMessageKind.text);
     expect(kindOf('image'), AppMessageKind.image);
