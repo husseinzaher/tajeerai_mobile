@@ -184,6 +184,36 @@ void main() {
         );
       }
     });
+
+    test('so does every text style a component theme hands out', () {
+      // `AppBar` and `SnackBar` replace the inherited text style with their
+      // component theme's instead of merging into it. A style copied into one
+      // of those from a text theme that never had the family drops the
+      // typeface for everything drawn inside — which is how the toolbar's
+      // title lost it before this test existed.
+      for (final String presetName in TokenManifest.presets) {
+        final TajeerPreset preset = TajeerPreset.fromName(presetName);
+        for (final Brightness brightness in Brightness.values) {
+          final ThemeData theme = AppTheme.of(preset, brightness);
+
+          for (final (String slot, TextStyle? style) in <(String, TextStyle?)>[
+            ('appBarTheme.titleTextStyle', theme.appBarTheme.titleTextStyle),
+            (
+              'snackBarTheme.contentTextStyle',
+              theme.snackBarTheme.contentTextStyle,
+            ),
+          ]) {
+            final String where = '$slot in $presetName ${brightness.name}';
+            expect(style?.fontFamily, 'Tajawal', reason: where);
+            expect(
+              style?.fontFamilyFallback,
+              contains('Noto Sans Arabic'),
+              reason: where,
+            );
+          }
+        }
+      }
+    });
   });
 
   group('TajeerPreset', () {

@@ -53,7 +53,15 @@ abstract final class AppTheme {
       outlineVariant: colors.borderSubtle,
     );
 
-    final TextTheme textTheme = TajeerTypography.textTheme(type);
+    // The family goes on here and not only on `ThemeData`. `fontFamily:` below
+    // reaches `ThemeData.textTheme`, but not a style copied out of this local
+    // theme into a component theme — and `AppBar` and `SnackBar` *replace* the
+    // inherited text style with their component theme's. Without this, text
+    // inside a toolbar lost the typeface and fell back to the platform's.
+    final TextTheme textTheme = TajeerTypography.textTheme(type).apply(
+      fontFamily: TajeerTypography.sansFamily,
+      fontFamilyFallback: TajeerTypography.sansFallback,
+    );
 
     return ThemeData(
       useMaterial3: true,
