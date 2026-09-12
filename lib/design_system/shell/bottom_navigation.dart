@@ -64,27 +64,47 @@ class AppBottomNavigation extends StatelessWidget {
         onTap: () => onSelect(destination.id),
       ),
     );
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: colors.surface,
-        border: Border(top: BorderSide(color: colors.border)),
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(
+        start: TajeerSpacing.md,
+        end: TajeerSpacing.md,
+        bottom: TajeerSpacing.sm,
       ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: TajeerSpacing.xs,
-            vertical: TajeerSpacing.xs2,
-          ),
-          child: Row(
-            children: <Widget>[
-              for (final AppNavDestination d in destinations.take(split))
-                item(d),
-              if (centerAction != null) _CenterAction(action: centerAction!),
-              for (final AppNavDestination d in destinations.skip(split))
-                item(d),
-            ],
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: TajeerRadii.xlAll,
+          border: Border.all(color: colors.border),
+          //testing part
+          boxShadow: [
+            BoxShadow(
+              blurRadius: 20,
+              spreadRadius: 0,
+              offset: const Offset(0, 6),
+              color: Colors.black.withValues(alpha: 0.12),
+            ),
+          ],
+          // boxShadow: context.elevation.floating.shadow,
+        ),
+        child: SafeArea(
+          top: false,
+          bottom: false,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: TajeerSpacing.xs,
+              vertical: TajeerSpacing.xs2,
+            ),
+            child: Row(
+              children: <Widget>[
+                for (final AppNavDestination d in destinations.take(split))
+                  item(d),
+
+                if (centerAction != null) _CenterAction(action: centerAction!),
+
+                for (final AppNavDestination d in destinations.skip(split))
+                  item(d),
+              ],
+            ),
           ),
         ),
       ),
@@ -123,56 +143,60 @@ class _NavItem extends StatelessWidget {
           borderRadius: TajeerRadii.mdAll,
           child: ConstrainedBox(
             // A minimum, never a fixed height: the label grows with text size.
-            constraints: const BoxConstraints(minHeight: 56),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              spacing: TajeerSpacing.xs2,
-              children: <Widget>[
-                Stack(
-                  clipBehavior: Clip.none,
-                  children: <Widget>[
-                    AnimatedContainer(
-                      duration: context.motion.fast,
-                      curve: context.motion.standard,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: TajeerSpacing.sm,
-                        vertical: TajeerSpacing.xs2,
+            constraints: const BoxConstraints(maxHeight: 70),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                spacing: TajeerSpacing.xs2,
+                children: <Widget>[
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: <Widget>[
+                      AnimatedContainer(
+                        duration: context.motion.fast,
+                        curve: context.motion.standard,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: TajeerSpacing.sm,
+                          vertical: TajeerSpacing.xs2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: selected
+                              ? colors.primarySoft
+                              : Colors.transparent,
+                          borderRadius: TajeerRadii.fullAll,
+                        ),
+                        child: Icon(
+                          icon,
+                          size: 22,
+                          // `focus`, not `primary`: yellow on its own soft tint
+                          // has no contrast in the light theme.
+                          color: selected ? colors.focus : colors.textMuted,
+                        ),
                       ),
-                      decoration: BoxDecoration(
-                        color: selected
-                            ? colors.primarySoft
-                            : Colors.transparent,
-                        borderRadius: TajeerRadii.fullAll,
+                      if (destination.badgeCount > 0)
+                        PositionedDirectional(
+                          top: -4,
+                          end: -4,
+                          child: AppBadge.count(destination.badgeCount),
+                        ),
+                    ],
+                  ),
+                  TajeerTypography.clampForControl(
+                    Text(
+                      destination.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.type.labelSm.copyWith(
+                        color: selected ? colors.textPrimary : colors.textMuted,
+                        fontWeight: selected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
                       ),
-                      child: Icon(
-                        icon,
-                        size: 22,
-                        // `focus`, not `primary`: yellow on its own soft tint
-                        // has no contrast in the light theme.
-                        color: selected ? colors.focus : colors.textMuted,
-                      ),
-                    ),
-                    if (destination.badgeCount > 0)
-                      PositionedDirectional(
-                        top: -4,
-                        end: -4,
-                        child: AppBadge.count(destination.badgeCount),
-                      ),
-                  ],
-                ),
-                TajeerTypography.clampForControl(
-                  Text(
-                    destination.label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.type.labelSm.copyWith(
-                      color: selected ? colors.textPrimary : colors.textMuted,
-                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
