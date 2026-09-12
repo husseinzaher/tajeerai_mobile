@@ -182,6 +182,30 @@ class AppStrings {
       'ar': 'هذه المحادثة مؤرشفة ولا يمكنها استقبال رسائل جديدة.',
     },
 
+    // -- signing in with a provider -----------------------------------------
+    'continueWith': <String, String>{
+      'en': 'Or continue with',
+      'ar': 'أو تابع باستخدام',
+    },
+    'continueWithGoogle': <String, String>{'en': 'Google', 'ar': 'جوجل'},
+    'continueWithFacebook': <String, String>{'en': 'Facebook', 'ar': 'فيسبوك'},
+    'socialEmailRequired': <String, String>{
+      'en': 'That account gave us no confirmed email address, so we cannot match it to a workspace.',
+      'ar': 'لم يعطنا هذا الحساب بريدًا إلكترونيًا مؤكدًا، فتعذّر ربطه بمساحة عمل.',
+    },
+    'socialAccountInactive': <String, String>{
+      'en': 'That account is not active. Ask an owner to re-enable it.',
+      'ar': 'هذا الحساب غير نشط. اطلب من المالك إعادة تفعيله.',
+    },
+    'socialWorkspaceSuspended': <String, String>{
+      'en': 'That workspace is suspended.',
+      'ar': 'مساحة العمل موقوفة.',
+    },
+    'socialFailed': <String, String>{
+      'en': 'That sign-in could not be completed. Try again, or use your password.',
+      'ar': 'تعذّر إكمال تسجيل الدخول. حاول مرة أخرى أو استخدم كلمة المرور.',
+    },
+
     // -- customers ----------------------------------------------------------
     'customers': <String, String>{'en': 'Contacts', 'ar': 'جهات الاتصال'},
     'searchCustomers': <String, String>{
@@ -359,6 +383,24 @@ class AppStrings {
   String get sendOffline => call('sendOffline');
   String get sendNotSaved => call('sendNotSaved');
   String get sendFailed => call('sendFailed');
+
+  String get continueWith => call('continueWith');
+
+  /// The provider's own name, as the provider writes it. A provider this build
+  /// does not know yet is shown as the server named it, not as nothing.
+  String socialProviderName(String provider) => switch (provider) {
+    'google' => call('continueWithGoogle'),
+    'facebook' => call('continueWithFacebook'),
+    _ => provider,
+  };
+
+  /// The API's own refusal codes, in the reader's language.
+  String socialRefusal(String reason) => switch (reason) {
+    'social_email_required' => call('socialEmailRequired'),
+    'social_account_inactive' => call('socialAccountInactive'),
+    'social_workspace_suspended' => call('socialWorkspaceSuspended'),
+    _ => call('socialFailed'),
+  };
 
   String get customers => call('customers');
   String get searchCustomers => call('searchCustomers');

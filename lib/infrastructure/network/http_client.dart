@@ -136,6 +136,25 @@ class HttpClient {
     return _send(path, () => _dio.patch<Object?>(path, data: body));
   }
 
+  /// The absolute URL a relative API path resolves to.
+  ///
+  /// For the one flow that hands a URL to something other than this client:
+  /// a social sign-in opens in the system browser, and the browser needs the
+  /// whole address. Built from the same base every request uses, so it cannot
+  /// drift from the environment the app is pointed at.
+  Uri resolve(String path, [Map<String, String>? query]) {
+    final Uri base = Uri.parse('${_dio.options.baseUrl}$path');
+
+    return query == null || query.isEmpty
+        ? base
+        : base.replace(
+            queryParameters: <String, String>{
+              ...base.queryParameters,
+              ...query,
+            },
+          );
+  }
+
   /// Puts cookies back in the jar, by name and value.
   ///
   /// The jar lives in memory, so a cold start has none, and every request

@@ -876,8 +876,22 @@ Recorded so they are decisions, not omissions.
   until the official app-icon exports exist: they are what people see on a home
   screen and in the stores, and Android needs separate foreground and
   background layers.
-- **Social sign-in, "forgot password" and "create an account".** The reference
-  design draws all three and the sign-in screen draws none, because nothing sits
-  behind them on mobile yet — a control that goes nowhere is worse than an
-  absent one. `AppSocialButton` is built and documented in the showcase for the
-  day the OAuth flow exists.
+- **"Forgot password" and "create an account".** The reference design draws
+  both and the sign-in screen draws neither, because nothing sits behind them on
+  mobile yet — a control that goes nowhere is worse than an absent one.
+
+  **Social sign-in is now built**, and is the worked example of how the other
+  two would arrive. A browser finishes one by having cookies set on it; an app
+  cannot be, because the round trip happens in a Custom Tab whose cookie jar is
+  the browser's. So the API hands back a one-time code on
+  `tajeerai://auth/callback`, and PKCE (RFC 7636) is what makes that safe: any
+  app may claim a custom scheme, so the code is worthless without the verifier
+  this app kept and never sent. `SocialSignInCoordinator` runs it,
+  `WebAuthenticator` is the browser behind a port, and the session it produces
+  is handed to `SessionCoordinator.adopt` so the shell, the guard and the socket
+  all start exactly as they do after a password sign-in.
+
+  What is still missing is the providers' own brand marks: `AppSocialButton`
+  draws a glyph and nothing else, and the buttons carry the provider's initial
+  until the official artwork exists. Google's branding rules require their own
+  mark on a button that offers Google.

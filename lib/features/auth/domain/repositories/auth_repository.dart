@@ -21,6 +21,32 @@ abstract interface class AuthRepository {
     bool remember,
   });
 
+  /// Which providers this deployment offers sign-in with.
+  ///
+  /// Empty when the back office has configured none, which is the normal state
+  /// of a fresh deployment - and the reason the buttons are asked for rather
+  /// than assumed.
+  Future<List<String>> socialProviders();
+
+  /// Where a social sign-in begins, for the system browser to open.
+  ///
+  /// The challenge is the public half of a PKCE pair; the verifier stays in
+  /// this app until [completeSocialSignIn].
+  Uri socialSignInUrl({
+    required String provider,
+    required String codeChallenge,
+    required String locale,
+  });
+
+  /// Spends the code the callback left, proving ownership with the verifier.
+  ///
+  /// Ends in exactly the session a password sign-in ends in - same body, same
+  /// cookies, same stored credential.
+  Future<Session> completeSocialSignIn({
+    required String code,
+    required String codeVerifier,
+  });
+
   /// The cached session from a previous run, or null.
   ///
   /// Reads local storage only -- never the network. This is what lets the app

@@ -43,5 +43,6 @@ class PkceGenerator {
   /// only one worth using. `plain` would put the verifier in the URL, which is
   /// the thing this exists to keep out of it.
   static String challengeFor(String verifier) =>
-      base64UrlEncode(sha256.convert(ascii.encode(verifier)).bytes).replaceAll('=', '');
+      base64UrlEncode(sha256.convert(ascii.encode(verifier)).bytes)
+          .replaceAll('=', '');
 }

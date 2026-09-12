@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -48,6 +50,8 @@ class _LoginFormState extends ConsumerState<LoginForm> {
   @override
   Widget build(BuildContext context) {
     final LoginState state = ref.watch(loginControllerProvider);
+    final List<String> providers =
+        ref.watch(socialProvidersProvider).value ?? const <String>[];
     final LoginController controller = ref.read(
       loginControllerProvider.notifier,
     );
@@ -107,7 +111,78 @@ class _LoginFormState extends ConsumerState<LoginForm> {
               rtl ? LucideIcons.arrowLeft : LucideIcons.arrowRight,
             ),
           ),
+          // Included only when there is something to draw. An empty child
+          // still costs one of the column's gaps, which is a stripe of dead
+          // space under the button on every deployment that offers no
+          // provider.
+          if (providers.isNotEmpty)
+            _SocialSignIn(providers: providers, busy: state.isSubmitting),
         ],
+      ),
+    );
+  }
+}
+
+/// The providers this deployment offers.
+///
+/// Only built when there is at least one - a fresh deployment names none,
+/// which is why the list is asked for rather than assumed.
+class _SocialSignIn extends ConsumerWidget {
+  const _SocialSignIn({required this.providers, required this.busy});
+
+  final List<String> providers;
+  final bool busy;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final AppStrings strings = ref.watch(appStringsProvider);
+
+    return Column(
+      spacing: TajeerSpacing.md,
+      children: <Widget>[
+        AppLabelledSeparator(label: strings.continueWith),
+        Row(
+          spacing: TajeerSpacing.xs,
+          children: <Widget>[
+            for (final String provider in providers)
+              Expanded(
+                child: AppSocialButton(
+                  glyph: _glyphFor(strings.socialProviderName(provider)),
+                  label: strings.socialProviderName(provider),
+                  onPressed: busy
+                      ? null
+                      : () => unawaited(
+                          ref
+                              .read(loginControllerProvider.notifier)
+                              .signInWith(provider),
+                        ),
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// The provider's initial, until its real mark exists.
+  ///
+  /// **Deliberately a letter and not a lookalike.** `AppSocialButton` draws
+  /// its glyph and nothing else - the label is only its accessible name - so
+  /// two providers need two distinguishable marks or they are the same button
+  /// twice. Lucide carries no brand icons, and Google's branding rules require
+  /// their own "G" on a button that offers Google, so drawing something merely
+  /// round and colourful would be worse than plainly provisional. The official
+  /// marks are an asset task; this reads correctly in both languages in the
+  /// meantime.
+  static Widget _glyphFor(String name) {
+    final String initial = name.isEmpty
+        ? '?'
+        : String.fromCharCodes(name.runes.take(1)).toUpperCase();
+
+    return Builder(
+      builder: (BuildContext context) => Text(
+        initial,
+        style: context.type.titleMd.copyWith(color: context.colors.textPrimary),
       ),
     );
   }

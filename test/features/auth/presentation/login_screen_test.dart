@@ -16,6 +16,7 @@ import 'package:tajeerai_mobile/failures/app_failure.dart';
 import 'package:tajeerai_mobile/features/auth/application/coordinators/session_coordinator.dart';
 import 'package:tajeerai_mobile/features/auth/domain/entities/user.dart';
 import 'package:tajeerai_mobile/features/auth/domain/services/auth_service.dart';
+import 'package:tajeerai_mobile/features/auth/presentation/controllers/login_controller.dart';
 import 'package:tajeerai_mobile/features/auth/presentation/screens/login_screen.dart';
 import 'package:tajeerai_mobile/infrastructure/logging/logger.dart';
 import 'package:tajeerai_mobile/infrastructure/storage/preferences_storage.dart';
@@ -91,6 +92,64 @@ void main() {
     await tapVisible(tester, find.text('Sign in').last);
     await tester.pump();
   }
+
+  /// The screen with a deployment that offers providers.
+  Widget withProviders(List<String> providers) {
+    return ProviderScope(
+      overrides: [
+        sessionCoordinatorProvider.overrideWithValue(coordinator),
+        preferencesStorageProvider.overrideWithValue(preferences),
+        socialProvidersProvider.overrideWith((Ref ref) async => providers),
+      ],
+      child: wrapWidget(const LoginScreen()),
+    );
+  }
+
+  group('signing in with a provider', () {
+    /*
+      A fresh deployment has no client secret filled in and offers none, which
+      is why the list is asked for. A button that leads to a 404 is worse than
+      no button - and an empty section would still cost a gap under the sign-in
+      button.
+    */
+    testWidgets('draws nothing at all when the server names no providers', (
+      tester,
+    ) async {
+      await tester.pumpWidget(withProviders(const <String>[]));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AppSocialButton), findsNothing);
+      expect(find.text('Or continue with'), findsNothing);
+    });
+
+    testWidgets('draws one button per provider the server named', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        withProviders(const <String>['google', 'facebook']),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AppSocialButton), findsNWidgets(2));
+      expect(find.text('Or continue with'), findsOneWidget);
+      // The button draws a glyph, not its name: the name is what a screen
+      // reader announces, and the initial is what distinguishes the two until
+      // the brand marks exist.
+      expect(find.text('G'), findsOneWidget);
+      expect(find.text('F'), findsOneWidget);
+    });
+
+    /* The server's vocabulary grows; an unknown provider is drawn, not dropped. */
+    testWidgets('draws a provider this build has never heard of', (
+      tester,
+    ) async {
+      await tester.pumpWidget(withProviders(const <String>['apple']));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AppSocialButton), findsOneWidget);
+      expect(find.text('A'), findsOneWidget);
+    });
+  });
 
   group('initial render', () {
     testWidgets('shows the form built from the design system', (tester) async {
@@ -291,11 +350,15 @@ void main() {
       expect(find.byType(AppCheckbox), findsOneWidget);
     });
 
-    testWidgets('offers no social sign-in, because mobile has no OAuth flow', (
+    testWidgets('offers no social sign-in until a deployment configures one', (
       tester,
     ) async {
-      // A provider button that does nothing is worse than an absent one.
+      // The flow exists now; the buttons still wait to be told which providers
+      // are real. A button that leads to a 404 because nobody filled in a
+      // client secret is worse than an absent one.
       await tester.pumpWidget(subject());
+      await tester.pumpAndSettle();
+
       expect(find.byType(AppSocialButton), findsNothing);
     });
   });

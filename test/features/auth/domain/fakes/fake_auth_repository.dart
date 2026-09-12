@@ -68,6 +68,39 @@ class FakeAuthRepository implements AuthRepository {
     return session;
   }
 
+  /// What the social flow is handed, for the tests that drive it.
+  List<String> providers = const <String>['google'];
+  Session? socialSession;
+  Object? socialFailure;
+  final List<String> exchanged = <String>[];
+
+  @override
+  Future<List<String>> socialProviders() async => providers;
+
+  @override
+  Uri socialSignInUrl({
+    required String provider,
+    required String codeChallenge,
+    required String locale,
+  }) => Uri.parse(
+    'https://api.test/v1/auth/social/$provider/start'
+    '?client=mobile&codeChallenge=$codeChallenge&locale=$locale',
+  );
+
+  @override
+  Future<Session> completeSocialSignIn({
+    required String code,
+    required String codeVerifier,
+  }) async {
+    exchanged.add('$code:$codeVerifier');
+
+    final Object? failure = socialFailure;
+
+    if (failure != null) throw failure;
+
+    return socialSession ?? nextSession!;
+  }
+
   @override
   Future<Session?> cachedSession() async => cached;
 

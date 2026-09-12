@@ -69,6 +69,68 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<List<String>> socialProviders() async {
+    try {
+      return await _remote.socialProviders();
+    } on HttpException catch (error) {
+      // No providers is a legitimate answer and an unreachable server is not
+      // worth a message on a sign-in screen: either way there are no buttons.
+      _logger.info(
+        'social providers unavailable',
+        data: <String, Object?>{'status': error.statusCode},
+      );
+
+      return const <String>[];
+    }
+  }
+
+  @override
+  Uri socialSignInUrl({
+    required String provider,
+    required String codeChallenge,
+    required String locale,
+  }) {
+    return _remote.socialStartUrl(
+      provider: provider,
+      codeChallenge: codeChallenge,
+      locale: locale,
+    );
+  }
+
+  @override
+  Future<Session> completeSocialSignIn({
+    required String code,
+    required String codeVerifier,
+  }) async {
+    try {
+      final Session session = await _remote.exchangeSocialCode(
+        code: code,
+        codeVerifier: codeVerifier,
+      );
+
+      await _local.saveSession(session, now: _clock());
+      _logger.info('signed in with a provider');
+
+      return session;
+    } on HttpException catch (error) {
+      // The code was spent, expired, or never ours. Not a session that ended -
+      // there was never one - so it reads as a sign-in that did not work.
+      if (error.statusCode == 401) {
+        throw const AuthenticationFailure(
+          message: 'That sign-in could not be completed.',
+        );
+      }
+
+      throw error.toFailure();
+    } on FormatException catch (error) {
+      throw UnknownFailure(
+        message0: 'The server sent an unexpected response.',
+        cause: error,
+      );
+    }
+  }
+
+  @override
   Future<Session?> cachedSession() async {
     try {
       // The cookie jar is in-memory, so a cold start has to be re-seeded from

@@ -120,6 +120,18 @@ class SessionCoordinator implements SessionCapability, CredentialRenewer {
     }
   }
 
+  /// Takes up a session somebody else produced.
+  ///
+  /// A social sign-in ends with a session this coordinator did not fetch, and
+  /// everything downstream - the shell, the guard, the socket - reacts to the
+  /// announcement rather than to the fetch. So the two paths converge here
+  /// instead of the app having a second way to become signed in, which is how
+  /// one of them ends up forgetting to start the socket.
+  void adopt(Session session) {
+    _publish(AuthState.authenticated(session));
+    _announce(SignedIn(session: session, wasRestored: false));
+  }
+
   /// Ends the session.
   ///
   /// [expired] marks a sign-out the server forced, so the login screen can

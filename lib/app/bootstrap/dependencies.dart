@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../features/auth/application/contracts/session_capability.dart';
 import '../../features/auth/application/coordinators/session_coordinator.dart';
+import '../../features/auth/application/coordinators/social_sign_in_coordinator.dart';
 import '../../features/auth/data/local/auth_local_data_source.dart';
 import '../../features/auth/data/remote/auth_remote_data_source.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
@@ -39,6 +40,8 @@ import '../../infrastructure/realtime/socket_connection.dart';
 import '../../infrastructure/realtime/socket_manager.dart';
 import '../../infrastructure/storage/file_storage.dart';
 import '../../infrastructure/storage/preferences_storage.dart';
+import '../../infrastructure/device/web_auth/web_authenticator.dart';
+import '../../infrastructure/security/pkce.dart';
 import '../../infrastructure/storage/secure_storage.dart';
 import '../config/app_config.dart';
 
@@ -210,6 +213,25 @@ final Provider<AuthRepository> authRepositoryProvider =
 final Provider<AuthService> authServiceProvider = Provider<AuthService>(
   (ref) => AuthService(ref.watch(authRepositoryProvider)),
 );
+
+/// The system browser, for the one flow that needs one.
+final Provider<WebAuthenticator> webAuthenticatorProvider =
+    Provider<WebAuthenticator>((ref) => const PlatformWebAuthenticator());
+
+/// Signing in with a provider.
+///
+/// Its own coordinator rather than a branch inside `SessionCoordinator`: the
+/// round trip leaves the app, comes back through a URL the operating system
+/// routes, and carries a secret of its own for the length of it.
+final Provider<SocialSignInCoordinator> socialSignInProvider =
+    Provider<SocialSignInCoordinator>((ref) {
+      return SocialSignInCoordinator(
+        repository: ref.watch(authRepositoryProvider),
+        browser: ref.watch(webAuthenticatorProvider),
+        logger: ref.watch(authLoggerProvider),
+        pkce: const PkceGenerator(),
+      );
+    });
 
 final Provider<SessionCoordinator> sessionCoordinatorProvider =
     Provider<SessionCoordinator>((ref) {

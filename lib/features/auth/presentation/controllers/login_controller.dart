@@ -1,8 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/bootstrap/dependencies.dart';
+import '../../../../app/localization/locale_manager.dart';
 import '../../../../app/localization/translations/app_strings.dart';
 import '../../../../failures/app_failure.dart';
+import '../../application/coordinators/social_sign_in_coordinator.dart';
 
 /// The login form's state.
 ///
@@ -93,6 +95,16 @@ final NotifierProvider<LoginController, LoginState> loginControllerProvider =
 /// It validates nothing itself. `AuthService` decides what a valid identifier
 /// is, and this maps the resulting failure onto the form -- which is the line
 /// between a controller and a business rule.
+/// Which providers the sign-in screen draws buttons for.
+///
+/// Asked of the server rather than assumed: a deployment with no client secret
+/// filled in offers none, and a button that leads to a 404 is worse than no
+/// button.
+final FutureProvider<List<String>> socialProvidersProvider =
+    FutureProvider<List<String>>(
+      (Ref ref) => ref.watch(socialSignInProvider).availableProviders(),
+    );
+
 class LoginController extends Notifier<LoginState> {
   @override
   LoginState build() => const LoginState();
@@ -145,6 +157,56 @@ class LoginController extends Notifier<LoginState> {
         fieldErrors: failure is ValidationFailure
             ? _localise(failure.fieldErrors, strings)
             : const <String, List<String>>{},
+      );
+
+      return false;
+    }
+  }
+
+  /// Signs in with a provider.
+  ///
+  /// The round trip leaves the app for a Custom Tab and comes back through the
+  /// callback URL; the session it produces is handed to the same coordinator a
+  /// password sign-in goes through, so the shell, the guard and the socket all
+  /// start the way they always do.
+  Future<bool> signInWith(String provider) async {
+    if (state.isSubmitting) return false;
+
+    state = state.copyWith(isSubmitting: true, clearErrors: true);
+
+    final AppStrings strings = ref.read(appStringsProvider);
+
+    try {
+      final SocialSignInOutcome outcome = await ref
+          .read(socialSignInProvider)
+          .signIn(provider: provider, locale: ref.read(localeProvider).code);
+
+      switch (outcome) {
+        case SocialSignedIn(:final session):
+          ref.read(sessionCoordinatorProvider).adopt(session);
+          state = state.copyWith(isSubmitting: false);
+
+          return true;
+
+        case SocialSignInCancelled():
+          // Nothing went wrong. Somebody closed the browser, and a red message
+          // for that would be the app telling them off for changing their mind.
+          state = state.copyWith(isSubmitting: false);
+
+          return false;
+
+        case SocialSignInRefused(:final reason):
+          state = state.copyWith(
+            isSubmitting: false,
+            errorMessage: strings.socialRefusal(reason),
+          );
+
+          return false;
+      }
+    } on AppFailure catch (failure) {
+      state = state.copyWith(
+        isSubmitting: false,
+        errorMessage: _messageFor(failure, strings),
       );
 
       return false;

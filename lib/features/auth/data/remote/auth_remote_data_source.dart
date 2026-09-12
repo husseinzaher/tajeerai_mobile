@@ -34,6 +34,7 @@ class AuthRemoteDataSource {
   static const String _refreshPath = '/v1/auth/refresh';
   static const String _logoutPath = '/v1/auth/logout';
   static const String _sessionPath = '/v1/auth/session';
+  static const String _socialPath = '/v1/auth/social';
 
   /// The two session cookies, which are also the secure-storage keys they are
   /// kept under between runs.
@@ -59,6 +60,60 @@ class AuthRemoteDataSource {
         'password': password,
         'remember': remember,
       },
+    );
+
+    await _captureTokens();
+
+    return SessionDto.decode(response);
+  }
+
+  /// `GET /v1/auth/social` - which providers this deployment can offer.
+  ///
+  /// Asked before the buttons are drawn: a button that leads to a 404 because
+  /// nobody filled in a client secret is worse than no button.
+  Future<List<String>> socialProviders() async {
+    final Map<String, Object?> response = await _http.get(_socialPath);
+    final Object? providers = response['providers'];
+
+    if (providers is! List<Object?>) return const <String>[];
+
+    return <String>[
+      for (final Object? provider in providers)
+        if (provider != null) provider.toString(),
+    ];
+  }
+
+  /// Where a native sign-in begins, for the browser to open.
+  ///
+  /// Built here rather than in the flow above, because the path and its query
+  /// are this file's business - and `client=mobile` is what makes the callback
+  /// hand back a code instead of setting cookies on a browser this app cannot
+  /// read.
+  Uri socialStartUrl({
+    required String provider,
+    required String codeChallenge,
+    required String locale,
+  }) {
+    return _http.resolve('$_socialPath/$provider/start', <String, String>{
+      'client': 'mobile',
+      'codeChallenge': codeChallenge,
+      'locale': locale,
+    });
+  }
+
+  /// `POST /v1/auth/social/exchange` - spends the code the callback left.
+  ///
+  /// Answers the same `{user, tenant}` body as sign-in and sets the same
+  /// cookies, so everything downstream is identical to a password sign-in -
+  /// including [_captureTokens], which is what puts the socket's credential in
+  /// the Keychain.
+  Future<Session> exchangeSocialCode({
+    required String code,
+    required String codeVerifier,
+  }) async {
+    final Map<String, Object?> response = await _http.post(
+      '$_socialPath/exchange',
+      body: <String, Object?>{'code': code, 'codeVerifier': codeVerifier},
     );
 
     await _captureTokens();
