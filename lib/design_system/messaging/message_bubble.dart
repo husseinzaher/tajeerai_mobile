@@ -48,8 +48,12 @@ class AppMessageBubble extends StatelessWidget {
   /// it, and only the first keeps its rounded corner on the speaker's side.
   final bool startsRun;
 
-  /// The last of its run. Only the last carries the time — unless the message
-  /// has something to say about its delivery, which every bubble does.
+  /// The last of its run. Only the last carries the *time*.
+  ///
+  /// Delivery is not collapsed with it: every outgoing bubble shows its own
+  /// status, because a single tick under the last of a run says nothing about
+  /// the three messages above it — and "did that one arrive?" is asked of a
+  /// message, not of a run.
   final bool endsRun;
 
   final VoidCallback? onRetry;
@@ -106,6 +110,10 @@ class AppMessageBubble extends StatelessWidget {
     final TajeerColors colors = context.colors;
     final AppMessages strings = context.strings;
     final bool outgoing = message.side == AppMessageSide.outgoing;
+
+    /// The time still collapses to the end of a run, and to any bubble whose
+    /// delivery is still unsettled. The status no longer collapses with it.
+    final bool showsTime = endsRun || _speaksUp(message.status);
     final String time = AppRelativeTime.clock(
       message.sentAt,
       locale: Localizations.maybeLocaleOf(context)?.languageCode ?? 'en',
@@ -185,7 +193,7 @@ class AppMessageBubble extends StatelessWidget {
                 reactions: message.reactions,
                 onToggle: onToggleReaction,
               ),
-            if (endsRun || _speaksUp(message.status))
+            if (showsTime || outgoing)
               ExcludeSemantics(
                 // Wraps rather than overflows: at large text the time and a
                 // worded status do not fit on one line of a bubble.
@@ -193,12 +201,13 @@ class AppMessageBubble extends StatelessWidget {
                   spacing: TajeerSpacing.xs2,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: <Widget>[
-                    Text(
-                      time,
-                      style: context.type.caption.copyWith(
-                        color: colors.textMuted,
+                    if (showsTime)
+                      Text(
+                        time,
+                        style: context.type.caption.copyWith(
+                          color: colors.textMuted,
+                        ),
                       ),
-                    ),
                     if (outgoing) AppMessageStatusIcon(status: message.status),
                   ],
                 ),
