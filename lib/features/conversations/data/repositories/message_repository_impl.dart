@@ -220,6 +220,40 @@ class MessageRepositoryImpl implements MessageRepository {
   }
 
   @override
+ /// Loads the newest page when the screen opens for the first time.
+Future<int> loadLatest({
+  required String conversationId,
+  int limit = 50,
+}) async {
+  try {
+    final page = await _remote.listMessages(
+      conversationId: conversationId,
+      // قبل "دلوقتي" (أو استخدم API منفصل بترجع آخر N مباشرة)
+      before: _clock().toUtc(),
+      limit: limit,
+    );
+
+    if (page.messages.isEmpty) return 0;
+
+    return await _dao.upsertMessages(
+      page.messages.map(_toCompanion).toList(growable: false),
+    );
+  } on FormatException catch (error) {
+    throw UnknownFailure(
+      message0: 'The server sent unexpected message history.',
+      cause: error,
+    );
+  } on Object catch (error, stackTrace) {
+    _logger.error(
+      'failed to load latest messages',
+      error: error,
+      stackTrace: stackTrace,
+    );
+    rethrow;
+  }
+}
+
+  @override
   Future<int> loadOlder({
     required String conversationId,
     required DateTime before,

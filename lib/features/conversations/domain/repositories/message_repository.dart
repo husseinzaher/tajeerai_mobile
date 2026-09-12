@@ -68,4 +68,6 @@ abstract interface class MessageRepository {
 
   /// Removes a message the server never accepted.
   Future<void> remove(String messageId);
+
+  Future<void> loadLatest({required String conversationId}) async {}
 }
