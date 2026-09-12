@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:tajeerai_mobile/features/auth/domain/entities/social_auth_config.dart';
 import 'package:tajeerai_mobile/features/auth/domain/entities/user.dart';
 import 'package:tajeerai_mobile/features/auth/domain/repositories/auth_repository.dart';
 import 'package:tajeerai_mobile/features/auth/domain/value_objects/login_identifier.dart';
@@ -70,12 +71,17 @@ class FakeAuthRepository implements AuthRepository {
 
   /// What the social flow is handed, for the tests that drive it.
   List<String> providers = const <String>['google'];
+  String? googleWebClientId = '123.apps.googleusercontent.com';
   Session? socialSession;
   Object? socialFailure;
   final List<String> exchanged = <String>[];
+  final List<String> googleTokens = <String>[];
 
   @override
-  Future<List<String>> socialProviders() async => providers;
+  Future<SocialAuthConfig> socialAuthConfig() async => SocialAuthConfig(
+    providers: providers,
+    googleWebClientId: googleWebClientId,
+  );
 
   @override
   Uri socialSignInUrl({
@@ -93,6 +99,20 @@ class FakeAuthRepository implements AuthRepository {
     required String codeVerifier,
   }) async {
     exchanged.add('$code:$codeVerifier');
+
+    final Object? failure = socialFailure;
+
+    if (failure != null) throw failure;
+
+    return socialSession ?? nextSession!;
+  }
+
+  @override
+  Future<Session> completeNativeGoogleSignIn({
+    required String idToken,
+    required String locale,
+  }) async {
+    googleTokens.add('$idToken:$locale');
 
     final Object? failure = socialFailure;
 

@@ -1,6 +1,7 @@
 import '../../../../failures/app_failure.dart';
 import '../../../../infrastructure/logging/logger.dart';
 import '../../../../infrastructure/network/http_exception.dart';
+import '../../domain/entities/social_auth_config.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/value_objects/login_identifier.dart';
@@ -69,9 +70,9 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<List<String>> socialProviders() async {
+  Future<SocialAuthConfig> socialAuthConfig() async {
     try {
-      return await _remote.socialProviders();
+      return await _remote.socialAuthConfig();
     } on HttpException catch (error) {
       // No providers is a legitimate answer and an unreachable server is not
       // worth a message on a sign-in screen: either way there are no buttons.
@@ -80,7 +81,7 @@ class AuthRepositoryImpl implements AuthRepository {
         data: <String, Object?>{'status': error.statusCode},
       );
 
-      return const <String>[];
+      return const SocialAuthConfig(providers: <String>[]);
     }
   }
 
@@ -113,21 +114,53 @@ class AuthRepositoryImpl implements AuthRepository {
 
       return session;
     } on HttpException catch (error) {
-      // The code was spent, expired, or never ours. Not a session that ended -
-      // there was never one - so it reads as a sign-in that did not work.
-      if (error.statusCode == 401) {
-        throw const AuthenticationFailure(
-          message: 'That sign-in could not be completed.',
-        );
-      }
-
-      throw error.toFailure();
+      throw _socialSignInFailure(error);
     } on FormatException catch (error) {
       throw UnknownFailure(
         message0: 'The server sent an unexpected response.',
         cause: error,
       );
     }
+  }
+
+  @override
+  Future<Session> completeNativeGoogleSignIn({
+    required String idToken,
+    required String locale,
+  }) async {
+    try {
+      final Session session = await _remote.exchangeGoogleIdToken(
+        idToken: idToken,
+        locale: locale,
+      );
+
+      await _local.saveSession(session, now: _clock());
+      _logger.info('signed in with Google');
+
+      return session;
+    } on HttpException catch (error) {
+      throw _socialSignInFailure(error);
+    } on FormatException catch (error) {
+      throw UnknownFailure(
+        message0: 'The server sent an unexpected response.',
+        cause: error,
+      );
+    }
+  }
+
+  AuthenticationFailure _socialSignInFailure(HttpException error) {
+    // The code or token was spent, expired, or refused. Not a session that
+    // ended - there was never one. When the server names the reason, pass it
+    // through so the screen can localise it.
+    if (error.statusCode == 401) {
+      return AuthenticationFailure(
+        message: error.message,
+        sessionExpired: false,
+        cause: error,
+      );
+    }
+
+    throw error.toFailure();
   }
 
   @override

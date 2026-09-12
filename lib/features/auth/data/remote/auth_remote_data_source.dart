@@ -1,5 +1,6 @@
 import '../../../../infrastructure/network/http_client.dart';
 import '../../../../infrastructure/storage/secure_storage.dart';
+import '../../domain/entities/social_auth_config.dart';
 import '../../domain/entities/user.dart';
 import '../models/session_dto.dart';
 
@@ -71,16 +72,25 @@ class AuthRemoteDataSource {
   ///
   /// Asked before the buttons are drawn: a button that leads to a 404 because
   /// nobody filled in a client secret is worse than no button.
-  Future<List<String>> socialProviders() async {
+  Future<SocialAuthConfig> socialAuthConfig() async {
     final Map<String, Object?> response = await _http.get(_socialPath);
     final Object? providers = response['providers'];
 
-    if (providers is! List<Object?>) return const <String>[];
+    final List<String> resolved = providers is List<Object?>
+        ? <String>[
+            for (final Object? provider in providers)
+              if (provider != null) provider.toString(),
+          ]
+        : const <String>[];
 
-    return <String>[
-      for (final Object? provider in providers)
-        if (provider != null) provider.toString(),
-    ];
+    final Object? googleWebClientId = response['googleWebClientId'];
+
+    return SocialAuthConfig(
+      providers: resolved,
+      googleWebClientId: googleWebClientId is String && googleWebClientId.isNotEmpty
+          ? googleWebClientId
+          : null,
+    );
   }
 
   /// Where a native sign-in begins, for the browser to open.
@@ -114,6 +124,21 @@ class AuthRemoteDataSource {
     final Map<String, Object?> response = await _http.post(
       '$_socialPath/exchange',
       body: <String, Object?>{'code': code, 'codeVerifier': codeVerifier},
+    );
+
+    await _captureTokens();
+
+    return SessionDto.decode(response);
+  }
+
+  /// `POST /v1/auth/social/google/token` - verifies a native Google id token.
+  Future<Session> exchangeGoogleIdToken({
+    required String idToken,
+    required String locale,
+  }) async {
+    final Map<String, Object?> response = await _http.post(
+      '$_socialPath/google/token',
+      body: <String, Object?>{'idToken': idToken, 'locale': locale},
     );
 
     await _captureTokens();

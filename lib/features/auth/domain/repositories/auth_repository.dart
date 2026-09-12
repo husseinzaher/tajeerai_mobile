@@ -1,3 +1,4 @@
+import '../entities/social_auth_config.dart';
 import '../entities/user.dart';
 import '../value_objects/login_identifier.dart';
 import '../value_objects/password.dart';
@@ -21,12 +22,9 @@ abstract interface class AuthRepository {
     bool remember,
   });
 
-  /// Which providers this deployment offers sign-in with.
-  ///
-  /// Empty when the back office has configured none, which is the normal state
-  /// of a fresh deployment - and the reason the buttons are asked for rather
-  /// than assumed.
-  Future<List<String>> socialProviders();
+  /// Which providers this deployment offers sign-in with, and the public ids
+  /// a native client needs to start them.
+  Future<SocialAuthConfig> socialAuthConfig();
 
   /// Where a social sign-in begins, for the system browser to open.
   ///
@@ -45,6 +43,12 @@ abstract interface class AuthRepository {
   Future<Session> completeSocialSignIn({
     required String code,
     required String codeVerifier,
+  });
+
+  /// Signs in with a Google id token from the native SDK.
+  Future<Session> completeNativeGoogleSignIn({
+    required String idToken,
+    required String locale,
   });
 
   /// The cached session from a previous run, or null.

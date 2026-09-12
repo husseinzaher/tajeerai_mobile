@@ -40,6 +40,7 @@ import '../../infrastructure/realtime/socket_connection.dart';
 import '../../infrastructure/realtime/socket_manager.dart';
 import '../../infrastructure/storage/file_storage.dart';
 import '../../infrastructure/storage/preferences_storage.dart';
+import '../../infrastructure/device/google_sign_in/google_sign_in_gateway.dart';
 import '../../infrastructure/device/web_auth/web_authenticator.dart';
 import '../../infrastructure/security/pkce.dart';
 import '../../infrastructure/storage/secure_storage.dart';
@@ -218,6 +219,9 @@ final Provider<AuthService> authServiceProvider = Provider<AuthService>(
 final Provider<WebAuthenticator> webAuthenticatorProvider =
     Provider<WebAuthenticator>((ref) => const PlatformWebAuthenticator());
 
+final Provider<GoogleSignInGateway> googleSignInGatewayProvider =
+    Provider<GoogleSignInGateway>((ref) => const PlatformGoogleSignInGateway());
+
 /// Signing in with a provider.
 ///
 /// Its own coordinator rather than a branch inside `SessionCoordinator`: the
@@ -228,6 +232,7 @@ final Provider<SocialSignInCoordinator> socialSignInProvider =
       return SocialSignInCoordinator(
         repository: ref.watch(authRepositoryProvider),
         browser: ref.watch(webAuthenticatorProvider),
+        google: ref.watch(googleSignInGatewayProvider),
         logger: ref.watch(authLoggerProvider),
         pkce: const PkceGenerator(),
       );
