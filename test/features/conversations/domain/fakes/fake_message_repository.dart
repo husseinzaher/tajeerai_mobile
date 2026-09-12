@@ -49,6 +49,7 @@ class FakeMessageRepository implements MessageRepository {
   final List<DateTime?> upsertEventStamps = <DateTime?>[];
 
   int loadOlderCalls = 0;
+  int loadLatestCalls = 0;
   Object? failureToThrow;
 
   void seed(List<Message> messages) {
@@ -182,6 +183,18 @@ class FakeMessageRepository implements MessageRepository {
     if (failure != null) throw failure;
 
     return 0;
+  }
+
+  /// `MessageRepository` gives this a body, but `implements` copies the
+  /// signature and not the body - so a fake has to supply its own. Counted
+  /// rather than ignored, since the thread's catch-up is worth asserting on.
+  @override
+  Future<void> loadLatest({required String conversationId}) async {
+    loadLatestCalls += 1;
+
+    final failure = failureToThrow;
+
+    if (failure != null) throw failure;
   }
 
   @override

@@ -133,6 +133,47 @@ void main() {
       expect(find.text(appMessagesEn.queued), findsOneWidget);
     });
 
+    /*
+      Delivery does not collapse with the time. A single tick under the last of
+      a run said nothing about the messages above it, and "did that one
+      arrive?" is a question about a message.
+    */
+    testWidgets('every outgoing bubble carries its own delivery state', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        wrapWidget(
+          AppMessageBubble(
+            message: _message(status: AppMessageStatus.read),
+            endsRun: false,
+          ),
+        ),
+      );
+
+      expect(find.byType(AppMessageStatusIcon), findsOneWidget);
+      // Still no time: that one does collapse to the end of the run.
+      expect(find.text('10:24'), findsNothing);
+    });
+
+    testWidgets('an incoming bubble mid-run carries neither', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        wrapWidget(
+          AppMessageBubble(
+            message: _message(
+              side: AppMessageSide.incoming,
+              status: AppMessageStatus.none,
+            ),
+            endsRun: false,
+          ),
+        ),
+      );
+
+      expect(find.byType(AppMessageStatusIcon), findsNothing);
+      expect(find.text('10:24'), findsNothing);
+    });
+
     testWidgets('a failed send is outlined, says so, and offers buttons', (
       WidgetTester tester,
     ) async {
