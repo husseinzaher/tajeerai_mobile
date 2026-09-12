@@ -179,4 +179,14 @@ class ConversationThreadController extends _$ConversationThreadController {
 
     state = state.copyWith(clearError: true);
   }
+
+  Future<void> loadInitial() async {
+  try {
+    await ref
+        .read(messageRepositoryProvider)
+        .loadLatest(conversationId: conversationId); // ← محتاجة تتعمل
+  } on AppFailure catch (failure) {
+    state = state.copyWith(error: composerErrorFor(failure));
+  }
+}
 }
