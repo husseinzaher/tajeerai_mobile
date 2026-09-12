@@ -8,6 +8,10 @@ import '../../features/auth/presentation/controllers/auth_controller.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/conversations/presentation/screens/conversation_list_screen.dart';
 import '../../features/conversations/presentation/screens/conversation_screen.dart';
+import '../../features/customers/presentation/screens/customer_detail_screen.dart';
+import '../../features/customers/presentation/screens/customer_form_screen.dart';
+import '../../features/customers/presentation/screens/customer_note_form_screen.dart';
+import '../../features/customers/presentation/screens/customers_screen.dart';
 import '../../design_system/loaders/app_splash.dart';
 import '../../design_system/showcase/showcase_app.dart';
 import '../settings/settings_screen.dart';
@@ -121,6 +125,43 @@ List<RouteBase> _destinationRoutes(
             builder: (context, state) => ConversationScreen(
               conversationId: state.pathParameters['conversationId']!,
             ),
+          ),
+        ],
+      ),
+    ],
+    ShellDestination.contacts => <RouteBase>[
+      GoRoute(
+        path: destination.path,
+        name: AppRouteNames.customers,
+        builder: (context, state) => const CustomersScreen(),
+        routes: <RouteBase>[
+          // Declared before `:customerId`, or the literal is read as an id and
+          // the form becomes a contact lookup for the word "new".
+          GoRoute(
+            path: AppRoutes.customerNew,
+            name: AppRouteNames.customerNew,
+            parentNavigatorKey: rootNavigatorKey,
+            builder: (context, state) => CustomerFormScreen(
+              initialPhone: state.uri.queryParameters['phone'],
+            ),
+          ),
+          GoRoute(
+            path: AppRoutes.customerDetail,
+            name: AppRouteNames.customerDetail,
+            parentNavigatorKey: rootNavigatorKey,
+            builder: (context, state) => CustomerDetailScreen(
+              customerId: state.pathParameters['customerId']!,
+            ),
+            routes: <RouteBase>[
+              GoRoute(
+                path: AppRoutes.customerNoteNew,
+                name: AppRouteNames.customerNoteNew,
+                parentNavigatorKey: rootNavigatorKey,
+                builder: (context, state) => CustomerNoteFormScreen(
+                  customerId: state.pathParameters['customerId']!,
+                ),
+              ),
+            ],
           ),
         ],
       ),

@@ -21,6 +21,12 @@ import '../../features/conversations/domain/repositories/message_repository.dart
 import '../../features/conversations/domain/services/conversation_service.dart';
 import '../../features/conversations/domain/services/message_service.dart';
 import '../../features/conversations/realtime/conversation_socket_handler.dart';
+import '../../features/customers/application/contracts/customer_directory_capability.dart';
+import '../../features/customers/application/coordinators/customer_directory_coordinator.dart';
+import '../../features/customers/application/coordinators/customer_sync_coordinator.dart';
+import '../../features/customers/data/remote/customer_remote_data_source.dart';
+import '../../features/customers/data/repositories/customer_repository_impl.dart';
+import '../../features/customers/domain/repositories/customer_repository.dart';
 import '../../infrastructure/database/app_database.dart';
 import '../../infrastructure/device/connectivity/connectivity_monitor.dart';
 import '../../infrastructure/device/platform_info.dart';
@@ -335,4 +341,44 @@ final Provider<ConversationSocketHandler> conversationSocketHandlerProvider =
       ref.onDispose(handler.dispose);
 
       return handler;
+    });
+
+// ---------------------------------------------------------------------------
+// Customers feature
+// ---------------------------------------------------------------------------
+
+final Provider<CustomerRemoteDataSource> customerRemoteDataSourceProvider =
+    Provider<CustomerRemoteDataSource>(
+      (ref) => CustomerRemoteDataSource(ref.watch(httpClientProvider)),
+    );
+
+final Provider<CustomerRepository> customerRepositoryProvider =
+    Provider<CustomerRepository>((ref) {
+      return CustomerRepositoryImpl(
+        dao: ref.watch(appDatabaseProvider).customerDao,
+        remote: ref.watch(customerRemoteDataSourceProvider),
+        clock: DateTime.now,
+      );
+    });
+
+final Provider<CustomerSyncCoordinator> customerSyncProvider =
+    Provider<CustomerSyncCoordinator>((ref) {
+      return CustomerSyncCoordinator(
+        customers: ref.watch(customerRepositoryProvider),
+        syncDao: ref.watch(appDatabaseProvider).syncDao,
+        logger: ref.watch(syncLoggerProvider),
+      );
+    });
+
+/// The contact directory, as other features see it.
+///
+/// Exposed as the contract rather than the coordinator, so a feature that
+/// depends on this provider cannot reach past what the contract allows -- the
+/// boundary is a type here, not a convention.
+final Provider<CustomerDirectoryCapability> customerDirectoryProvider =
+    Provider<CustomerDirectoryCapability>((ref) {
+      return CustomerDirectoryCoordinator(
+        customers: ref.watch(customerRepositoryProvider),
+        sync: ref.watch(customerSyncProvider),
+      );
     });

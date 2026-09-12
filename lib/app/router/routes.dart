@@ -19,6 +19,26 @@ abstract final class AppRoutes {
   static String conversationDetailPath(String conversationId) =>
       '$conversations/thread/$conversationId';
 
+  /// The workspace's contacts.
+  static const String customers = '/customers';
+
+  /// One contact. Nested under the list so the platform back gesture returns
+  /// there rather than exiting the app.
+  static const String customerDetail = ':customerId';
+  static const String customerNew = 'new';
+
+  /// Writing an entry on a contact's record. Nested under the contact, because
+  /// that is where it is reached from and where it returns to.
+  static const String customerNoteNew = 'notes/new';
+
+  static String customerDetailPath(String customerId) =>
+      '$customers/$customerId';
+
+  static String customerNewPath() => '$customers/new';
+
+  static String customerNoteNewPath(String customerId) =>
+      '$customers/$customerId/notes/new';
+
   /// The member's own settings: account, appearance, language, the way out.
   static const String settings = '/settings';
 
@@ -43,6 +63,10 @@ abstract final class AppRouteNames {
   static const String login = 'login';
   static const String conversations = 'conversations';
   static const String conversationDetail = 'conversation-detail';
+  static const String customers = 'customers';
+  static const String customerDetail = 'customer-detail';
+  static const String customerNew = 'customer-new';
+  static const String customerNoteNew = 'customer-note-new';
   static const String settings = 'settings';
   static const String designSystem = 'design-system';
   static const String splash = 'splash';

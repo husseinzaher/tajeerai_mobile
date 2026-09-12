@@ -242,7 +242,10 @@ void main() {
               email: 'grace@demo.test',
               role: 'member',
               locale: 'en',
-              permissions: <String>{'read:Customer'},
+              // A permission no destination is gated on, which is the point:
+              // this member is offered Settings because nothing else is open
+              // to them, not because they hold nothing at all.
+              permissions: <String>{'read:Invoice'},
             ),
           ),
         ),

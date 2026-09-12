@@ -99,6 +99,11 @@ class AuthenticatedShell extends ConsumerWidget {
         label: strings.inbox,
         icon: LucideIcons.messagesSquare,
       ),
+      ShellDestination.contacts => AppNavDestination(
+        id: destination.name,
+        label: strings.customers,
+        icon: LucideIcons.users,
+      ),
       ShellDestination.settings => AppNavDestination(
         id: destination.name,
         label: strings.settings,

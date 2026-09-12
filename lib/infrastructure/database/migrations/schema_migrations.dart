@@ -24,7 +24,9 @@ abstract final class SchemaMigrations {
   /// v2 -- `sync_states.page_cursor`, for the paged HTTP syncs.
   /// v3 -- `session_users.denied`, so a withdrawn capability outlives a
   ///       restart.
-  static const int version = 3;
+  /// v4 -- `customers` and `customer_notes`, with the phone lookup indexes a
+  ///       caller card answers from.
+  static const int version = 4;
 
   static MigrationStrategy strategy(GeneratedDatabase database) {
     return MigrationStrategy(
@@ -46,6 +48,15 @@ abstract final class SchemaMigrations {
             schema.sessionUsers,
             schema.sessionUsers.denied,
           );
+        },
+        from3To4: (Migrator migrator, Schema4 schema) async {
+          await migrator.createTable(schema.customers);
+          await migrator.createTable(schema.customerNotes);
+
+          // New tables need their indexes here as well as in `onCreate`, or
+          // only fresh installs get them -- and the phone lookup is the one
+          // read in this app with a deadline attached to it.
+          await _createCustomerIndexes(database);
         },
       ),
       beforeOpen: (OpeningDetails details) async {
@@ -88,6 +99,39 @@ abstract final class SchemaMigrations {
       // Pruning applied events by age.
       'CREATE INDEX IF NOT EXISTS idx_processed_events_processed_at '
           'ON processed_events (processed_at)',
+    ];
+
+    for (final statement in statements) {
+      await database.customStatement(statement);
+    }
+
+    await _createCustomerIndexes(database);
+  }
+
+  /// The contact indexes, shared by `onCreate` and the v4 step.
+  ///
+  /// Written once rather than twice: an index a fresh install has and an
+  /// upgraded device does not is the kind of difference that shows up as "the
+  /// caller card is slow on my phone only".
+  static Future<void> _createCustomerIndexes(GeneratedDatabase database) async {
+    const statements = <String>[
+      // The caller card: a ringing number, compared suffix to suffix. An
+      // equality test rather than a trailing `LIKE`, because this one has a
+      // deadline -- the phone is ringing while it runs.
+      'CREATE INDEX IF NOT EXISTS idx_customers_phone_suffix '
+          'ON customers (phone_suffix)',
+      // Typing a number into the contact search.
+      'CREATE INDEX IF NOT EXISTS idx_customers_phone_digits '
+          'ON customers (phone_digits)',
+      // The list's own order, and the reconciliation sweep that reads
+      // `seen_at`.
+      'CREATE INDEX IF NOT EXISTS idx_customers_updated_at '
+          'ON customers (updated_at DESC)',
+      'CREATE INDEX IF NOT EXISTS idx_customers_seen_at '
+          'ON customers (seen_at)',
+      // One contact's entries, newest first -- what the detail screen reads.
+      'CREATE INDEX IF NOT EXISTS idx_customer_notes_customer_created '
+          'ON customer_notes (customer_id, created_at DESC)',
     ];
 
     for (final statement in statements) {

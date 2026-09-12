@@ -72,7 +72,8 @@ lib/
 │
 └── features/                  One directory per business capability.
     ├── auth/
-    └── conversations/
+    ├── conversations/
+    └── customers/             The workspace's contacts, and the directory a caller card answers from.
 ```
 
 ### Why `failures/` is a top-level directory
@@ -316,9 +317,23 @@ Properties, each tested:
 - **Reconnect** — catch up, then recover and drain the outbox.
 - **Paged HTTP lists** — customers, orders and products have no server cursor,
   only numbered pages that shift as rows change. Such a scope keeps its own
-  resume position in `SyncStates.pageCursor`, written in the transaction that
-  writes the page it follows, so an abandoned walk resumes after the last page
-  that landed.
+  resume position in `SyncStates.pageCursor`, written after the page it follows
+  has landed, so an abandoned walk resumes on the page that did not.
+
+  `CustomerSyncCoordinator` is the worked example, and three of its properties
+  are load-bearing rather than decoration:
+
+  - **Ascending by `updatedAt`.** Rows edited mid-walk move to the end, behind
+    the page being read. A descending walk puts a freshly-edited contact on
+    page one and silently drops whoever fell off its bottom.
+  - **The resume token carries the walk's start time, not just its page.** The
+    reconciliation at the end deletes rows the walk did not stamp, so a walk
+    that resumed against the wrong moment would delete the rows its own earlier
+    pages had already written. A token older than `resumeWindow` is abandoned
+    rather than resumed, for the same reason.
+  - **Deletions are reconciled only after a walk that completed.** A pass that
+    stopped halfway has not looked everywhere, and deleting on its evidence
+    empties the list of everybody on the pages it never asked for.
 
 The cursor advances **only** on a confirmed success, using the server's own
 `syncedAt` — never the device clock, which may be minutes fast. A failed pass
@@ -675,7 +690,12 @@ because it compiles, analyses clean, or works when tried by hand.
 Bug fixes are test-first: reproduce in a failing test, fix, keep the test.
 
 Coverage is enforced by `tool/check_coverage.dart` — 80% overall, with higher
-floors on domain, application, realtime, the DAOs and the failure taxonomy.
+floors on domain, application, realtime, the DAOs and the failure taxonomy. A
+feature earns its own floors when something depends on it being right rather
+than merely present: `customers/domain/` is at 90 and `customers/application/`
+at 85, because the contact directory is what a caller card answers from and the
+walk is what keeps it complete — a rule that is wrong there shows up as the
+wrong person's name over a ringing phone.
 Coverage is a guardrail, not a goal; a test written only to move the number is
 worse than the gap it fills.
 

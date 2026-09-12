@@ -28,6 +28,12 @@ const Map<String, double> _criticalAreas = <String, double>{
   'lib/features/conversations/application/': 85,
   'lib/features/conversations/realtime/': 85,
   'lib/features/auth/application/': 85,
+  // The contact directory a caller card answers from: a rule that is wrong
+  // here shows up as the wrong person's name over a ringing phone.
+  'lib/features/customers/domain/': 90,
+  // The walk that keeps that directory complete -- resume, pacing and the
+  // reconciliation that deletes.
+  'lib/features/customers/application/': 85,
   'lib/infrastructure/database/daos/': 85,
   'lib/infrastructure/realtime/': 85,
   'lib/failures/': 90,

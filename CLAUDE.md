@@ -156,6 +156,7 @@ change — never to describe a violation after the fact. When it does change:
 | The signed-in frame (drawer, bottom bar) | `app/shell/authenticated_shell.dart`, built from `design_system/shell/` |
 | A signed-in destination | `app/shell/shell_destination.dart`, then its routes in `app/router/app_router.dart` |
 | The member's settings | `app/settings/settings_screen.dart` |
+| Contacts, and the directory a caller card reads | `features/customers/`, reached from outside through `application/contracts/customer_directory_capability.dart` |
 | A colour, type step or spacing value | `design/tokens.json`, generated into `app/theme/tokens.g.dart` |
 | Error types | `failures/app_failure.dart` |
 | The backend contract | `backend/src/modules/conversation/application/contracts/conversation-socket.ts` |

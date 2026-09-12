@@ -15,6 +15,8 @@ import '../router/routes.dart';
 enum ShellDestination {
   inbox(AppRoutes.conversations, permission: 'read:Conversation'),
 
+  contacts(AppRoutes.customers, permission: 'read:Customer'),
+
   /// Last, and open to every member: whatever a role withholds, the account
   /// and the way out are always reachable.
   settings(AppRoutes.settings);

@@ -5,6 +5,8 @@ import 'package:drift_flutter/drift_flutter.dart';
 import '../../features/auth/data/local/auth_tables.dart';
 import '../../features/conversations/data/local/conversation_dao.dart';
 import '../../features/conversations/data/local/conversation_tables.dart';
+import '../../features/customers/data/local/customer_dao.dart';
+import '../../features/customers/data/local/customer_tables.dart';
 import 'daos/outbox_dao.dart';
 import 'daos/sync_dao.dart';
 import 'migrations/schema_migrations.dart';
@@ -44,12 +46,14 @@ part 'app_database.g.dart';
   tables: <Type>[
     Conversations,
     Messages,
+    Customers,
+    CustomerNotes,
     SessionUsers,
     OutboxEntries,
     SyncStates,
     ProcessedEvents,
   ],
-  daos: <Type>[OutboxDao, SyncDao, ConversationDao],
+  daos: <Type>[OutboxDao, SyncDao, ConversationDao, CustomerDao],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor])

@@ -182,6 +182,95 @@ class AppStrings {
       'ar': 'هذه المحادثة مؤرشفة ولا يمكنها استقبال رسائل جديدة.',
     },
 
+    // -- customers ----------------------------------------------------------
+    'customers': <String, String>{'en': 'Contacts', 'ar': 'جهات الاتصال'},
+    'searchCustomers': <String, String>{
+      'en': 'Search contacts…',
+      'ar': 'ابحث في جهات الاتصال…',
+    },
+    'noCustomers': <String, String>{
+      'en': 'No contacts yet',
+      'ar': 'لا توجد جهات اتصال بعد',
+    },
+    'noCustomersDescription': <String, String>{
+      'en': 'Contacts sync from the workspace. Pull down to fetch them.',
+      'ar': 'تُزامَن جهات الاتصال من مساحة العمل. اسحب للأسفل لجلبها.',
+    },
+    'customersUnreadable': <String, String>{
+      'en': 'Contacts could not be read',
+      'ar': 'تعذّرت قراءة جهات الاتصال',
+    },
+    'allTags': <String, String>{'en': 'All', 'ar': 'الكل'},
+    'searchOnline': <String, String>{
+      'en': 'Search the workspace',
+      'ar': 'ابحث في مساحة العمل',
+    },
+    'searchOnlineHint': <String, String>{
+      'en': 'Not on this device? Search everyone.',
+      'ar': 'غير موجود على هذا الجهاز؟ ابحث في الكل.',
+    },
+    'searchOnlineOffline': <String, String>{
+      'en': 'Searching the workspace needs a connection.',
+      'ar': 'البحث في مساحة العمل يحتاج اتصالًا بالإنترنت.',
+    },
+    'newCustomer': <String, String>{
+      'en': 'New contact',
+      'ar': 'جهة اتصال جديدة',
+    },
+    'customerName': <String, String>{'en': 'Name', 'ar': 'الاسم'},
+    'customerTags': <String, String>{'en': 'Tags', 'ar': 'الوسوم'},
+    'customerType': <String, String>{'en': 'Type', 'ar': 'النوع'},
+    'customerSource': <String, String>{'en': 'Added via', 'ar': 'أُضيف عبر'},
+    'customerStandingNote': <String, String>{'en': 'About', 'ar': 'نبذة'},
+    'customerNotes': <String, String>{'en': 'Notes', 'ar': 'الملاحظات'},
+    'customerNotesDescription': <String, String>{
+      'en': 'What the team has written down, newest first.',
+      'ar': 'ما دوّنه الفريق، من الأحدث إلى الأقدم.',
+    },
+    'addNote': <String, String>{'en': 'Add note', 'ar': 'إضافة ملاحظة'},
+    'noteBody': <String, String>{'en': 'Note', 'ar': 'الملاحظة'},
+    'noteHint': <String, String>{
+      'en': 'What happened, in your own words',
+      'ar': 'ما الذي حدث، بكلماتك',
+    },
+    'noNotes': <String, String>{
+      'en': 'Nothing written down yet',
+      'ar': 'لا توجد ملاحظات بعد',
+    },
+    'noNotesDescription': <String, String>{
+      'en': 'Notes added here and on the web appear together.',
+      'ar': 'الملاحظات المضافة من هنا ومن الويب تظهر معًا.',
+    },
+    'noteAuthorUnknown': <String, String>{
+      'en': 'Author no longer on the team',
+      'ar': 'الكاتب لم يعد ضمن الفريق',
+    },
+    'noteNeedsConnection': <String, String>{
+      'en': 'Writing a note needs a connection. Your draft is kept.',
+      'ar': 'كتابة ملاحظة تحتاج اتصالًا. مسوّدتك محفوظة.',
+    },
+    'noteSaveFailed': <String, String>{
+      'en': 'The note was not saved',
+      'ar': 'لم تُحفظ الملاحظة',
+    },
+    'customerNeedsConnection': <String, String>{
+      'en': 'Adding a contact needs a connection.',
+      'ar': 'إضافة جهة اتصال تحتاج اتصالًا بالإنترنت.',
+    },
+    'customerSaveFailed': <String, String>{
+      'en': 'The contact was not saved',
+      'ar': 'لم تُحفظ جهة الاتصال',
+    },
+    'customerExists': <String, String>{
+      'en': 'This number already belongs to a contact',
+      'ar': 'هذا الرقم يخص جهة اتصال موجودة',
+    },
+    'customerGone': <String, String>{
+      'en': 'This contact was removed from the workspace',
+      'ar': 'أُزيلت جهة الاتصال من مساحة العمل',
+    },
+    'save': <String, String>{'en': 'Save', 'ar': 'حفظ'},
+
     // -- settings -----------------------------------------------------------
     'settings': <String, String>{'en': 'Settings', 'ar': 'الإعدادات'},
     'account': <String, String>{'en': 'Account', 'ar': 'الحساب'},
@@ -266,6 +355,37 @@ class AppStrings {
   String get sendOffline => call('sendOffline');
   String get sendNotSaved => call('sendNotSaved');
   String get sendFailed => call('sendFailed');
+
+  String get customers => call('customers');
+  String get searchCustomers => call('searchCustomers');
+  String get noCustomers => call('noCustomers');
+  String get noCustomersDescription => call('noCustomersDescription');
+  String get customersUnreadable => call('customersUnreadable');
+  String get allTags => call('allTags');
+  String get searchOnline => call('searchOnline');
+  String get searchOnlineHint => call('searchOnlineHint');
+  String get searchOnlineOffline => call('searchOnlineOffline');
+  String get newCustomer => call('newCustomer');
+  String get customerName => call('customerName');
+  String get customerTags => call('customerTags');
+  String get customerType => call('customerType');
+  String get customerSource => call('customerSource');
+  String get customerStandingNote => call('customerStandingNote');
+  String get customerNotes => call('customerNotes');
+  String get customerNotesDescription => call('customerNotesDescription');
+  String get addNote => call('addNote');
+  String get noteBody => call('noteBody');
+  String get noteHint => call('noteHint');
+  String get noNotes => call('noNotes');
+  String get noNotesDescription => call('noNotesDescription');
+  String get noteAuthorUnknown => call('noteAuthorUnknown');
+  String get noteNeedsConnection => call('noteNeedsConnection');
+  String get noteSaveFailed => call('noteSaveFailed');
+  String get customerNeedsConnection => call('customerNeedsConnection');
+  String get customerSaveFailed => call('customerSaveFailed');
+  String get customerExists => call('customerExists');
+  String get customerGone => call('customerGone');
+  String get save => call('save');
 
   String get settings => call('settings');
   String get account => call('account');
