@@ -40,15 +40,18 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
   static const AppChannelCapabilities _capabilities =
       AppChannelCapabilities.textOnly;
 
-@override
-void initState() {
-  super.initState();
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    ref.read(
-      conversationThreadControllerProvider(widget.conversationId).notifier,
-    ).loadInitial(); 
-  });
-}
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref
+          .read(
+            conversationThreadControllerProvider(widget.conversationId)
+                .notifier,
+          )
+          .loadInitial();
+    });
+  }
 
   @override
   void dispose() {

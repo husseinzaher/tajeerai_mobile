@@ -181,12 +181,12 @@ class ConversationThreadController extends _$ConversationThreadController {
   }
 
   Future<void> loadInitial() async {
-  try {
-    await ref
-        .read(messageRepositoryProvider)
-        .loadLatest(conversationId: conversationId); // ← محتاجة تتعمل
-  } on AppFailure catch (failure) {
-    state = state.copyWith(error: composerErrorFor(failure));
+    try {
+      await ref
+          .read(messageRepositoryProvider)
+          .loadLatest(conversationId: conversationId); // ← محتاجة تتعمل
+    } on AppFailure catch (failure) {
+      state = state.copyWith(error: composerErrorFor(failure));
+    }
   }
-}
 }
