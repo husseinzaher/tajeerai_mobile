@@ -72,6 +72,24 @@ abstract final class PhoneDigits {
         : digits.substring(digits.length - significantSuffix);
   }
 
+  /// Whether a number was written in full, with its country code.
+  ///
+  /// The shape E.164 allows: a `+`, then eight to fifteen digits. Deliberately
+  /// a shape check and not a parse - this app carries no phone metadata, and
+  /// the API is the authority on whether `+9995551234` is a real number. What
+  /// this catches is the mistake somebody actually makes, which is typing
+  /// `0501234567` into a field that reaches WhatsApp: Saudi Arabia's number to
+  /// a Saudi reader, and somebody else's to everybody else.
+  static bool isInternational(String value) {
+    final String digits = of(value);
+
+    if (!digits.startsWith('+')) return false;
+
+    final int length = digits.length - 1;
+
+    return length >= 8 && length <= 15;
+  }
+
   /// Whether two numbers, however each was spelled, reach the same person.
   static bool sameNumber(String left, String right) {
     final String a = suffix(left);

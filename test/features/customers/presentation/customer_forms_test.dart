@@ -229,7 +229,9 @@ void main() {
 
       await tester.pumpWidget(_wrap(const CustomerFormScreen(), contacts));
       await tester.enterText(find.byType(TextField).first, 'Ada Lovelace');
-      await tester.enterText(find.byType(TextField).at(1), '0501234567');
+      // In full: the form refuses a national number before it looks anything
+      // up, which is a different test.
+      await tester.enterText(find.byType(TextField).at(1), '+966501234567');
       await tester.pump();
 
       await tester.tap(_saveButton());
@@ -241,6 +243,58 @@ void main() {
       // It opened the contact that already had the number rather than making a
       // second one.
       expect(find.text('contact c1'), findsOneWidget);
+    });
+
+    /*
+      The mistake the field invites: `0501234567` is Saudi Arabia's number to a
+      Saudi reader and somebody else's to everybody else, and the API refuses
+      it. Caught while the keyboard is still open rather than after a round
+      trip.
+    */
+    testWidgets('refuses a number typed without its country code', (
+      WidgetTester tester,
+    ) async {
+      final _Contacts contacts = _Contacts();
+
+      await tester.pumpWidget(_wrap(const CustomerFormScreen(), contacts));
+      await tester.enterText(find.byType(TextField).first, 'Ada');
+      await tester.enterText(find.byType(TextField).at(1), '0501234567');
+      await tester.pump();
+
+      await tester.tap(_saveButton());
+      await tester.pump();
+
+      expect(
+        find.text('Start with the country code, like +966501234567.'),
+        findsWidgets,
+      );
+      expect(contacts.creates, 0);
+    });
+
+    testWidgets(
+      'opens on the country code, so the right answer is the easy one',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(_wrap(const CustomerFormScreen(), _Contacts()));
+        await tester.pump();
+
+        expect(find.text('+966'), findsOneWidget);
+      },
+    );
+
+    /* A field left at the bare calling code is nobody's number. */
+    testWidgets('saves a contact with no number when only the code is there', (
+      WidgetTester tester,
+    ) async {
+      final _Contacts contacts = _Contacts();
+
+      await tester.pumpWidget(_wrap(const CustomerFormScreen(), contacts));
+      await tester.enterText(find.byType(TextField).first, 'Ada');
+      await tester.pump();
+
+      await tester.tap(_saveButton());
+      await tester.pumpAndSettle();
+
+      expect(contacts.creates, 1);
     });
 
     testWidgets('prefills the number it was opened with', (

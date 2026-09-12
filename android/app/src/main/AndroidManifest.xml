@@ -39,6 +39,31 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!--
+            Where a social sign-in comes back to.
+
+            The provider sends the browser to `tajeerai://auth/callback?code=…`
+            and Android routes it here, which hands it to the Custom Tab this
+            app opened. Nothing on that URL is secret: the code is worth
+            nothing without the PKCE verifier the app kept and never sent, and
+            any app may claim a custom scheme - which is exactly why the
+            verifier exists. See the API's `SocialMobileHandoffUseCase`.
+
+            `taskAffinity=""` on the package's own advice: without it the
+            callback can land in a task of its own and the app appears twice in
+            the recents list.
+        -->
+        <activity
+            android:name="com.linusu.flutter_web_auth_2.CallbackActivity"
+            android:exported="true"
+            android:taskAffinity="">
+            <intent-filter android:label="tajeerai_social_callback">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="tajeerai" />
+            </intent-filter>
+        </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

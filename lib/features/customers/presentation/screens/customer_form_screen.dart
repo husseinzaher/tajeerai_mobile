@@ -34,10 +34,23 @@ class CustomerFormScreen extends ConsumerStatefulWidget {
   ConsumerState<CustomerFormScreen> createState() => _CustomerFormScreenState();
 }
 
+/// The workspace's home market, and the same default the web's phone control
+/// opens on - the two have to agree, or a number typed in one place is a
+/// different number in the other.
+const String _defaultCallingCode = '+966';
+
 class _CustomerFormScreenState extends ConsumerState<CustomerFormScreen> {
   late final TextEditingController _name = TextEditingController();
+
+  /// Opens on the country code rather than empty.
+  ///
+  /// A number typed without one is the mistake this field invites: the API
+  /// refuses it, and `0501234567` is Saudi Arabia's number to a Saudi reader
+  /// and somebody else's to everybody else. Starting the field at `+966` makes
+  /// the right answer the easy one, and it is still editable for a contact
+  /// abroad.
   late final TextEditingController _phone = TextEditingController(
-    text: widget.initialPhone ?? '',
+    text: widget.initialPhone ?? _defaultCallingCode,
   );
   late final TextEditingController _email = TextEditingController();
 
@@ -65,10 +78,25 @@ class _CustomerFormScreenState extends ConsumerState<CustomerFormScreen> {
     final AppStrings strings = ref.read(appStringsProvider);
     final String phone = _phone.text.trim();
 
+    // Refused here as well as by the API, so somebody learns what is wrong
+    // while the keyboard is still open rather than after a round trip.
+    if (phone.isNotEmpty &&
+        phone != _defaultCallingCode &&
+        !PhoneDigits.isInternational(phone)) {
+      setState(() {
+        _saving = false;
+        _error = strings.phoneNeedsCountryCode;
+      });
+
+      return;
+    }
+
     try {
       // The duplicate check, before the write rather than after it: a contact
       // created and then found to exist is two rows somebody has to merge.
-      if (phone.isNotEmpty && PhoneDigits.bare(phone).isNotEmpty) {
+      if (phone.isNotEmpty &&
+          phone != _defaultCallingCode &&
+          PhoneDigits.bare(phone).isNotEmpty) {
         final Customer? existing = await ref
             .read(customerRepositoryProvider)
             .findByPhone(phone);
@@ -86,7 +114,8 @@ class _CustomerFormScreenState extends ConsumerState<CustomerFormScreen> {
           .read(customerRepositoryProvider)
           .create(
             name: name,
-            phone: phone.isEmpty ? null : phone,
+            // The bare calling code is nobody's number.
+            phone: phone.isEmpty || phone == _defaultCallingCode ? null : phone,
             email: _email.text.trim().isEmpty ? null : _email.text.trim(),
           );
 
@@ -129,6 +158,7 @@ class _CustomerFormScreenState extends ConsumerState<CustomerFormScreen> {
             AppTextField(
               controller: _phone,
               label: strings.phone,
+              description: strings.phoneNeedsCountryCode,
               keyboardType: TextInputType.phone,
             ),
             const SizedBox(height: TajeerSpacing.md),

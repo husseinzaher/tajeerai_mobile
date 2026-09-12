@@ -45,6 +45,28 @@ void main() {
     });
   });
 
+  group('PhoneDigits.isInternational', () {
+    test('accepts a number written in full, however it was spaced', () {
+      expect(PhoneDigits.isInternational('+966501234567'), isTrue);
+      expect(PhoneDigits.isInternational('+966 50 123 4567'), isTrue);
+      expect(PhoneDigits.isInternational('+20 100 875 5187'), isTrue);
+    });
+
+    /* The mistake this exists to catch. */
+    test('refuses a national number with no country code', () {
+      expect(PhoneDigits.isInternational('0501234567'), isFalse);
+      expect(PhoneDigits.isInternational('501234567'), isFalse);
+      expect(PhoneDigits.isInternational('00966501234567'), isFalse);
+    });
+
+    test('refuses something too short or too long to be a number', () {
+      expect(PhoneDigits.isInternational('+1234567'), isFalse);
+      expect(PhoneDigits.isInternational('+1234567890123456'), isFalse);
+      expect(PhoneDigits.isInternational('+'), isFalse);
+      expect(PhoneDigits.isInternational(''), isFalse);
+    });
+  });
+
   group('PhoneDigits.sameNumber', () {
     test('matches one person however each side was spelled', () {
       expect(PhoneDigits.sameNumber('+966 50 123 4567', '0501234567'), isTrue);

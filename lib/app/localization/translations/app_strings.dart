@@ -257,6 +257,10 @@ class AppStrings {
       'en': 'Adding a contact needs a connection.',
       'ar': 'إضافة جهة اتصال تحتاج اتصالًا بالإنترنت.',
     },
+    'phoneNeedsCountryCode': <String, String>{
+      'en': 'Start with the country code, like +966501234567.',
+      'ar': 'ابدأ برمز الدولة، مثل ‎+966501234567.',
+    },
     'customerSaveFailed': <String, String>{
       'en': 'The contact was not saved',
       'ar': 'لم تُحفظ جهة الاتصال',
@@ -382,6 +386,7 @@ class AppStrings {
   String get noteNeedsConnection => call('noteNeedsConnection');
   String get noteSaveFailed => call('noteSaveFailed');
   String get customerNeedsConnection => call('customerNeedsConnection');
+  String get phoneNeedsCountryCode => call('phoneNeedsCountryCode');
   String get customerSaveFailed => call('customerSaveFailed');
   String get customerExists => call('customerExists');
   String get customerGone => call('customerGone');
