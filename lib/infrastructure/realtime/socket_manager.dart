@@ -96,15 +96,38 @@ class SocketManager {
   /// never inspects a payload.
   Stream<SocketEvent> get events => _client.events;
 
+  /// The states from which [start] opens a connection rather than leaving one
+  /// to arrive.
+  ///
+  /// Everything else means a socket is already up or on its way -- connected,
+  /// connecting, or waiting out a backoff -- and opening a second one is the
+  /// thing [start]'s idempotence exists to prevent.
+  static const Set<SocketConnectionState> _idle = <SocketConnectionState>{
+    SocketConnectionState.disconnected,
+    SocketConnectionState.unauthenticated,
+  };
+
   /// Brings the connection up and keeps it up.
   ///
   /// Idempotent: calling it twice does not open two sockets.
+  ///
+  /// **It does reopen a closed one.** Signing in calls this after the session
+  /// exists, and the call before it -- made while there was no token -- left
+  /// the manager wanted but closed. Refusing on `_wanted` alone stranded the
+  /// socket there for the rest of the process: the Inbox stayed empty behind a
+  /// "showing saved messages" banner until the app was restarted, which is the
+  /// bug this guard now avoids. `unauthenticated` is documented as terminal
+  /// *until a new token arrives*, and this is what makes that true.
   Future<void> start() async {
-    if (_disposed || _wanted) return;
+    if (_disposed) return;
+
+    final bool wasWanted = _wanted;
 
     _wanted = true;
     _listenToLifecycle();
     _listenToConnectivity();
+
+    if (wasWanted && !_idle.contains(_state)) return;
 
     await _openConnection();
   }

@@ -89,6 +89,28 @@ void main() {
 
       expect(client.connectTokens, hasLength(1));
     });
+
+    /*
+      Signing in is exactly this sequence. The app starts the manager when the
+      session appears, and before that there is no token -- so a `start` that
+      refused to look again would leave the socket closed for the whole run,
+      and the Inbox empty behind a "showing saved messages" banner until the
+      process was restarted. `unauthenticated` is documented as terminal *until
+      a new token arrives*, which is what this is.
+    */
+    test('opens once a session exists, having started without one', () async {
+      credentials.token = null;
+      await manager.start();
+
+      expect(client.connectTokens, isEmpty);
+      expect(manager.state, SocketConnectionState.unauthenticated);
+
+      credentials.token = 'token-1';
+      await manager.start();
+
+      expect(client.connectTokens, <String>['token-1']);
+      expect(manager.state, SocketConnectionState.connected);
+    });
   });
 
   group('reconnection', () {

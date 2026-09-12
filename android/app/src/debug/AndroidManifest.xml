@@ -4,4 +4,9 @@
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!-- Debug builds talk to a development backend over plain HTTP, which the
+         platform refuses by default. Named hosts only, and only here: a
+         release build never sees this file. See the config for the reasoning. -->
+    <application android:networkSecurityConfig="@xml/network_security_config" />
 </manifest>
