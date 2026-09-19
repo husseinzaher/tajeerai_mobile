@@ -18,11 +18,18 @@ import 'package:tajeerai_mobile/features/auth/domain/entities/user.dart';
 import 'package:tajeerai_mobile/features/auth/domain/services/auth_service.dart';
 import 'package:tajeerai_mobile/features/auth/presentation/controllers/login_controller.dart';
 import 'package:tajeerai_mobile/features/auth/presentation/screens/login_screen.dart';
+import 'package:tajeerai_mobile/infrastructure/device/platform_info.dart';
 import 'package:tajeerai_mobile/infrastructure/logging/logger.dart';
 import 'package:tajeerai_mobile/infrastructure/storage/preferences_storage.dart';
 
 import '../../../support/widget_harness.dart';
 import '../domain/fakes/fake_auth_repository.dart';
+
+const PlatformInfo _platformInfo = PlatformInfo(
+  appVersion: '1.0.0',
+  buildNumber: '1',
+  operatingSystem: 'android',
+);
 
 Session _session() => const Session(
   user: AuthenticatedUser(
@@ -77,6 +84,7 @@ void main() {
       overrides: [
         sessionCoordinatorProvider.overrideWithValue(coordinator),
         preferencesStorageProvider.overrideWithValue(preferences),
+        platformInfoProvider.overrideWithValue(_platformInfo),
       ],
       child: wrapWidget(const LoginScreen(), brightness: brightness),
     );
@@ -99,6 +107,7 @@ void main() {
       overrides: [
         sessionCoordinatorProvider.overrideWithValue(coordinator),
         preferencesStorageProvider.overrideWithValue(preferences),
+        platformInfoProvider.overrideWithValue(_platformInfo),
         socialProvidersProvider.overrideWith((Ref ref) async => providers),
       ],
       child: wrapWidget(const LoginScreen()),
@@ -175,6 +184,12 @@ void main() {
       await tester.pumpWidget(subject());
 
       expect(find.byType(AppInlineError), findsNothing);
+    });
+
+    testWidgets('shows the app version in the footer', (tester) async {
+      await tester.pumpWidget(subject());
+
+      expect(find.text('Version 1.0.0 (1)'), findsOneWidget);
     });
   });
 
@@ -376,6 +391,7 @@ void main() {
           overrides: [
             sessionCoordinatorProvider.overrideWithValue(coordinator),
             preferencesStorageProvider.overrideWithValue(fresh),
+            platformInfoProvider.overrideWithValue(_platformInfo),
           ],
           child: wrapWidget(
             const LoginScreen(),
@@ -403,6 +419,7 @@ void main() {
           overrides: [
             sessionCoordinatorProvider.overrideWithValue(coordinator),
             preferencesStorageProvider.overrideWithValue(fresh),
+            platformInfoProvider.overrideWithValue(_platformInfo),
           ],
           child: wrapWidget(
             const LoginScreen(),

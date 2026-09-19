@@ -9,6 +9,7 @@ import 'package:tajeerai_mobile/app/bootstrap/dependencies.dart';
 import 'package:tajeerai_mobile/features/auth/application/coordinators/session_coordinator.dart';
 import 'package:tajeerai_mobile/features/auth/domain/services/auth_service.dart';
 import 'package:tajeerai_mobile/features/auth/presentation/screens/login_screen.dart';
+import 'package:tajeerai_mobile/infrastructure/device/platform_info.dart';
 import 'package:tajeerai_mobile/infrastructure/logging/logger.dart';
 import 'package:tajeerai_mobile/infrastructure/storage/preferences_storage.dart';
 
@@ -52,6 +53,13 @@ void main() {
           overrides: [
             sessionCoordinatorProvider.overrideWithValue(coordinator),
             preferencesStorageProvider.overrideWithValue(preferences),
+            platformInfoProvider.overrideWithValue(
+              const PlatformInfo(
+                appVersion: '1.0.0',
+                buildNumber: '1',
+                operatingSystem: 'android',
+              ),
+            ),
           ],
           child: wrapWidget(
             const LoginScreen(),

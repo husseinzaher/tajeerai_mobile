@@ -4,10 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../app/bootstrap/dependencies.dart';
 import '../../../../app/localization/locale_manager.dart';
 import '../../../../app/localization/translations/app_strings.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../design_system/design_system.dart';
+import '../../../../infrastructure/device/platform_info.dart';
 import '../widgets/login_form.dart';
 
 /// The sign-in screen.
@@ -31,6 +33,7 @@ class LoginScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AppStrings strings = ref.watch(appStringsProvider);
+    final PlatformInfo platform = ref.watch(platformInfoProvider);
     final TajeerColors colors = context.colors;
 
     return AppScaffold(
@@ -41,17 +44,28 @@ class LoginScreen extends ConsumerWidget {
           title: strings.signInTitle,
           description: strings.signInSubtitle,
         ),
-        footer: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          spacing: TajeerSpacing.xs,
+        footer: Column(
+          spacing: TajeerSpacing.sm,
           children: <Widget>[
-            Icon(LucideIcons.shieldCheck, size: 16, color: colors.textMuted),
-            Flexible(
-              child: Text(
-                strings.securityNotice,
-                textAlign: TextAlign.center,
-                style: context.type.caption.copyWith(color: colors.textMuted),
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              spacing: TajeerSpacing.xs,
+              children: <Widget>[
+                Icon(LucideIcons.shieldCheck, size: 16, color: colors.textMuted),
+                Flexible(
+                  child: Text(
+                    strings.securityNotice,
+                    textAlign: TextAlign.center,
+                    style: context.type.caption.copyWith(color: colors.textMuted),
+                  ),
+                ),
+              ],
+            ),
+            Text(
+              '${strings.appVersion} ${platform.appVersion} (${platform.buildNumber})',
+              textAlign: TextAlign.center,
+              textDirection: TextDirection.ltr,
+              style: context.type.caption.copyWith(color: colors.textMuted),
             ),
           ],
         ),
