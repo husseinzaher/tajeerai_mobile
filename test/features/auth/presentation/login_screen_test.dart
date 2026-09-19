@@ -389,6 +389,36 @@ void main() {
       expect(find.text('تسجيل الدخول'), findsOneWidget);
     });
 
+    testWidgets('email and password stay left-to-right in Arabic', (
+      tester,
+    ) async {
+      late PreferencesStorage fresh;
+      await tester.runAsync(() async {
+        SharedPreferences.setMockInitialValues(<String, Object>{});
+        fresh = await PreferencesStorage.open();
+      });
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            sessionCoordinatorProvider.overrideWithValue(coordinator),
+            preferencesStorageProvider.overrideWithValue(fresh),
+          ],
+          child: wrapWidget(
+            const LoginScreen(),
+            locale: const Locale('ar'),
+            textDirection: TextDirection.rtl,
+          ),
+        ),
+      );
+
+      final List<AppTextField> fields = tester
+          .widgetList<AppTextField>(find.byType(AppTextField))
+          .toList();
+      expect(fields, hasLength(2));
+      expect(fields.every((AppTextField field) => field.textDirection == TextDirection.ltr), isTrue);
+    });
+
     testWidgets('the switcher changes the copy without leaving the screen', (
       tester,
     ) async {

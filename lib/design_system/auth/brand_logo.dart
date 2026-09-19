@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 
 /// Which of the logo system's forms to draw.
 enum AppBrandLogoVariant {
-  /// The gradient T and its arrow, alone — for a small space: a toolbar, a
+  /// The gradient T and its arrow, alone — the sign-in screen, a toolbar, a
   /// drawer header, an avatar-sized slot.
   mark,
 
-  /// The mark above the wordmark. The sign-in screen's logo.
+  /// The mark above the wordmark.
   vertical,
 
   /// The mark beside the wordmark — for a wide, short space.

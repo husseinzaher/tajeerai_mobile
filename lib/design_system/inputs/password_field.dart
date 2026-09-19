@@ -25,6 +25,7 @@ class AppPasswordField extends StatefulWidget {
     this.onSubmitted,
     this.onChanged,
     this.autofillHint = AutofillHints.password,
+    this.textDirection,
     super.key,
   });
 
@@ -43,6 +44,9 @@ class AppPasswordField extends StatefulWidget {
   /// `AutofillHints.newPassword` on a sign-up form, so the platform offers to
   /// generate one instead of filling the old one in.
   final String autofillHint;
+
+  /// See [AppTextField.textDirection].
+  final TextDirection? textDirection;
 
   @override
   State<AppPasswordField> createState() => _AppPasswordFieldState();
@@ -72,6 +76,7 @@ class _AppPasswordFieldState extends State<AppPasswordField> {
       obscureText: _obscured,
       keyboardType: TextInputType.visiblePassword,
       autofillHints: <String>[widget.autofillHint],
+      textDirection: widget.textDirection,
       leading: const Icon(LucideIcons.lock),
       trailing: Semantics(
         button: true,

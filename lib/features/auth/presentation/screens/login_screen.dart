@@ -36,7 +36,7 @@ class LoginScreen extends ConsumerWidget {
     return AppScaffold(
       body: AppAuthLayout(
         topEnd: const _LanguageSwitcher(),
-        logo: const AppBrandLogo(),
+        logo: const AppBrandLogo(variant: AppBrandLogoVariant.mark),
         header: AppAuthHeader(
           title: strings.signInTitle,
           description: strings.signInSubtitle,

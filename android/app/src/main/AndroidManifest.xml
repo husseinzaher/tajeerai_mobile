@@ -11,7 +11,7 @@
          tokens. A copy restored onto another phone would be someone else's data
          under a session that phone never signed in to. -->
     <application
-        android:label="tajeerai_mobile"
+        android:label="TajeerAi"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:allowBackup="false"

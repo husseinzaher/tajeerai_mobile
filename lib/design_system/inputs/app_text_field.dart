@@ -37,6 +37,7 @@ class AppTextField extends StatelessWidget {
     this.minLines,
     this.textCapitalization = TextCapitalization.none,
     this.inputFormatters,
+    this.textDirection,
     super.key,
   });
 
@@ -66,7 +67,8 @@ class AppTextField extends StatelessWidget {
        onSubmitted = null,
        leading = null,
        trailing = null,
-       inputFormatters = null;
+       inputFormatters = null,
+       textDirection = null;
 
   final TextEditingController? controller;
   final String? label;
@@ -92,6 +94,10 @@ class AppTextField extends StatelessWidget {
   final int? minLines;
   final TextCapitalization textCapitalization;
   final List<TextInputFormatter>? inputFormatters;
+
+  /// When set, the typed text follows this direction regardless of the screen.
+  /// Email, password and one-time codes stay left-to-right even in Arabic.
+  final TextDirection? textDirection;
 
   bool get _invalid => errorText != null && errorText!.isNotEmpty;
 
@@ -128,6 +134,7 @@ class AppTextField extends StatelessWidget {
                 minLines: minLines,
                 textCapitalization: textCapitalization,
                 inputFormatters: inputFormatters,
+                textDirection: textDirection,
                 style: style,
                 cursorColor: colors.primary,
                 cursorWidth: 1.5,

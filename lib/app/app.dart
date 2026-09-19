@@ -94,7 +94,7 @@ class _TajeerAppState extends ConsumerState<TajeerApp> {
     final theme = ref.watch(themeSelectionProvider);
 
     return MaterialApp.router(
-      title: 'Tajeer AI',
+      title: 'TajeerAi',
       debugShowCheckedModeBanner: false,
       routerConfig: router,
       theme: AppTheme.light(preset: theme.preset),
