@@ -131,11 +131,22 @@ final class Message {
   ///
   /// The provider's type vocabulary grows server-side, so an unknown type has
   /// to degrade to a placeholder rather than crash a list.
-  bool get isRenderable => type == 'text' || body != null || mediaUrl != null;
+  bool get isRenderable =>
+      type == 'text' ||
+      body != null ||
+      mediaUrl != null ||
+      localMediaPath != null;
+
+  bool get hasMedia =>
+      type != 'text' && (mediaUrl != null || localMediaPath != null);
 
   Message copyWith({
     String? id,
     MessageState? state,
+    String? type,
+    String? body,
+    String? mediaUrl,
+    String? localMediaPath,
     String? externalId,
     String? failureReason,
     DateTime? updatedAt,
@@ -148,10 +159,10 @@ final class Message {
       clientMessageId: clientMessageId,
       direction: direction,
       state: state ?? this.state,
-      type: type,
-      body: body,
-      mediaUrl: mediaUrl,
-      localMediaPath: localMediaPath,
+      type: type ?? this.type,
+      body: body ?? this.body,
+      mediaUrl: mediaUrl ?? this.mediaUrl,
+      localMediaPath: localMediaPath ?? this.localMediaPath,
       authorName: authorName,
       authorId: authorId,
       isFromBot: isFromBot,

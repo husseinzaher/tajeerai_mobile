@@ -2,6 +2,7 @@ import '../../../../failures/app_failure.dart';
 import '../entities/user.dart';
 import '../repositories/auth_repository.dart';
 import '../value_objects/login_identifier.dart';
+import '../value_objects/login_phone_reader.dart';
 import '../value_objects/password.dart';
 import '../value_objects/session_renewal.dart';
 
@@ -53,7 +54,9 @@ class AuthService {
   }) {
     final fieldErrors = <String, List<String>>{};
 
-    final parsedIdentifier = LoginIdentifier.parse(identifier);
+    final parsedIdentifier = LoginIdentifier.parse(
+      LoginPhoneReader.resolveForSubmit(identifier),
+    );
     final parsedPassword = Password.parse(password);
 
     if (parsedIdentifier is InvalidLoginIdentifier) {

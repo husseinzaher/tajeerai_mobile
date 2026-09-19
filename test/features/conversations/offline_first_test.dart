@@ -16,6 +16,7 @@ import 'package:tajeerai_mobile/infrastructure/realtime/socket_event.dart';
 
 import '../../support/fixed_clock.dart';
 import '../../support/test_database.dart';
+import 'application/fakes/fake_conversation_media_remote.dart';
 import 'application/fakes/fake_conversation_remote.dart';
 
 /// End-to-end offline-first behaviour.
@@ -72,6 +73,7 @@ void main() {
       outbox: database.outboxDao,
       messages: messages,
       remote: remote,
+      media: FakeConversationMediaRemote(),
       logger: logger,
       clock: clock.call,
       random: SeededRandom(),

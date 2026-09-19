@@ -13,7 +13,9 @@ import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/domain/services/auth_service.dart';
 import '../../features/auth/realtime/auth_socket_credentials.dart';
 import '../../features/conversations/application/coordinators/conversation_sync_coordinator.dart';
+import '../../features/conversations/application/coordinators/message_media_coordinator.dart';
 import '../../features/conversations/application/coordinators/outbox_coordinator.dart';
+import '../../features/conversations/data/remote/conversation_media_remote_data_source.dart';
 import '../../features/conversations/data/remote/conversation_remote_data_source.dart';
 import '../../features/conversations/data/repositories/conversation_repository_impl.dart';
 import '../../features/conversations/data/repositories/message_repository_impl.dart';
@@ -279,6 +281,12 @@ conversationRemoteDataSourceProvider = Provider<ConversationRemoteDataSource>(
   (ref) => ConversationRemoteDataSource(ref.watch(socketManagerProvider)),
 );
 
+final Provider<ConversationMediaRemoteDataSource>
+conversationMediaRemoteDataSourceProvider =
+    Provider<ConversationMediaRemoteDataSource>(
+      (ref) => ConversationMediaRemoteDataSource(ref.watch(httpClientProvider)),
+    );
+
 final Provider<ConversationRepository> conversationRepositoryProvider =
     Provider<ConversationRepository>((ref) {
       return ConversationRepositoryImpl(
@@ -297,6 +305,16 @@ final Provider<MessageRepository> messageRepositoryProvider =
         outbox: database.outboxDao,
         remote: ref.watch(conversationRemoteDataSourceProvider),
         logger: ref.watch(databaseLoggerProvider),
+      );
+    });
+
+final Provider<MessageMediaCoordinator> messageMediaCoordinatorProvider =
+    Provider<MessageMediaCoordinator>((ref) {
+      return MessageMediaCoordinator(
+        messages: ref.watch(messageRepositoryProvider),
+        remote: ref.watch(conversationMediaRemoteDataSourceProvider),
+        storage: ref.watch(fileStorageProvider),
+        logger: ref.watch(syncLoggerProvider),
       );
     });
 
@@ -334,6 +352,7 @@ final Provider<OutboxCoordinator> outboxCoordinatorProvider =
         outbox: database.outboxDao,
         messages: ref.watch(messageRepositoryProvider),
         remote: ref.watch(conversationRemoteDataSourceProvider),
+        media: ref.watch(conversationMediaRemoteDataSourceProvider),
         logger: ref.watch(syncLoggerProvider),
       );
 

@@ -1,12 +1,18 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../app/bootstrap/dependencies.dart';
 import '../../../../app/localization/translations/app_strings.dart';
 import '../../../../design_system/design_system.dart';
 import '../../domain/entities/conversation.dart';
 import '../../domain/entities/message.dart';
 import '../controllers/conversation_thread_controller.dart';
+import '../helpers/conversation_audio_controller.dart';
+import '../helpers/conversation_media_picker.dart';
+import '../helpers/conversation_voice_recorder.dart';
 import '../widgets/async_view_state.dart';
 import '../widgets/conversation_view_data.dart';
 import '../widgets/message_view_data.dart';
@@ -17,12 +23,6 @@ import '../widgets/message_view_data.dart';
 /// socket appears here because the realtime handler wrote a row and the
 /// reactive query re-emitted -- this screen has no socket subscription and no
 /// message list of its own to keep in step.
-///
-/// Composition, and nothing else: the header, the thread, the composer and the
-/// long-press menu are the design system's. What this screen owns is which
-/// actions exist. Today a member can send text, copy, retry and discard; the
-/// composer's paperclip, microphone and reply strip appear the day the send
-/// path can carry a file, a voice note or a reply.
 class ConversationScreen extends ConsumerStatefulWidget {
   const ConversationScreen({required this.conversationId, super.key});
 
@@ -35,14 +35,33 @@ class ConversationScreen extends ConsumerStatefulWidget {
 class _ConversationScreenState extends ConsumerState<ConversationScreen> {
   final ScrollController _scroll = ScrollController();
   final AppComposerController _composer = AppComposerController();
+  late final ConversationVoiceRecorder _voiceRecorder;
+  late final ConversationAudioController _audio;
 
-  /// What the send path carries today: words.
-  static const AppChannelCapabilities _capabilities =
-      AppChannelCapabilities.textOnly;
+  /// Matches the WhatsApp channel capability set until channel metadata
+  /// arrives with the conversation.
+  static const AppChannelCapabilities _capabilities = AppChannelCapabilities(
+    text: true,
+    images: true,
+    video: true,
+    audio: true,
+    documents: true,
+  );
+
+  bool _recording = false;
+  Duration _recordingElapsed = Duration.zero;
 
   @override
   void initState() {
     super.initState();
+    _voiceRecorder = ConversationVoiceRecorder()
+      ..onElapsed = (Duration elapsed) {
+        if (mounted) {
+          setState(() => _recordingElapsed = elapsed);
+        }
+      };
+    _audio = ConversationAudioController();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref
           .read(
@@ -57,6 +76,8 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
   void dispose() {
     _scroll.dispose();
     _composer.dispose();
+    unawaited(_voiceRecorder.dispose());
+    unawaited(_audio.dispose());
     super.dispose();
   }
 
@@ -75,8 +96,17 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
       conversationThreadControllerProvider(widget.conversationId),
     );
 
-    // Composer failures are transient notices, not a screen state -- the thread
-    // behind them is still perfectly readable.
+    ref.listen(threadMessagesProvider(widget.conversationId), (
+      AsyncValue<List<Message>>? previous,
+      AsyncValue<List<Message>> next,
+    ) {
+      next.whenData((List<Message> items) {
+        unawaited(
+          ref.read(messageMediaCoordinatorProvider).cacheAll(items),
+        );
+      });
+    });
+
     ref.listen(conversationThreadControllerProvider(widget.conversationId), (
       ComposerState? previous,
       ComposerState next,
@@ -112,6 +142,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
         emptyTitle: strings.noMessages,
         emptyDescription: strings.sendFirstMessage,
         controller: _scroll,
+        audioController: _audio,
         onRetry: (AppMessageData data) => _act(data, _thread.retry),
         onDiscard: (AppMessageData data) => _act(data, _thread.discard),
         onLongPress: (AppMessageData data) => AppMessageActions.show(
@@ -130,9 +161,60 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
             : strings.archivedReadOnly,
         sending: composer.isSending,
         hintText: strings.writeMessage,
-        onSend: (AppComposerDraft draft) => _thread.send(draft.text),
+        onSend: _thread.sendDraft,
+        onAttach: _attach,
+        recording: _recording,
+        recordingElapsed: _recordingElapsed,
+        onRecordStart: _startRecording,
+        onRecordStop: _stopRecording,
+        onRecordCancel: _cancelRecording,
       ),
     );
+  }
+
+  Future<void> _attach() async {
+    final AppAttachmentData? picked = await ConversationMediaPicker.pick();
+
+    if (picked != null && mounted) {
+      _composer.addAttachment(picked);
+    }
+  }
+
+  Future<void> _startRecording() async {
+    final bool started = await _voiceRecorder.start();
+
+    if (!started || !mounted) return;
+
+    setState(() {
+      _recording = true;
+      _recordingElapsed = Duration.zero;
+    });
+  }
+
+  Future<void> _stopRecording() async {
+    final String? path = await _voiceRecorder.stop();
+
+    if (mounted) {
+      setState(() {
+        _recording = false;
+        _recordingElapsed = Duration.zero;
+      });
+    }
+
+    if (path != null) {
+      await _thread.sendVoice(path);
+    }
+  }
+
+  Future<void> _cancelRecording() async {
+    await _voiceRecorder.cancel();
+
+    if (mounted) {
+      setState(() {
+        _recording = false;
+        _recordingElapsed = Duration.zero;
+      });
+    }
   }
 
   static String _describe(ComposerError error, AppStrings strings) =>
@@ -143,7 +225,6 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
         ComposerError.unknown => strings.sendFailed,
       };
 
-  /// Runs [action] on the domain message a bubble was drawn from.
   void _act(AppMessageData data, Future<void> Function(Message) action) {
     final Message? message = ref
         .read(threadMessagesProvider(widget.conversationId))

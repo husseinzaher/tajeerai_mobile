@@ -1,9 +1,11 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../app/bootstrap/dependencies.dart';
+import '../../../../design_system/messaging/composer.dart';
 import '../../../../failures/app_failure.dart';
 import '../../domain/entities/conversation.dart';
 import '../../domain/entities/message.dart';
+import '../helpers/conversation_media_picker.dart';
 
 part 'conversation_thread_controller.g.dart';
 
@@ -103,7 +105,39 @@ class ConversationThreadController extends _$ConversationThreadController {
   /// bubble appears at once, in `pending`, and the outbox delivers it whenever
   /// the connection allows. Offline is not a special case here; it is the
   /// normal path with a longer wait.
-  Future<bool> send(String body) async {
+  Future<bool> send(String body) => sendDraft(AppComposerDraft(text: body));
+
+  Future<bool> sendDraft(AppComposerDraft draft) async {
+    if (state.isSending) return false;
+
+    if (draft.attachments.isNotEmpty) {
+      final attachment = draft.attachments.first;
+      final String? path = attachment.localPath;
+
+      if (path == null || path.isEmpty) return false;
+
+      return _sendMedia(
+        type: ConversationMediaPicker.messageTypeFor(attachment),
+        localPath: path,
+        filename: attachment.name ?? 'attachment',
+        mimeType: attachment.mimeType ?? 'application/octet-stream',
+        caption: draft.text,
+      );
+    }
+
+    return _sendText(draft.text);
+  }
+
+  Future<bool> sendVoice(String localPath) {
+    return _sendMedia(
+      type: 'audio',
+      localPath: localPath,
+      filename: 'voice.m4a',
+      mimeType: 'audio/mp4',
+    );
+  }
+
+  Future<bool> _sendText(String body) async {
     if (state.isSending) return false;
 
     state = state.copyWith(isSending: true, clearError: true);
@@ -126,9 +160,52 @@ class ConversationThreadController extends _$ConversationThreadController {
 
       state = state.copyWith(isSending: false);
 
-      // Nudge the queue. It would drain on its own on the next reconnect;
-      // doing it now is what makes a message sent while online leave
-      // immediately rather than on a timer.
+      await ref.read(outboxCoordinatorProvider).drain();
+
+      return true;
+    } on AppFailure catch (failure) {
+      state = state.copyWith(
+        isSending: false,
+        error: composerErrorFor(failure),
+      );
+
+      return false;
+    }
+  }
+
+  Future<bool> _sendMedia({
+    required String type,
+    required String localPath,
+    required String filename,
+    required String mimeType,
+    String? caption,
+  }) async {
+    if (state.isSending) return false;
+
+    state = state.copyWith(isSending: true, clearError: true);
+
+    try {
+      final conversation = await ref
+          .read(conversationRepositoryProvider)
+          .findConversation(conversationId);
+
+      final session = ref.read(sessionCapabilityProvider);
+
+      await ref
+          .read(messageServiceProvider)
+          .composeMedia(
+            conversation: conversation,
+            type: type,
+            localPath: localPath,
+            filename: filename,
+            mimeType: mimeType,
+            rawCaption: caption,
+            authorId: session.currentUserId,
+            authorName: session.currentSession?.user.name,
+          );
+
+      state = state.copyWith(isSending: false);
+
       await ref.read(outboxCoordinatorProvider).drain();
 
       return true;

@@ -16,6 +16,7 @@ import '../../../support/fixed_clock.dart';
 import '../../../support/test_database.dart';
 import '../domain/fakes/fake_conversation_repository.dart';
 import '../domain/fakes/fake_message_repository.dart';
+import 'fakes/fake_conversation_media_remote.dart';
 import 'fakes/fake_conversation_remote.dart';
 
 void main() {
@@ -35,6 +36,7 @@ void main() {
       outbox: database.outboxDao,
       messages: FakeMessageRepository(),
       remote: FakeConversationRemote(),
+      media: FakeConversationMediaRemote(),
       logger: Logger('test', verbose: false),
       clock: clock.call,
       random: SeededRandom(),

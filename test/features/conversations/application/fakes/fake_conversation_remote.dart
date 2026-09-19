@@ -32,6 +32,9 @@ class FakeConversationRemote extends ConversationRemoteDataSource {
 
   String nextMessageId = 'server-1';
   bool nextDeduplicated = false;
+  String? lastSendType;
+  String? lastMediaId;
+  String? lastSendBody;
 
   List<Conversation> nextConversations = const <Conversation>[];
   List<Message> nextMessages = const <Message>[];
@@ -40,11 +43,18 @@ class FakeConversationRemote extends ConversationRemoteDataSource {
   @override
   Future<MessageSendResult> sendMessage({
     required String conversationId,
-    required String body,
     required String clientMessageId,
+    String type = 'text',
+    String? body,
+    String? mediaId,
+    String? filename,
+    String? mimeType,
   }) async {
     sendAttempts += 1;
     attemptedClientMessageIds.add(clientMessageId);
+    lastSendType = type;
+    lastMediaId = mediaId;
+    lastSendBody = body;
 
     final failure = failureToThrow;
 

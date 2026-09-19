@@ -15,7 +15,13 @@ import 'package:tajeerai_mobile/design_system/shell/toolbar.dart';
 import 'package:tajeerai_mobile/failures/app_failure.dart';
 import 'package:tajeerai_mobile/features/conversations/domain/entities/conversation.dart';
 import 'package:tajeerai_mobile/features/conversations/domain/entities/message.dart';
+import 'package:tajeerai_mobile/features/conversations/application/coordinators/message_media_coordinator.dart';
 import 'package:tajeerai_mobile/features/conversations/presentation/controllers/conversation_thread_controller.dart';
+import 'package:tajeerai_mobile/infrastructure/logging/logger.dart';
+import 'package:tajeerai_mobile/infrastructure/storage/file_storage.dart';
+
+import '../application/fakes/fake_conversation_media_remote.dart';
+import '../domain/fakes/fake_message_repository.dart';
 import 'package:tajeerai_mobile/features/conversations/presentation/screens/conversation_screen.dart';
 import 'package:tajeerai_mobile/infrastructure/storage/preferences_storage.dart';
 
@@ -40,6 +46,15 @@ class _Thread extends ConversationThreadController {
     sent.add(body);
     return accept;
   }
+
+  @override
+  Future<bool> sendDraft(AppComposerDraft draft) async {
+    sent.add(draft.text);
+    return accept;
+  }
+
+  @override
+  Future<void> loadInitial() async {}
 
   @override
   Future<void> retry(Message message) async {
@@ -81,6 +96,7 @@ void main() {
   late PreferencesStorage preferences;
   late StreamController<List<Message>> messages;
   late StreamController<Conversation?> conversation;
+  late FakeMessageRepository messageRepository;
   _Thread? thread;
 
   Future<void> storeLocale(String code) async {
@@ -94,6 +110,7 @@ void main() {
     // Broadcast, because a retry re-subscribes to the same source.
     messages = StreamController<List<Message>>.broadcast();
     conversation = StreamController<Conversation?>.broadcast();
+    messageRepository = FakeMessageRepository();
     thread = null;
   });
 
@@ -110,6 +127,15 @@ void main() {
           .overrideWith((Ref ref) => conversation.stream),
       conversationThreadControllerProvider(_id)
           .overrideWith(() => thread = _Thread()),
+      messageRepositoryProvider.overrideWithValue(messageRepository),
+      messageMediaCoordinatorProvider.overrideWithValue(
+        MessageMediaCoordinator(
+          messages: messageRepository,
+          remote: FakeConversationMediaRemote(),
+          storage: const FileStorage(),
+          logger: Logger('test', verbose: false),
+        ),
+      ),
     ],
     child: MaterialApp(
       debugShowCheckedModeBanner: false,

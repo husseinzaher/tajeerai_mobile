@@ -32,6 +32,7 @@ abstract final class ConversationRealtimeEvents {
     messageCreated,
     messageUpdated,
     messageRemoved,
+    mediaReady,
     conversationCreated,
     conversationUpdated,
     conversationStateChanged,

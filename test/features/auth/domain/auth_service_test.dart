@@ -171,6 +171,17 @@ void main() {
       expect(repository.signInCalls, 1);
     });
 
+    test('normalises a phone identifier to E.164 before signing in', () async {
+      repository.nextSession = _session();
+
+      await service.signIn(
+        identifier: '201008755187',
+        password: 'secret',
+      );
+
+      expect(repository.lastIdentifier, '+201008755187');
+    });
+
     test('passes the remember flag through to the repository', () async {
       repository.nextSession = _session();
 

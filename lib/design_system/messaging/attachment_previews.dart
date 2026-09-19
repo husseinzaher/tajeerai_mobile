@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -58,6 +59,7 @@ class AppImagePreview extends StatelessWidget {
   Widget build(BuildContext context) {
     final TajeerColors colors = context.colors;
     final String? url = attachment.url;
+    final String? localPath = attachment.localPath;
 
     Widget placeholder(IconData icon) => Container(
       width: width,
@@ -67,26 +69,38 @@ class AppImagePreview extends StatelessWidget {
       child: Icon(icon, size: 28, color: colors.textMuted),
     );
 
-    final Widget picture = url == null
-        // Still on this device: nothing to fetch yet.
-        ? placeholder(LucideIcons.image)
-        : Image.network(
-            url,
-            width: width,
-            height: height,
-            fit: BoxFit.cover,
-            loadingBuilder:
-                (BuildContext context, Widget child, ImageChunkEvent? chunk) =>
-                    chunk == null
-                    ? child
-                    : AppSkeleton(width: width, height: height),
-            // A broken picture must not blank the bubble it sits in.
-            errorBuilder: (
-              BuildContext context,
-              Object error,
-              StackTrace? stack,
-            ) => placeholder(LucideIcons.imageOff),
-          );
+    final Widget picture = switch ((localPath, url)) {
+      (final String path, _) when File(path).existsSync() => Image.file(
+        File(path),
+        width: width,
+        height: height,
+        fit: BoxFit.cover,
+        errorBuilder: (
+          BuildContext context,
+          Object error,
+          StackTrace? stack,
+        ) =>
+            placeholder(LucideIcons.imageOff),
+      ),
+      (_, final String networkUrl) => Image.network(
+        networkUrl,
+        width: width,
+        height: height,
+        fit: BoxFit.cover,
+        loadingBuilder:
+            (BuildContext context, Widget child, ImageChunkEvent? chunk) =>
+                chunk == null
+                ? child
+                : AppSkeleton(width: width, height: height),
+        errorBuilder: (
+          BuildContext context,
+          Object error,
+          StackTrace? stack,
+        ) =>
+            placeholder(LucideIcons.imageOff),
+      ),
+      _ => placeholder(LucideIcons.image),
+    };
 
     return Semantics(
       container: true,

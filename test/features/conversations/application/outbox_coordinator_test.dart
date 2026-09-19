@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tajeerai_mobile/failures/app_failure.dart';
 import 'package:tajeerai_mobile/features/conversations/application/coordinators/outbox_coordinator.dart';
@@ -11,11 +14,13 @@ import 'package:tajeerai_mobile/infrastructure/logging/logger.dart';
 import '../../../support/fixed_clock.dart';
 import '../../../support/test_database.dart';
 import '../domain/fakes/fake_message_repository.dart';
+import 'fakes/fake_conversation_media_remote.dart';
 import 'fakes/fake_conversation_remote.dart';
 
 void main() {
   late AppDatabase database;
   late FakeConversationRemote remote;
+  late FakeConversationMediaRemote media;
   late FakeMessageRepository messages;
   late OutboxCoordinator coordinator;
   late FixedClock clock;
@@ -23,6 +28,7 @@ void main() {
   setUp(() {
     database = openTestDatabase();
     remote = FakeConversationRemote();
+    media = FakeConversationMediaRemote();
     messages = FakeMessageRepository();
     clock = FixedClock(testEpoch);
 
@@ -31,6 +37,7 @@ void main() {
       outbox: database.outboxDao,
       messages: messages,
       remote: remote,
+      media: media,
       logger: Logger('test', verbose: false),
       clock: clock.call,
       // A seeded generator makes the jittered backoff deterministic, so the
@@ -106,6 +113,34 @@ void main() {
       await subscription.cancel();
 
       expect(events.whereType<ConversationMessageArrived>(), hasLength(1));
+    });
+
+    test('uploads media before sending the socket command', () async {
+      final File file = File(
+        '${Directory.systemTemp.path}/outbox-media-${clock().millisecondsSinceEpoch}.jpg',
+      );
+      await file.writeAsBytes(<int>[1, 2, 3]);
+
+      await database.outboxDao.enqueue(
+        id: 'client-media',
+        command: ConversationCommands.messageSend,
+        payload: jsonEncode(<String, Object?>{
+          'conversationId': 'c1',
+          'clientMessageId': 'client-media',
+          'type': 'image',
+          'localPath': file.path,
+          'filename': 'photo.jpg',
+          'mimeType': 'image/jpeg',
+        }),
+        scopeId: 'c1',
+        now: clock(),
+      );
+
+      await coordinator.drain();
+
+      expect(media.uploadCalls, 1);
+      expect(remote.lastMediaId, 'media-1');
+      expect(remote.lastSendType, 'image');
     });
   });
 

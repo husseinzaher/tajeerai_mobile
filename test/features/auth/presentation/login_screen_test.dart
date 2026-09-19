@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tajeerai_mobile/app/bootstrap/dependencies.dart';
 import 'package:tajeerai_mobile/design_system/auth/social_button.dart';
@@ -400,6 +401,34 @@ void main() {
 
       expect(find.text('مرحباً بعودتك'), findsOneWidget);
       expect(find.text('تسجيل الدخول'), findsOneWidget);
+    });
+
+    testWidgets('rejects Arabic characters in the identifier field', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(subject());
+      await tester.pump();
+
+      await tester.enterText(find.byType(AppTextField).first, 'مرحبا');
+      await tester.pump();
+
+      expect(find.text('مرحبا'), findsNothing);
+    });
+
+    testWidgets('switches to the phone keypad for a phone-shaped identifier', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(subject());
+      await tester.pump();
+
+      await tester.enterText(find.byType(AppTextField).first, '2010');
+      await tester.pump();
+
+      final AppTextField field = tester.widget<AppTextField>(
+        find.byType(AppTextField).first,
+      );
+      expect(field.keyboardType, TextInputType.phone);
+      expect(find.byIcon(LucideIcons.phone), findsOneWidget);
     });
 
     testWidgets('email and password stay left-to-right in Arabic', (

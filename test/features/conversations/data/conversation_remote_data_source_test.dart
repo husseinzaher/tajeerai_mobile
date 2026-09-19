@@ -215,6 +215,28 @@ void main() {
       expect(result.deduplicated, isTrue);
     });
 
+    test('carries media fields for an attachment send', () async {
+      client.nextAck = const SocketAckSuccess(<String, Object?>{
+        'messageId': 'server-1',
+        'deduplicated': false,
+      });
+
+      await remote.sendMessage(
+        conversationId: 'c1',
+        clientMessageId: 'client-1',
+        type: 'image',
+        mediaId: 'media-1',
+        filename: 'photo.jpg',
+        mimeType: 'image/jpeg',
+        body: 'caption',
+      );
+
+      expect(lastCommand().payload['type'], 'image');
+      expect(lastCommand().payload['mediaId'], 'media-1');
+      expect(lastCommand().payload['filename'], 'photo.jpg');
+      expect(lastCommand().payload['body'], 'caption');
+    });
+
     test('rejects an acknowledgement with no message id', () async {
       client.nextAck = const SocketAckSuccess(<String, Object?>{});
 

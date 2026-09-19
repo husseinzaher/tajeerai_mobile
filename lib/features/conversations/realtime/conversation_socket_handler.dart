@@ -172,6 +172,24 @@ class ConversationSocketHandler {
 
         return true;
 
+      case ConversationRealtimeEvents.mediaReady:
+        final messageId = event.payload['messageId']?.toString();
+        final mediaUrl = event.payload['mediaUrl']?.toString();
+        final type = event.payload['type']?.toString();
+
+        if (messageId == null || mediaUrl == null || mediaUrl.isEmpty) {
+          throw const FormatException('mediaReady was incomplete.');
+        }
+
+        await _messages.updateMedia(
+          messageId: messageId,
+          mediaUrl: mediaUrl,
+          type: type,
+          eventAt: occurredAt,
+        );
+
+        return true;
+
       case ConversationRealtimeEvents.conversationCreated:
       case ConversationRealtimeEvents.conversationUpdated:
       case ConversationRealtimeEvents.conversationStateChanged:

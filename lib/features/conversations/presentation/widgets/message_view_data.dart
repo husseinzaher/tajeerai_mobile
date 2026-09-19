@@ -1,3 +1,7 @@
+import 'dart:io';
+
+import 'package:path/path.dart' as p;
+
 import '../../../../design_system/design_system.dart';
 import '../../domain/entities/message.dart';
 
@@ -16,10 +20,23 @@ extension MessagePresentation on Message {
     status: isOutbound ? state.toStatus() : AppMessageStatus.none,
     authorId: authorId,
     isFromBot: isFromBot,
-    attachment: mediaUrl == null && localMediaPath == null
-        ? null
-        : AppAttachmentData(url: mediaUrl, localPath: localMediaPath),
+    attachment: _attachment,
   );
+
+  AppAttachmentData? get _attachment {
+    if (mediaUrl == null && localMediaPath == null) return null;
+
+    final String? path = localMediaPath;
+    final File? file = path == null ? null : File(path);
+
+    return AppAttachmentData(
+      url: mediaUrl,
+      localPath: localMediaPath,
+      name: path == null ? null : p.basename(path),
+      mimeType: path == null ? null : _mimeFromPath(path),
+      sizeBytes: file != null && file.existsSync() ? file.lengthSync() : null,
+    );
+  }
 
   /// The provider's type vocabulary grows server-side, so an unknown type
   /// degrades — to text if there are words, to a file if there is media, and
@@ -56,4 +73,20 @@ extension MessageStatePresentation on MessageState {
 String? _present(String? value) {
   final String? trimmed = value?.trim();
   return trimmed == null || trimmed.isEmpty ? null : value;
+}
+
+String? _mimeFromPath(String path) {
+  return switch (p.extension(path).toLowerCase()) {
+    '.jpg' || '.jpeg' => 'image/jpeg',
+    '.png' => 'image/png',
+    '.gif' => 'image/gif',
+    '.webp' => 'image/webp',
+    '.mp4' => 'video/mp4',
+    '.mov' => 'video/quicktime',
+    '.pdf' => 'application/pdf',
+    '.mp3' => 'audio/mpeg',
+    '.m4a' => 'audio/mp4',
+    '.wav' => 'audio/wav',
+    _ => null,
+  };
 }

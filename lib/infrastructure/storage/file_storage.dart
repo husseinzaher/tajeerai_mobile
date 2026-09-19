@@ -50,4 +50,12 @@ class FileStorage {
       await file.delete();
     }
   }
+
+  /// Writes bytes to the media cache and returns the absolute path.
+  Future<String> writeCachedMedia(String fileName, List<int> bytes) async {
+    final path = await cachedMediaPath(fileName);
+    await File(path).writeAsBytes(bytes, flush: true);
+
+    return path;
+  }
 }

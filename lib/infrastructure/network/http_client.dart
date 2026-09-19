@@ -1,4 +1,5 @@
 import 'dart:io' show HttpDate;
+import 'dart:typed_data';
 
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
@@ -134,6 +135,77 @@ class HttpClient {
 
   Future<Map<String, Object?>> patch(String path, {Object? body}) {
     return _send(path, () => _dio.patch<Object?>(path, data: body));
+  }
+
+  /// Multipart upload for a single file field.
+  ///
+  /// Used for conversation media (`POST /v1/conversations/:id/media`). The
+  /// backend expects the field name `file`, matching the web inbox composer.
+  Future<Map<String, Object?>> postMultipart(
+    String path, {
+    required String filePath,
+    required String filename,
+    String? mimeType,
+    String fieldName = 'file',
+  }) {
+    return _send(
+      path,
+      () async {
+        final formData = FormData.fromMap(<String, Object?>{
+          fieldName: await MultipartFile.fromFile(
+            filePath,
+            filename: filename,
+          ),
+        });
+
+        return _dio.post<Object?>(path, data: formData);
+      },
+    );
+  }
+
+  /// Downloads a binary body, such as a message attachment.
+  Future<Uint8List> getBytes(String path) async {
+    Response<Object?> response = await _attempt(
+      () => _dio.get<Object?>(
+        path,
+        options: Options(responseType: ResponseType.bytes),
+      ),
+    );
+
+    final Future<RefreshOutcome> Function()? renew = _renewCredential;
+
+    if (response.statusCode == 401 &&
+        renew != null &&
+        !path.startsWith(_authPrefix)) {
+      if (await renew() is TokenRefreshed) {
+        response = await _attempt(
+          () => _dio.get<Object?>(
+            path,
+            options: Options(responseType: ResponseType.bytes),
+          ),
+        );
+      }
+    }
+
+    final status = response.statusCode ?? 0;
+
+    if (status >= 200 && status < 300) {
+      final data = response.data;
+
+      if (data is Uint8List) return data;
+      if (data is List<int>) return Uint8List.fromList(data);
+
+      return Uint8List(0);
+    }
+
+    if (status == 403) _onForbidden?.call();
+
+    throw HttpException(
+      message: _messageFrom(response.data) ?? 'Request failed.',
+      statusCode: status,
+      body: response.data,
+      retryAfter: status == 429 ? _retryAfter(response.headers) : null,
+    );
   }
 
   /// The absolute URL a relative API path resolves to.

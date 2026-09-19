@@ -144,15 +144,23 @@ class ConversationRemoteDataSource {
   /// acknowledgement safe.
   Future<MessageSendResult> sendMessage({
     required String conversationId,
-    required String body,
     required String clientMessageId,
+    String type = 'text',
+    String? body,
+    String? mediaId,
+    String? filename,
+    String? mimeType,
   }) async {
     final ack = await _send(
       SocketCommand(
         name: ConversationCommands.messageSend,
         payload: <String, Object?>{
           'conversationId': conversationId,
-          'body': body,
+          'type': type,
+          if (body != null && body.isNotEmpty) 'body': body,
+          if (mediaId != null) 'mediaId': mediaId,
+          if (filename != null) 'filename': filename,
+          if (mimeType != null) 'mimeType': mimeType,
           'clientMessageId': clientMessageId,
         },
       ),

@@ -9,6 +9,7 @@ import '../../../../infrastructure/logging/logger.dart';
 import '../../domain/entities/message.dart';
 import '../../domain/repositories/message_repository.dart';
 import '../../domain/value_objects/message_content.dart';
+import '../../domain/value_objects/outbound_media.dart';
 import '../../realtime/conversation_events.dart';
 import '../local/conversation_dao.dart';
 import '../local/conversation_tables.dart';
@@ -128,6 +129,97 @@ class MessageRepositoryImpl implements MessageRepository {
   }
 
   @override
+  Future<Message> enqueueOutboundMedia({
+    required String conversationId,
+    required OutboundMedia media,
+    required String clientMessageId,
+    String? authorId,
+    String? authorName,
+  }) async {
+    final now = _clock().toUtc();
+
+    final message = Message(
+      id: clientMessageId,
+      conversationId: conversationId,
+      clientMessageId: clientMessageId,
+      direction: MessageDirection.outbound,
+      state: MessageState.pending,
+      type: media.type,
+      body: media.caption,
+      localMediaPath: media.localPath,
+      authorId: authorId,
+      authorName: authorName,
+      createdAt: now,
+    );
+
+    try {
+      await _dao.transaction(() async {
+        await _dao.upsertMessage(_toCompanion(message));
+
+        await _outbox.enqueue(
+          id: clientMessageId,
+          command: ConversationCommands.messageSend,
+          payload: jsonEncode(<String, Object?>{
+            'conversationId': conversationId,
+            'clientMessageId': clientMessageId,
+            'type': media.type,
+            'localPath': media.localPath,
+            'filename': media.filename,
+            'mimeType': media.mimeType,
+            if (media.caption != null) 'body': media.caption,
+          }),
+          scopeId: conversationId,
+          now: now,
+        );
+
+        await _dao.touchWithMessage(
+          conversationId: conversationId,
+          preview: media.railPreview(),
+          messageAt: now,
+        );
+      });
+    } on Object catch (error, stackTrace) {
+      _logger.error(
+        'failed to queue outbound media',
+        error: error,
+        stackTrace: stackTrace,
+      );
+
+      throw DatabaseFailure(
+        message: 'The message could not be saved.',
+        cause: error,
+      );
+    }
+
+    return message;
+  }
+
+  @override
+  Future<void> updateMedia({
+    required String messageId,
+    String? mediaUrl,
+    String? localMediaPath,
+    String? type,
+    DateTime? eventAt,
+  }) async {
+    final changes = MessagesCompanion(
+      mediaUrl: mediaUrl == null ? const Value.absent() : Value<String?>(mediaUrl),
+      localMediaPath: localMediaPath == null
+          ? const Value.absent()
+          : Value<String?>(localMediaPath),
+      type: type == null ? const Value.absent() : Value<String>(type),
+      updatedAt: Value<DateTime?>(_clock().toUtc()),
+    );
+
+    await _dao.updateMessage(
+      messageId,
+      eventAt == null
+          ? changes
+          : changes.copyWith(lastEventAt: Value<DateTime?>(eventAt)),
+    );
+  }
+
+  @override
   Future<int> upsertAll(List<Message> messages, {DateTime? eventAt}) async {
     if (messages.isEmpty) return 0;
 
@@ -149,7 +241,7 @@ class MessageRepositoryImpl implements MessageRepository {
 
       await _dao.touchWithMessage(
         conversationId: newest.conversationId,
-        preview: _previewOf(newest.body),
+        preview: _previewOf(newest),
         messageAt: newest.createdAt,
       );
 
@@ -358,16 +450,32 @@ class MessageRepositoryImpl implements MessageRepository {
     return _dao.upsertMessage(_toCompanion(incoming), eventAt: eventAt);
   }
 
-  /// A one-line rail preview, or null when there is no text to preview.
-  static String? _previewOf(String? body) {
-    if (body == null) return null;
+  /// A one-line rail preview, or null when there is nothing to preview.
+  static String? _previewOf(Message message) {
+    final body = message.body;
 
-    final parsed = MessageContent.parse(body);
+    if (body != null) {
+      final parsed = MessageContent.parse(body);
 
-    return switch (parsed) {
-      ValidMessageContent(:final content) => content.preview(),
-      InvalidMessageContent() => null,
-    };
+      final preview = switch (parsed) {
+        ValidMessageContent(:final content) => content.preview(),
+        InvalidMessageContent() => null,
+      };
+
+      if (preview != null) return preview;
+    }
+
+    if (message.hasMedia || OutboundMedia.supportedTypes.contains(message.type)) {
+      return switch (message.type) {
+        'image' => 'Photo',
+        'video' => 'Video',
+        'audio' => 'Voice message',
+        'document' => 'Document',
+        _ => 'Attachment',
+      };
+    }
+
+    return null;
   }
 
   static Message _toEntity(MessageRow row) {

@@ -1,5 +1,6 @@
 import '../entities/message.dart';
 import '../value_objects/message_content.dart';
+import '../value_objects/outbound_media.dart';
 
 /// Data access for messages.
 ///
@@ -27,6 +28,15 @@ abstract interface class MessageRepository {
   Future<Message> enqueueOutbound({
     required String conversationId,
     required MessageContent content,
+    required String clientMessageId,
+    String? authorId,
+    String? authorName,
+  });
+
+  /// Writes an outbound media message locally and queues it in the outbox.
+  Future<Message> enqueueOutboundMedia({
+    required String conversationId,
+    required OutboundMedia media,
     required String clientMessageId,
     String? authorId,
     String? authorName,
@@ -68,6 +78,15 @@ abstract interface class MessageRepository {
 
   /// Removes a message the server never accepted.
   Future<void> remove(String messageId);
+
+  /// Patches media fields on an existing row.
+  Future<void> updateMedia({
+    required String messageId,
+    String? mediaUrl,
+    String? localMediaPath,
+    String? type,
+    DateTime? eventAt,
+  });
 
   Future<void> loadLatest({required String conversationId}) async {}
 }

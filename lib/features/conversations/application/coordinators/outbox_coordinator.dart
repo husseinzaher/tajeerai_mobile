@@ -7,6 +7,7 @@ import '../../../../infrastructure/database/app_database.dart';
 import '../../../../infrastructure/database/daos/outbox_dao.dart';
 import '../../../../infrastructure/database/tables/outbox_table.dart';
 import '../../../../infrastructure/logging/logger.dart';
+import '../../data/remote/conversation_media_port.dart';
 import '../../data/remote/conversation_remote_data_source.dart';
 import '../../domain/entities/message.dart';
 import '../../domain/repositories/message_repository.dart';
@@ -37,6 +38,7 @@ class OutboxCoordinator {
     required OutboxDao outbox,
     required MessageRepository messages,
     required ConversationRemoteDataSource remote,
+    required ConversationMediaPort media,
     required Logger logger,
     DateTime Function() clock = DateTime.now,
     Random? random,
@@ -44,6 +46,7 @@ class OutboxCoordinator {
        _outbox = outbox,
        _messages = messages,
        _remote = remote,
+       _media = media,
        _logger = logger,
        _clock = clock,
        _random = random ?? Random();
@@ -52,6 +55,7 @@ class OutboxCoordinator {
   final OutboxDao _outbox;
   final MessageRepository _messages;
   final ConversationRemoteDataSource _remote;
+  final ConversationMediaPort _media;
   final Logger _logger;
   final DateTime Function() _clock;
   final Random _random;
@@ -225,11 +229,23 @@ class OutboxCoordinator {
     Map<String, Object?> payload,
   ) async {
     final conversationId = payload['conversationId']?.toString();
-    final body = payload['body']?.toString();
     final clientMessageId = payload['clientMessageId']?.toString() ?? entry.id;
+    final type = payload['type']?.toString() ?? 'text';
+    final body = payload['body']?.toString();
+    final localPath = payload['localPath']?.toString();
+    final filename = payload['filename']?.toString();
+    final mimeType = payload['mimeType']?.toString();
 
-    if (conversationId == null || body == null) {
+    if (conversationId == null) {
       throw const FormatException('send entry was incomplete.');
+    }
+
+    if (type == 'text' && (body == null || body.isEmpty)) {
+      throw const FormatException('send entry was incomplete.');
+    }
+
+    if (type != 'text' && localPath == null) {
+      throw const FormatException('media send entry was incomplete.');
     }
 
     await _messages.updateState(
@@ -237,10 +253,29 @@ class OutboxCoordinator {
       state: MessageState.sending,
     );
 
+    var sendType = type;
+    String? mediaId = payload['mediaId']?.toString();
+
+    if (localPath != null && (mediaId == null || mediaId.isEmpty)) {
+      final uploaded = await _media.upload(
+        conversationId: conversationId,
+        filePath: localPath,
+        filename: filename ?? 'attachment',
+        mimeType: mimeType,
+      );
+
+      mediaId = uploaded.mediaId;
+      sendType = uploaded.type;
+    }
+
     final result = await _remote.sendMessage(
       conversationId: conversationId,
-      body: body,
       clientMessageId: clientMessageId,
+      type: sendType,
+      body: body,
+      mediaId: mediaId,
+      filename: filename,
+      mimeType: mimeType,
     );
 
     await _messages.reconcile(

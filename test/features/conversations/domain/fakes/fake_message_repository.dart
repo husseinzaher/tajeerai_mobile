@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:tajeerai_mobile/features/conversations/domain/entities/message.dart';
 import 'package:tajeerai_mobile/features/conversations/domain/repositories/message_repository.dart';
 import 'package:tajeerai_mobile/features/conversations/domain/value_objects/message_content.dart';
+import 'package:tajeerai_mobile/features/conversations/domain/value_objects/outbound_media.dart';
 
 /// Records a state update the service asked for.
 class StateUpdate {
@@ -108,6 +109,57 @@ class FakeMessageRepository implements MessageRepository {
     _messages[message.id] = message;
 
     return message;
+  }
+
+  @override
+  Future<Message> enqueueOutboundMedia({
+    required String conversationId,
+    required OutboundMedia media,
+    required String clientMessageId,
+    String? authorId,
+    String? authorName,
+  }) async {
+    final failure = failureToThrow;
+
+    if (failure != null) throw failure;
+
+    final message = Message(
+      id: clientMessageId,
+      conversationId: conversationId,
+      clientMessageId: clientMessageId,
+      direction: MessageDirection.outbound,
+      state: MessageState.pending,
+      type: media.type,
+      body: media.caption,
+      localMediaPath: media.localPath,
+      authorId: authorId,
+      authorName: authorName,
+      createdAt: DateTime.utc(2026, 3, 1, 12),
+    );
+
+    enqueued.add(message);
+    _messages[message.id] = message;
+
+    return message;
+  }
+
+  @override
+  Future<void> updateMedia({
+    required String messageId,
+    String? mediaUrl,
+    String? localMediaPath,
+    String? type,
+    DateTime? eventAt,
+  }) async {
+    final existing = _messages[messageId];
+
+    if (existing == null) return;
+
+    _messages[messageId] = existing.copyWith(
+      mediaUrl: mediaUrl,
+      localMediaPath: localMediaPath,
+      type: type,
+    );
   }
 
   @override

@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tajeerai_mobile/features/conversations/domain/entities/conversation.dart';
+import 'package:tajeerai_mobile/features/conversations/domain/entities/message.dart';
 import 'package:tajeerai_mobile/features/conversations/realtime/conversation_events.dart';
 import 'package:tajeerai_mobile/features/conversations/realtime/conversation_socket_handler.dart';
 import 'package:tajeerai_mobile/features/conversations/realtime/message_events.dart';
@@ -305,6 +306,41 @@ void main() {
       // Not an error: the conversation simply has not synced yet, and the sync
       // will carry the current count with it.
       expect(applied, isFalse);
+    });
+  });
+
+  group('message.media-ready', () {
+    test('updates the stored media url', () async {
+      messages.seed(<Message>[
+        Message(
+          id: 'm1',
+          conversationId: 'c1',
+          direction: MessageDirection.inbound,
+          state: MessageState.delivered,
+          type: 'image',
+          createdAt: testEpoch,
+        ),
+      ]);
+
+      final applied = await handler.handle(
+        SocketEvent.fromWire(
+          ConversationRealtimeEvents.mediaReady,
+          <String, Object?>{
+            'eventId': 'e-media',
+            'occurredAt': testEpoch.toIso8601String(),
+            'conversationId': 'c1',
+            'messageId': 'm1',
+            'mediaUrl': 'https://example.com/photo.jpg',
+            'type': 'image',
+          },
+        ),
+      );
+
+      expect(applied, isTrue);
+      expect(
+        (await messages.findMessage('m1'))!.mediaUrl,
+        'https://example.com/photo.jpg',
+      );
     });
   });
 

@@ -1,13 +1,17 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../app/localization/translations/app_strings.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../design_system/design_system.dart';
+import '../../domain/value_objects/login_phone_reader.dart';
 import '../controllers/login_controller.dart';
+import '../helpers/login_identifier_input_formatter.dart';
+import 'login_identifier_leading.dart';
 
 /// The sign-in form.
 ///
@@ -30,16 +34,26 @@ class _LoginFormState extends ConsumerState<LoginForm> {
   final FocusNode _passwordFocus = FocusNode();
 
   @override
+  void initState() {
+    super.initState();
+    _identifier.addListener(_identifierChanged);
+  }
+
+  void _identifierChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
   void dispose() {
-    _identifier.dispose();
+    _identifier
+      ..removeListener(_identifierChanged)
+      ..dispose();
     _password.dispose();
     _passwordFocus.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
-    // Unfocus first so the keyboard does not sit over the error the user is
-    // about to be shown.
     FocusScope.of(context).unfocus();
 
     await ref
@@ -57,6 +71,9 @@ class _LoginFormState extends ConsumerState<LoginForm> {
     );
     final AppStrings strings = ref.watch(appStringsProvider);
     final bool rtl = Directionality.of(context) == TextDirection.rtl;
+    final String identifierText = _identifier.text;
+    final bool asPhone = LoginPhoneReader.isPhoneShaped(identifierText);
+    final bool asEmail = identifierText.contains('@');
 
     return AutofillGroup(
       child: Column(
@@ -73,13 +90,18 @@ class _LoginFormState extends ConsumerState<LoginForm> {
             errorText: state.errorFor('identifier'),
             enabled: !state.isSubmitting,
             autofocus: true,
-            keyboardType: TextInputType.emailAddress,
+            keyboardType: asPhone
+                ? TextInputType.phone
+                : (asEmail ? TextInputType.emailAddress : TextInputType.text),
             textInputAction: TextInputAction.next,
             textDirection: TextDirection.ltr,
             autofillHints: const <String>[AutofillHints.username],
+            inputFormatters: const <TextInputFormatter>[
+              LoginIdentifierInputFormatter(),
+            ],
             onChanged: (_) => controller.clearErrors(),
             onSubmitted: (_) => _passwordFocus.requestFocus(),
-            leading: const Icon(LucideIcons.mail),
+            leading: LoginIdentifierLeading(value: identifierText),
           ),
           AppPasswordField(
             controller: _password,
@@ -92,9 +114,6 @@ class _LoginFormState extends ConsumerState<LoginForm> {
             onChanged: (_) => controller.clearErrors(),
             onSubmitted: (_) => _submit(),
           ),
-          // Maps to `loginSchema.remember`, which the backend uses to decide the
-          // refresh token's lifetime — so it changes how long the session
-          // survives, not merely whether a field is prefilled.
           AppCheckbox(
             value: state.remember,
             label: strings.rememberMe,
@@ -107,16 +126,10 @@ class _LoginFormState extends ConsumerState<LoginForm> {
             loading: state.isSubmitting,
             size: AppButtonSize.large,
             expand: true,
-            // Forward is toward the end of the line, which is the left in
-            // Arabic.
             trailing: Icon(
               rtl ? LucideIcons.arrowLeft : LucideIcons.arrowRight,
             ),
           ),
-          // Included only when there is something to draw. An empty child
-          // still costs one of the column's gaps, which is a stripe of dead
-          // space under the button on every deployment that offers no
-          // provider.
           if (providers.isNotEmpty)
             _SocialSignIn(providers: providers, busy: state.isSubmitting),
         ],
@@ -126,9 +139,6 @@ class _LoginFormState extends ConsumerState<LoginForm> {
 }
 
 /// The providers this deployment offers.
-///
-/// Only built when there is at least one - a fresh deployment names none,
-/// which is why the list is asked for rather than assumed.
 class _SocialSignIn extends ConsumerWidget {
   const _SocialSignIn({required this.providers, required this.busy});
 
@@ -165,5 +175,4 @@ class _SocialSignIn extends ConsumerWidget {
       ],
     );
   }
-
 }

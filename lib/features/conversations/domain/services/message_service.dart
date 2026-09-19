@@ -3,6 +3,7 @@ import '../entities/conversation.dart';
 import '../entities/message.dart';
 import '../repositories/message_repository.dart';
 import '../value_objects/message_content.dart';
+import '../value_objects/outbound_media.dart';
 import 'conversation_service.dart';
 
 /// Business rules about messages.
@@ -98,6 +99,48 @@ class MessageService {
     return _repository.enqueueOutbound(
       conversationId: conversation!.id,
       content: content,
+      clientMessageId: _newId(),
+      authorId: authorId,
+      authorName: authorName,
+    );
+  }
+
+  /// Validates and stores an outbound attachment or voice note.
+  Future<Message> composeMedia({
+    required Conversation? conversation,
+    required String type,
+    required String localPath,
+    required String filename,
+    required String mimeType,
+    String? rawCaption,
+    String? authorId,
+    String? authorName,
+  }) async {
+    final eligibility = _conversations.canSendTo(conversation);
+
+    if (!eligibility.isAllowed) {
+      throw ConflictFailure(
+        message: switch (eligibility) {
+          SendEligibility.archived =>
+            'This conversation is archived and cannot receive new messages.',
+          SendEligibility.unknownConversation =>
+            'This conversation is not available.',
+          SendEligibility.allowed => '',
+        },
+      );
+    }
+
+    final media = OutboundMedia.parse(
+      type: type,
+      localPath: localPath,
+      filename: filename,
+      mimeType: mimeType,
+      rawCaption: rawCaption,
+    );
+
+    return _repository.enqueueOutboundMedia(
+      conversationId: conversation!.id,
+      media: media,
       clientMessageId: _newId(),
       authorId: authorId,
       authorName: authorName,
