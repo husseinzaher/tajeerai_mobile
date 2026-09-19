@@ -441,6 +441,35 @@ void main() {
     });
   });
 
+  group('AppTextField', () {
+    testWidgets('keeps a forced direction for the hint on an Arabic screen', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        wrapWidget(
+          const AppTextField(
+            hintText: 'name@yourstore.com',
+            textDirection: TextDirection.ltr,
+          ),
+          textDirection: TextDirection.rtl,
+        ),
+      );
+
+      final TextField field = tester.widget<TextField>(find.byType(TextField));
+      expect(field.textDirection, TextDirection.ltr);
+      expect(field.textAlign, TextAlign.left);
+
+      final InputDecoration decoration =
+          tester.widget<InputDecorator>(find.byType(InputDecorator)).decoration;
+      expect(decoration.hintTextDirection, TextDirection.ltr);
+
+      final Directionality directionality = tester
+          .element(find.byType(TextField))
+          .findAncestorWidgetOfExactType<Directionality>()!;
+      expect(directionality.textDirection, TextDirection.ltr);
+    });
+  });
+
   group('AppPasswordField', () {
     testWidgets('the toggle flips both the obscuring and its own label', (
       WidgetTester tester,

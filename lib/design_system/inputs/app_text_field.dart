@@ -101,6 +101,20 @@ class AppTextField extends StatelessWidget {
 
   bool get _invalid => errorText != null && errorText!.isNotEmpty;
 
+  TextAlign get _textAlign => switch (textDirection) {
+    TextDirection.ltr => TextAlign.left,
+    TextDirection.rtl => TextAlign.right,
+    null => TextAlign.start,
+  };
+
+  Widget _directionalField(Widget field) {
+    if (textDirection == null) {
+      return field;
+    }
+
+    return Directionality(textDirection: textDirection!, child: field);
+  }
+
   @override
   Widget build(BuildContext context) {
     final TajeerColors colors = context.colors;
@@ -118,45 +132,49 @@ class AppTextField extends StatelessWidget {
           children: <Widget>[
             if (leading != null) _adornment(colors, leading!),
             Expanded(
-              child: TextField(
-                controller: controller,
-                focusNode: focusNode,
-                enabled: enabled,
-                readOnly: readOnly,
-                autofocus: autofocus,
-                obscureText: obscureText,
-                keyboardType: keyboardType,
-                textInputAction: textInputAction,
-                autofillHints: autofillHints,
-                onSubmitted: onSubmitted,
-                onChanged: onChanged,
-                maxLines: obscureText ? 1 : maxLines,
-                minLines: minLines,
-                textCapitalization: textCapitalization,
-                inputFormatters: inputFormatters,
-                textDirection: textDirection,
-                style: style,
-                cursorColor: colors.primary,
-                cursorWidth: 1.5,
-                decoration: InputDecoration(
-                  isDense: true,
-                  filled: false,
-                  hintText: hintText,
-                  hintStyle: style.copyWith(color: colors.textMuted),
-                  // The surface owns the border and the padding; the field
-                  // draws nothing of its own or the two would fight.
-                  border: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  focusedBorder: InputBorder.none,
-                  disabledBorder: InputBorder.none,
-                  errorBorder: InputBorder.none,
-                  focusedErrorBorder: InputBorder.none,
-                  contentPadding: const EdgeInsetsDirectional.symmetric(
-                    vertical: TajeerSpacing.sm,
+              child: _directionalField(
+                TextField(
+                  controller: controller,
+                  focusNode: focusNode,
+                  enabled: enabled,
+                  readOnly: readOnly,
+                  autofocus: autofocus,
+                  obscureText: obscureText,
+                  keyboardType: keyboardType,
+                  textInputAction: textInputAction,
+                  autofillHints: autofillHints,
+                  onSubmitted: onSubmitted,
+                  onChanged: onChanged,
+                  maxLines: obscureText ? 1 : maxLines,
+                  minLines: minLines,
+                  textCapitalization: textCapitalization,
+                  inputFormatters: inputFormatters,
+                  textDirection: textDirection,
+                  textAlign: _textAlign,
+                  style: style,
+                  cursorColor: colors.primary,
+                  cursorWidth: 1.5,
+                  decoration: InputDecoration(
+                    isDense: true,
+                    filled: false,
+                    hintText: hintText,
+                    hintTextDirection: textDirection,
+                    hintStyle: style.copyWith(color: colors.textMuted),
+                    // The surface owns the border and the padding; the field
+                    // draws nothing of its own or the two would fight.
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    disabledBorder: InputBorder.none,
+                    errorBorder: InputBorder.none,
+                    focusedErrorBorder: InputBorder.none,
+                    contentPadding: const EdgeInsetsDirectional.symmetric(
+                      vertical: TajeerSpacing.sm,
+                    ),
+                    // The message renders below, in the scaffold, so its
+                    // typography comes from the system's scale.
+                    errorStyle: const TextStyle(height: 0, fontSize: 0),
                   ),
-                  // The message renders below, in the scaffold, so its
-                  // typography comes from the system's scale.
-                  errorStyle: const TextStyle(height: 0, fontSize: 0),
                 ),
               ),
             ),
