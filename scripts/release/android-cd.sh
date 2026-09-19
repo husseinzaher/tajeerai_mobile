@@ -13,6 +13,7 @@
 #   ALLOW_DIRTY=1            Continue with uncommitted changes (default: fail)
 #   SKIP_VERIFY=1            Skip `make verify` (default: run verify)
 #   DRY_RUN=1                Validate and print planned steps only
+#   VERSION_AUTO=0           Use pubspec version as-is (default: auto next version)
 #   PUSH_TAG=0|1             Push a newly created release tag (mode defaults apply)
 #   UPLOAD=0|1               Upload AAB to Google Play (mode defaults apply)
 #   GOOGLE_PLAY_TRACK=...    Play track (default: internal)
@@ -30,6 +31,7 @@ CD_MODE="local"
 ALLOW_DIRTY="${ALLOW_DIRTY:-0}"
 SKIP_VERIFY="${SKIP_VERIFY:-0}"
 DRY_RUN="${DRY_RUN:-0}"
+VERSION_AUTO="${VERSION_AUTO:-1}"
 PUSH_TAG=""
 UPLOAD=""
 GOOGLE_PLAY_TRACK="${GOOGLE_PLAY_TRACK:-internal}"
@@ -37,6 +39,7 @@ GOOGLE_PLAY_TRACK="${GOOGLE_PLAY_TRACK:-internal}"
 TAG_ACTION="NONE"
 TAG_STATUS="UNKNOWN"
 TAG_PUSHED="no"
+PUBSPEC_ACTION="UNCHANGED"
 VERIFY_STATUS="SKIPPED"
 BUILD_STATUS="SKIPPED"
 AAB_STATUS="SKIPPED"
@@ -133,30 +136,62 @@ validate_clean_worktree() {
   fi
 }
 
+version_source() {
+  if [[ "$VERSION_AUTO" == "1" ]]; then
+    printf 'next\n'
+  else
+    printf 'pubspec\n'
+  fi
+}
+
 read_release_version() {
-  VERSION_NAME="$(bash "$ROOT/tool/resolve_android_version.sh" name pubspec)"
-  VERSION_CODE="$(bash "$ROOT/tool/resolve_android_version.sh" number pubspec)"
+  local source
+  source="$(version_source)"
+
+  VERSION_NAME="$(bash "$ROOT/tool/resolve_android_version.sh" name "$source")"
+  VERSION_CODE="$(bash "$ROOT/tool/resolve_android_version.sh" number "$source")"
   RELEASE_TAG="v${VERSION_NAME}"
 
   if [[ -z "$VERSION_NAME" || -z "$VERSION_CODE" ]]; then
-    fail "Version resolver returned empty values from pubspec.yaml."
+    fail "Version resolver returned empty values."
   fi
 
   if [[ ! "$RELEASE_TAG" =~ $RELEASE_TAG_PATTERN ]]; then
-    fail "Release version '$VERSION_NAME' is invalid. Expected MAJOR.MINOR.PATCH in pubspec.yaml."
+    fail "Release version '$VERSION_NAME' is invalid. Expected MAJOR.MINOR.PATCH."
   fi
+}
+
+sync_pubspec_version() {
+  local current current_semver target_line
+
+  if [[ "$VERSION_AUTO" != "1" ]]; then
+    PUBSPEC_ACTION="UNCHANGED"
+    return
+  fi
+
+  current="$(sed -n 's/^version:[[:space:]]*//p' "$ROOT/pubspec.yaml" | head -1)"
+  current_semver="${current%%+*}"
+  target_line="${VERSION_NAME}+1"
+
+  if [[ "$current" == "$target_line" ]]; then
+    PUBSPEC_ACTION="UNCHANGED"
+    return
+  fi
+
+  if [[ "$DRY_RUN" == "1" ]]; then
+    PUBSPEC_ACTION="WOULD UPDATE TO ${target_line}"
+    return
+  fi
+
+  sed -i "s/^version:.*/version: ${target_line}/" "$ROOT/pubspec.yaml"
+  git -C "$ROOT" add pubspec.yaml
+  git -C "$ROOT" commit -m "chore: bump version to ${VERSION_NAME}"
+  PUBSPEC_ACTION="UPDATED TO ${target_line}"
 }
 
 resolve_version() {
   read_release_version
-
-  local resolved_name resolved_code
-  resolved_name="$(bash "$ROOT/tool/resolve_android_version.sh" name pubspec)"
-  resolved_code="$(bash "$ROOT/tool/resolve_android_version.sh" number pubspec)"
-
-  if [[ "$resolved_name" != "$VERSION_NAME" || "$resolved_code" != "$VERSION_CODE" ]]; then
-    fail "Version resolver mismatch for pubspec release $VERSION_NAME."
-  fi
+  sync_pubspec_version
 }
 
 inspect_existing_tag() {
@@ -177,7 +212,7 @@ inspect_existing_tag() {
   fi
 
   TAG_STATUS="EXISTS (OTHER COMMIT)"
-  fail "Release tag $RELEASE_TAG already exists on commit ${tag_sha:0:7} but HEAD is ${head_sha:0:7}. Bump the version in pubspec.yaml before creating another release."
+  fail "Release tag $RELEASE_TAG already exists on commit ${tag_sha:0:7} but HEAD is ${head_sha:0:7}. Automatic version resolution should have avoided this; report a bug or set VERSION_AUTO=0 and bump pubspec.yaml manually."
 }
 
 configure_git_identity_for_tagging() {
@@ -309,6 +344,7 @@ upload_to_play() {
 print_dry_run_plan() {
   log ""
   log "Release version: $VERSION_NAME"
+  log "Pubspec:         $PUBSPEC_ACTION"
   log "Release tag:     $RELEASE_TAG"
   log "Tag status:      $TAG_STATUS"
   if [[ "$TAG_ACTION" == "WOULD CREATE ANNOTATED TAG" ]]; then
@@ -348,6 +384,7 @@ print_summary() {
   log "Tag:           $RELEASE_TAG"
   log "Version:       $VERSION_NAME"
   log "Version code:  $VERSION_CODE"
+  log "Pubspec:       $PUBSPEC_ACTION"
   if [[ "$DRY_RUN" == "1" ]]; then
     log "Tag status:    $TAG_STATUS"
     log "Tag action:    $TAG_ACTION"
@@ -393,8 +430,8 @@ main() {
   cd "$ROOT"
 
   validate_commands
-  validate_clean_worktree
   resolve_version
+  validate_clean_worktree
   ensure_release_tag
 
   if [[ "$DRY_RUN" == "1" ]]; then

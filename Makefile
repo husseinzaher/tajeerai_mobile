@@ -178,7 +178,8 @@ MODE ?= local
 
 cd: ## Run the shared Android CD pipeline (MODE=local|github)
 	ALLOW_DIRTY="$(ALLOW_DIRTY)" SKIP_VERIFY="$(SKIP_VERIFY)" DRY_RUN="$(DRY_RUN)" \
-		PUSH_TAG="$(PUSH_TAG)" UPLOAD="$(UPLOAD)" GOOGLE_PLAY_TRACK="$(GOOGLE_PLAY_TRACK)" \
+		VERSION_AUTO="$(VERSION_AUTO)" PUSH_TAG="$(PUSH_TAG)" UPLOAD="$(UPLOAD)" \
+		GOOGLE_PLAY_TRACK="$(GOOGLE_PLAY_TRACK)" \
 		bash scripts/release/android-cd.sh --mode "$(MODE)"
 
 cd-local: ## Run the local Android CD pipeline
