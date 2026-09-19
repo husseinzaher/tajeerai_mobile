@@ -148,3 +148,15 @@ verify: generate arch format-check analyze test coverage
 clean:
 	flutter clean
 	rm -rf coverage
+
+# --- Android / Flutter --------------------------------------------------------
+
+.PHONY: android-build
+
+android-build: ## Build Android App Bundle for Google Play
+	flutter clean
+	flutter pub get
+	flutter build appbundle --release
+	@echo ""
+	@echo "Android App Bundle generated:"
+	@echo "build/app/outputs/bundle/release/app-release.aab"
