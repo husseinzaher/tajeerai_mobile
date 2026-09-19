@@ -55,3 +55,6 @@ ios/Runner/GeneratedPluginRegistrant.*
 **/*.mode2v3
 **/*.perspectivev3
 **/xcuserdata/
+
+# Kotlin
+**/.kotlin/
