@@ -28,7 +28,7 @@ help:
 	@echo "build-prod    Release APK against .env.production"
 	@echo "android-build Release App Bundle for Google Play (.aab)"
 	@echo "cd            Android CD pipeline (MODE=local|github)"
-	@echo "cd-local      Local Android CD: tag from pubspec, verify, build signed AAB"
+	@echo "cd-local      Local Android CD: conventional commits, tag, build signed AAB"
 	@echo "arch          Run the architecture guard"
 	@echo "format        Format lib, test and tool"
 	@echo "analyze       Static analysis (infos and warnings fatal)"
@@ -154,7 +154,8 @@ clean:
 
 # --- Android / Flutter --------------------------------------------------------
 
-# versionName comes from the latest vMAJOR.MINOR.PATCH git tag, or pubspec.yaml.
+# Release builds pass BUILD_NAME/BUILD_NUMBER from the CD pipeline.
+# Dev builds fall back to the latest Git tag, then pubspec.yaml.
 # versionCode = major*1_000_000 + minor*1_000 + patch (see tool/resolve_android_version.sh).
 ANDROID_BUILD_NAME ?= $(shell bash tool/resolve_android_version.sh name)
 ANDROID_BUILD_NUMBER ?= $(shell bash tool/resolve_android_version.sh number)
@@ -178,8 +179,7 @@ MODE ?= local
 
 cd: ## Run the shared Android CD pipeline (MODE=local|github)
 	ALLOW_DIRTY="$(ALLOW_DIRTY)" SKIP_VERIFY="$(SKIP_VERIFY)" DRY_RUN="$(DRY_RUN)" \
-		VERSION_AUTO="$(VERSION_AUTO)" PUSH_TAG="$(PUSH_TAG)" UPLOAD="$(UPLOAD)" \
-		GOOGLE_PLAY_TRACK="$(GOOGLE_PLAY_TRACK)" \
+		PUSH_TAG="$(PUSH_TAG)" UPLOAD="$(UPLOAD)" GOOGLE_PLAY_TRACK="$(GOOGLE_PLAY_TRACK)" \
 		bash scripts/release/android-cd.sh --mode "$(MODE)"
 
 cd-local: ## Run the local Android CD pipeline
