@@ -36,6 +36,9 @@ coverage/
 android/.gradle/
 android/local.properties
 android/key.properties
+android/app/key.properties
+android/play-service-account.json
+android/app/upload-keystore.jks
 android/app/debug/
 android/app/profile/
 android/app/release/
@@ -55,3 +58,7 @@ ios/Runner/GeneratedPluginRegistrant.*
 **/*.mode2v3
 **/*.perspectivev3
 **/xcuserdata/
+
+# Kotlin
+**/.kotlin/
+
