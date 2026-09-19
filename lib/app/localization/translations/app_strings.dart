@@ -187,8 +187,14 @@ class AppStrings {
       'en': 'Or continue with',
       'ar': 'أو تابع باستخدام',
     },
-    'continueWithGoogle': <String, String>{'en': 'Google', 'ar': 'جوجل'},
-    'continueWithFacebook': <String, String>{'en': 'Facebook', 'ar': 'فيسبوك'},
+    'continueWithGoogle': <String, String>{
+      'en': 'Continue with Google',
+      'ar': 'المتابعة باستخدام Google',
+    },
+    'continueWithFacebook': <String, String>{
+      'en': 'Continue with Facebook',
+      'ar': 'المتابعة باستخدام Facebook',
+    },
     'socialEmailRequired': <String, String>{
       'en': 'That account gave us no confirmed email address, so we cannot match it to a workspace.',
       'ar': 'لم يعطنا هذا الحساب بريدًا إلكترونيًا مؤكدًا، فتعذّر ربطه بمساحة عمل.',

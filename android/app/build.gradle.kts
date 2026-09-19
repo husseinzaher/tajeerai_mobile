@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "net.tajeerai.mobile"
+    namespace = "com.tajeerai.mobile"
 
     // Pinned above `flutter.compileSdkVersion`: a plugin in the dependency
     // graph (flutter_secure_storage's AndroidX chain) is compiled against
@@ -24,7 +24,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "net.tajeerai.mobile"
+        applicationId = "com.tajeerai.mobile"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         // 23 is the floor for flutter_secure_storage's EncryptedSharedPreferences

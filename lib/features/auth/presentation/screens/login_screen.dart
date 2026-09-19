@@ -20,9 +20,6 @@ import '../widgets/login_form.dart';
 ///
 /// What the reference design draws and this screen deliberately does not:
 ///
-/// - **Social sign-in.** Mobile has no OAuth flow, and a provider button that
-///   does nothing is worse than an absent one. `AppSocialButton` exists and is
-///   documented in the showcase for the day that flow does.
 /// - **"Forgot password" and "Create an account".** There are no screens behind
 ///   either yet, for the same reason.
 /// - **The soft decorative shapes.** The brief for this system rules out

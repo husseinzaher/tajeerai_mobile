@@ -60,7 +60,16 @@ class _TajeerAppState extends ConsumerState<TajeerApp> {
 
     coordinator.events.listen((event) async {
       switch (event) {
-        case SignedIn():
+        case SignedIn(:final session, :final wasRestored):
+          if (!wasRestored) {
+            // First sign-in, including Google: follow the locale the server
+            // stored, unless the member already chose a language on this
+            // device.
+            await ref
+                .read(localeProvider.notifier)
+                .adoptFromSession(session.user.locale);
+          }
+
           final socket = ref.read(socketManagerProvider);
           final sync = ref.read(conversationSyncProvider);
           final handler = ref.read(conversationSocketHandlerProvider);
