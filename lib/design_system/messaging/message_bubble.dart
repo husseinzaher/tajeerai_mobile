@@ -306,6 +306,10 @@ class _Content extends StatelessWidget {
         attachment: file,
         onOpen: onOpen,
       ),
+      AppMessageKind.video when file != null => AppFilePreview(
+        attachment: file,
+        onOpen: onOpen,
+      ),
       AppMessageKind.document when file != null => AppFilePreview(
         attachment: file,
         onOpen: onOpen,

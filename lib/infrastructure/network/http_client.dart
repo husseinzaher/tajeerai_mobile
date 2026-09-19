@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
+import 'package:http_parser/http_parser.dart';
 
 import '../../app/config/app_config.dart';
 import '../logging/logger.dart';
@@ -147,20 +148,27 @@ class HttpClient {
     required String filename,
     String? mimeType,
     String fieldName = 'file',
+    Duration? sendTimeout,
+    Duration? receiveTimeout,
   }) {
-    return _send(
-      path,
-      () async {
-        final formData = FormData.fromMap(<String, Object?>{
-          fieldName: await MultipartFile.fromFile(
-            filePath,
-            filename: filename,
-          ),
-        });
+    return _send(path, () async {
+      final formData = FormData.fromMap(<String, Object?>{
+        fieldName: await MultipartFile.fromFile(
+          filePath,
+          filename: filename,
+          contentType: mimeType == null ? null : MediaType.parse(mimeType),
+        ),
+      });
 
-        return _dio.post<Object?>(path, data: formData);
-      },
-    );
+      return _dio.post<Object?>(
+        path,
+        data: formData,
+        options: Options(
+          sendTimeout: sendTimeout,
+          receiveTimeout: receiveTimeout,
+        ),
+      );
+    });
   }
 
   /// Downloads a binary body, such as a message attachment.

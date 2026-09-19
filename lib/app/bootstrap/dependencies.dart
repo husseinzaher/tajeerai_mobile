@@ -304,6 +304,7 @@ final Provider<MessageRepository> messageRepositoryProvider =
         dao: database.conversationDao,
         outbox: database.outboxDao,
         remote: ref.watch(conversationRemoteDataSourceProvider),
+        storage: ref.watch(fileStorageProvider),
         logger: ref.watch(databaseLoggerProvider),
       );
     });

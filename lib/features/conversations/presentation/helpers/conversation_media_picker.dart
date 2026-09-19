@@ -8,9 +8,7 @@ import '../../domain/value_objects/outbound_media.dart';
 /// Opens the system file picker and returns an attachment the composer can show.
 abstract final class ConversationMediaPicker {
   static Future<AppAttachmentData?> pick() async {
-    final PlatformFile? file = await FilePicker.pickFile(
-      type: FileType.any,
-    );
+    final PlatformFile? file = await FilePicker.pickFile(type: FileType.any);
 
     if (file == null) return null;
 
@@ -22,7 +20,7 @@ abstract final class ConversationMediaPicker {
         ? _mimeFromExtension(file.extension!)
         : 'application/octet-stream';
 
-    final int bytes = file.lengthSync() ?? File(path).lengthSync();
+    final int bytes = File(path).existsSync() ? File(path).lengthSync() : 0;
 
     return AppAttachmentData(
       localPath: path,

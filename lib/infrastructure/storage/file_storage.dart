@@ -58,4 +58,36 @@ class FileStorage {
 
     return path;
   }
+
+  /// Copies a picked attachment into permanent storage before it is queued.
+  ///
+  /// Gallery and document pickers often hand back a cache path or a URI-backed
+  /// file the uploader cannot read reliably — especially for large videos.
+  /// The outbox must send from a path the app owns.
+  Future<String> stageOutboundMedia({
+    required String sourcePath,
+    required String destinationName,
+  }) async {
+    final File source = File(sourcePath);
+
+    if (!source.existsSync()) {
+      throw FileSystemException(
+        'The attachment could not be read.',
+        sourcePath,
+      );
+    }
+
+    final Directory documents = await documentsDirectory();
+    final Directory outbound = Directory(p.join(documents.path, 'outbound'));
+
+    if (!outbound.existsSync()) {
+      await outbound.create(recursive: true);
+    }
+
+    final String destinationPath = p.join(outbound.path, destinationName);
+
+    await source.copy(destinationPath);
+
+    return destinationPath;
+  }
 }

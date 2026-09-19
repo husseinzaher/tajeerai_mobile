@@ -1,11 +1,14 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:drift/drift.dart';
+import 'package:path/path.dart' as p;
 
 import '../../../../failures/app_failure.dart';
 import '../../../../infrastructure/database/app_database.dart';
 import '../../../../infrastructure/database/daos/outbox_dao.dart';
 import '../../../../infrastructure/logging/logger.dart';
+import '../../../../infrastructure/storage/file_storage.dart';
 import '../../domain/entities/message.dart';
 import '../../domain/repositories/message_repository.dart';
 import '../../domain/value_objects/message_content.dart';
@@ -26,17 +29,20 @@ class MessageRepositoryImpl implements MessageRepository {
     required ConversationDao dao,
     required OutboxDao outbox,
     required ConversationRemoteDataSource remote,
+    required FileStorage storage,
     required Logger logger,
     DateTime Function() clock = DateTime.now,
   }) : _dao = dao,
        _outbox = outbox,
        _remote = remote,
+       _storage = storage,
        _logger = logger,
        _clock = clock;
 
   final ConversationDao _dao;
   final OutboxDao _outbox;
   final ConversationRemoteDataSource _remote;
+  final FileStorage _storage;
   final Logger _logger;
   final DateTime Function() _clock;
 
@@ -138,6 +144,26 @@ class MessageRepositoryImpl implements MessageRepository {
   }) async {
     final now = _clock().toUtc();
 
+    final String stagedPath;
+
+    try {
+      stagedPath = await _storage.stageOutboundMedia(
+        sourcePath: media.localPath,
+        destinationName: '$clientMessageId-${p.basename(media.filename)}',
+      );
+    } on FileSystemException catch (error, stackTrace) {
+      _logger.error(
+        'failed to stage outbound media',
+        error: error,
+        stackTrace: stackTrace,
+      );
+
+      throw DatabaseFailure(
+        message: 'The attachment could not be saved.',
+        cause: error,
+      );
+    }
+
     final message = Message(
       id: clientMessageId,
       conversationId: conversationId,
@@ -146,7 +172,7 @@ class MessageRepositoryImpl implements MessageRepository {
       state: MessageState.pending,
       type: media.type,
       body: media.caption,
-      localMediaPath: media.localPath,
+      localMediaPath: stagedPath,
       authorId: authorId,
       authorName: authorName,
       createdAt: now,
@@ -163,7 +189,7 @@ class MessageRepositoryImpl implements MessageRepository {
             'conversationId': conversationId,
             'clientMessageId': clientMessageId,
             'type': media.type,
-            'localPath': media.localPath,
+            'localPath': stagedPath,
             'filename': media.filename,
             'mimeType': media.mimeType,
             if (media.caption != null) 'body': media.caption,
@@ -203,7 +229,9 @@ class MessageRepositoryImpl implements MessageRepository {
     DateTime? eventAt,
   }) async {
     final changes = MessagesCompanion(
-      mediaUrl: mediaUrl == null ? const Value.absent() : Value<String?>(mediaUrl),
+      mediaUrl: mediaUrl == null
+          ? const Value.absent()
+          : Value<String?>(mediaUrl),
       localMediaPath: localMediaPath == null
           ? const Value.absent()
           : Value<String?>(localMediaPath),
@@ -355,9 +383,7 @@ class MessageRepositoryImpl implements MessageRepository {
 
       if (page.messages.isEmpty) return 0;
 
-      return await _dao.upsertMessages(
-        page.messages.map(_toCompanion).toList(growable: false),
-      );
+      return await upsertAll(page.messages);
     } on FormatException catch (error) {
       throw UnknownFailure(
         message0: 'The server sent unexpected message history.',
@@ -390,9 +416,7 @@ class MessageRepositoryImpl implements MessageRepository {
 
       // Written without an `eventAt` guard: history is older than anything
       // held, so there is no newer state for it to overwrite.
-      return await _dao.upsertMessages(
-        page.messages.map(_toCompanion).toList(growable: false),
-      );
+      return await upsertAll(page.messages);
     } on FormatException catch (error) {
       throw UnknownFailure(
         message0: 'The server sent unexpected message history.',
@@ -419,9 +443,8 @@ class MessageRepositoryImpl implements MessageRepository {
       final MessageRow? optimistic = await _dao.findByClientMessageId(clientId);
 
       if (optimistic != null && optimistic.id != message.id) {
-        final MessageState merged = _toEntityState(
-          optimistic.state,
-        ).prefer(message.state);
+        final MessageState merged = _toEntityState(optimistic.state)
+            .prefer(message.state);
 
         await _dao.rekeyMessage(
           fromId: optimistic.id,
@@ -433,8 +456,14 @@ class MessageRepositoryImpl implements MessageRepository {
           ),
         );
 
+        final MessageRow? rekeyed = await _dao.findMessage(message.id);
+
         return _dao.upsertMessage(
-          _toCompanion(message.copyWith(state: merged)),
+          _toCompanion(
+            rekeyed == null
+                ? message.copyWith(state: merged)
+                : _mergeWithExisting(message.copyWith(state: merged), rekeyed),
+          ),
           eventAt: eventAt,
         );
       }
@@ -443,11 +472,24 @@ class MessageRepositoryImpl implements MessageRepository {
     final MessageRow? existing = await _dao.findMessage(message.id);
     final Message incoming = existing == null
         ? message
-        : message.copyWith(
-            state: _toEntityState(existing.state).prefer(message.state),
-          );
+        : _mergeWithExisting(message, existing);
 
     return _dao.upsertMessage(_toCompanion(incoming), eventAt: eventAt);
+  }
+
+  /// Keeps locally known media when a server row omits it.
+  ///
+  /// Outbound photos are written with [Message.localMediaPath] before upload
+  /// finishes; a later [loadLatest] or realtime upsert must not wipe that path
+  /// just because the list API has not populated [Message.mediaUrl] yet.
+  Message _mergeWithExisting(Message incoming, MessageRow existing) {
+    final held = _toEntity(existing);
+
+    return incoming.copyWith(
+      state: held.state.prefer(incoming.state),
+      mediaUrl: incoming.mediaUrl ?? held.mediaUrl,
+      localMediaPath: incoming.localMediaPath ?? held.localMediaPath,
+    );
   }
 
   /// A one-line rail preview, or null when there is nothing to preview.
@@ -465,7 +507,8 @@ class MessageRepositoryImpl implements MessageRepository {
       if (preview != null) return preview;
     }
 
-    if (message.hasMedia || OutboundMedia.supportedTypes.contains(message.type)) {
+    if (message.hasMedia ||
+        OutboundMedia.supportedTypes.contains(message.type)) {
       return switch (message.type) {
         'image' => 'Photo',
         'video' => 'Video',

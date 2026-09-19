@@ -33,7 +33,9 @@ extension MessagePresentation on Message {
       url: mediaUrl,
       localPath: localMediaPath,
       name: path == null ? null : p.basename(path),
-      mimeType: path == null ? null : _mimeFromPath(path),
+      mimeType: path == null
+          ? _mimeFromType(type)
+          : _mimeFromPath(path) ?? _mimeFromType(type),
       sizeBytes: file != null && file.existsSync() ? file.lengthSync() : null,
     );
   }
@@ -74,6 +76,14 @@ String? _present(String? value) {
   final String? trimmed = value?.trim();
   return trimmed == null || trimmed.isEmpty ? null : value;
 }
+
+String? _mimeFromType(String type) => switch (type) {
+  'image' || 'sticker' => 'image/jpeg',
+  'video' => 'video/mp4',
+  'audio' || 'voice' || 'ptt' => 'audio/mp4',
+  'document' || 'file' => 'application/octet-stream',
+  _ => null,
+};
 
 String? _mimeFromPath(String path) {
   return switch (p.extension(path).toLowerCase()) {

@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:tajeerai_mobile/failures/app_failure.dart';
 import 'package:tajeerai_mobile/features/conversations/application/coordinators/outbox_coordinator.dart';
 import 'package:tajeerai_mobile/features/conversations/data/repositories/conversation_repository_impl.dart';
@@ -7,12 +10,14 @@ import 'package:tajeerai_mobile/features/conversations/domain/entities/conversat
 import 'package:tajeerai_mobile/features/conversations/domain/entities/message.dart';
 import 'package:tajeerai_mobile/features/conversations/domain/services/conversation_service.dart';
 import 'package:tajeerai_mobile/features/conversations/domain/services/message_service.dart';
+import 'package:tajeerai_mobile/features/conversations/domain/value_objects/outbound_media.dart';
 import 'package:tajeerai_mobile/features/conversations/realtime/conversation_events.dart';
 import 'package:tajeerai_mobile/features/conversations/realtime/conversation_socket_handler.dart';
 import 'package:tajeerai_mobile/infrastructure/database/app_database.dart';
 import 'package:tajeerai_mobile/infrastructure/database/tables/outbox_table.dart';
 import 'package:tajeerai_mobile/infrastructure/logging/logger.dart';
 import 'package:tajeerai_mobile/infrastructure/realtime/socket_event.dart';
+import 'package:tajeerai_mobile/infrastructure/storage/file_storage.dart';
 
 import '../../support/fixed_clock.dart';
 import '../../support/test_database.dart';
@@ -39,6 +44,7 @@ void main() {
   var idCounter = 0;
 
   setUp(() async {
+    PathProviderPlatform.instance = _TempPathProvider();
     database = openTestDatabase();
     remote = FakeConversationRemote();
     clock = FixedClock(testEpoch);
@@ -56,6 +62,7 @@ void main() {
       dao: database.conversationDao,
       outbox: database.outboxDao,
       remote: remote,
+      storage: const FileStorage(),
       logger: logger,
       clock: clock.call,
     );
@@ -292,7 +299,9 @@ void main() {
             ConversationRealtimeEvents.messageCreated,
             <String, Object?>{
               'eventId': 'e-queued',
-              'occurredAt': testEpoch.add(const Duration(seconds: 1)).toIso8601String(),
+              'occurredAt': testEpoch
+                  .add(const Duration(seconds: 1))
+                  .toIso8601String(),
               'conversationId': 'c1',
               'message': <String, Object?>{
                 'id': 'server-1',
@@ -561,6 +570,118 @@ void main() {
     });
   });
 
+  group('media messages', () {
+    test('loadLatest preserves local media path on sent photos', () async {
+      final File picked = File(
+        '${Directory.systemTemp.path}/picked-${clock().millisecondsSinceEpoch}.jpg',
+      );
+      await picked.writeAsBytes(<int>[1, 2, 3]);
+
+      await messages.enqueueOutboundMedia(
+        conversationId: 'c1',
+        media: OutboundMedia(
+          type: 'image',
+          localPath: picked.path,
+          filename: 'photo.jpg',
+          mimeType: 'image/jpeg',
+        ),
+        clientMessageId: 'client-1',
+      );
+
+      remote.nextMessageId = 'server-1';
+      await outbox.drain();
+
+      final String stagedPath = (await threadMessages()).single.localMediaPath!;
+
+      expect(stagedPath, isNot(picked.path));
+      expect(File(stagedPath).existsSync(), isTrue);
+
+      remote.nextMessages = <Message>[
+        Message(
+          id: 'server-1',
+          conversationId: 'c1',
+          clientMessageId: 'client-1',
+          direction: MessageDirection.outbound,
+          state: MessageState.sent,
+          type: 'image',
+          createdAt: testEpoch,
+        ),
+      ];
+
+      await messages.loadLatest(conversationId: 'c1');
+
+      final stored = await threadMessages();
+
+      expect(stored, hasLength(1));
+      expect(stored.single.localMediaPath, stagedPath);
+      expect(stored.single.type, 'image');
+    });
+
+    test('outbound video is staged before it is queued', () async {
+      final File picked = File(
+        '${Directory.systemTemp.path}/picked-${clock().millisecondsSinceEpoch}.mp4',
+      );
+      await picked.writeAsBytes(<int>[0, 1, 2, 3]);
+
+      await messages.enqueueOutboundMedia(
+        conversationId: 'c1',
+        media: OutboundMedia(
+          type: 'video',
+          localPath: picked.path,
+          filename: 'clip.mp4',
+          mimeType: 'video/mp4',
+        ),
+        clientMessageId: 'client-video',
+      );
+
+      final stored = await threadMessages();
+
+      expect(stored, hasLength(1));
+      expect(stored.single.type, 'video');
+      expect(stored.single.localMediaPath, isNot(picked.path));
+      expect(File(stored.single.localMediaPath!).existsSync(), isTrue);
+    });
+
+    test('a server upsert preserves local media path on sent photos', () async {
+      final File picked = File(
+        '${Directory.systemTemp.path}/picked-${clock().millisecondsSinceEpoch}.jpg',
+      );
+      await picked.writeAsBytes(<int>[1, 2, 3]);
+
+      await messages.enqueueOutboundMedia(
+        conversationId: 'c1',
+        media: OutboundMedia(
+          type: 'image',
+          localPath: picked.path,
+          filename: 'photo.jpg',
+          mimeType: 'image/jpeg',
+        ),
+        clientMessageId: 'client-1',
+      );
+
+      remote.nextMessageId = 'server-1';
+      await outbox.drain();
+
+      final String stagedPath = (await threadMessages()).single.localMediaPath!;
+
+      await messages.upsertAll(<Message>[
+        Message(
+          id: 'server-1',
+          conversationId: 'c1',
+          clientMessageId: 'client-1',
+          direction: MessageDirection.outbound,
+          state: MessageState.delivered,
+          type: 'image',
+          createdAt: testEpoch,
+        ),
+      ]);
+
+      final stored = await threadMessages();
+
+      expect(stored.single.localMediaPath, stagedPath);
+    });
+  });
+
   group('reactive delivery to the UI', () {
     test('the thread stream re-emits when a socket event lands', () async {
       final emissions = <int>[];
@@ -598,4 +719,16 @@ void main() {
       expect(emissions, containsAllInOrder(<int>[0, 1]));
     });
   });
+}
+
+class _TempPathProvider extends PathProviderPlatform {
+  @override
+  Future<String?> getApplicationDocumentsPath() async {
+    final Directory directory = Directory(
+      '${Directory.systemTemp.path}${Platform.pathSeparator}tajeer-docs-${DateTime.now().microsecondsSinceEpoch}',
+    );
+    await directory.create(recursive: true);
+
+    return directory.path;
+  }
 }

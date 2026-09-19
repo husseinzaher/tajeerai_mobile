@@ -11,6 +11,9 @@ import 'conversation_media_port.dart';
 class ConversationMediaRemoteDataSource implements ConversationMediaPort {
   const ConversationMediaRemoteDataSource(this._http);
 
+  /// Large videos need more time to stream than text API calls.
+  static const Duration uploadTimeout = Duration(minutes: 5);
+
   final HttpClient _http;
 
   /// `POST /v1/conversations/:id/media`.
@@ -27,15 +30,14 @@ class ConversationMediaRemoteDataSource implements ConversationMediaPort {
         filePath: filePath,
         filename: filename,
         mimeType: mimeType,
+        sendTimeout: uploadTimeout,
+        receiveTimeout: uploadTimeout,
       );
 
       final mediaId = body['mediaId']?.toString();
       final type = body['type']?.toString();
 
-      if (mediaId == null ||
-          mediaId.isEmpty ||
-          type == null ||
-          type.isEmpty) {
+      if (mediaId == null || mediaId.isEmpty || type == null || type.isEmpty) {
         throw const FormatException('Upload acknowledgement was incomplete.');
       }
 
@@ -43,7 +45,10 @@ class ConversationMediaRemoteDataSource implements ConversationMediaPort {
         mediaId: mediaId,
         type: type,
         filename: body['filename']?.toString() ?? filename,
-        mimeType: body['mimeType']?.toString() ?? mimeType ?? 'application/octet-stream',
+        mimeType:
+            body['mimeType']?.toString() ??
+            mimeType ??
+            'application/octet-stream',
       );
     } on HttpException catch (error) {
       throw error.toFailure();
