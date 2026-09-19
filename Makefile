@@ -4,7 +4,7 @@
 
 .PHONY: help setup tokens tokens-check generate watch migrations arch format format-check analyze \
         test golden golden-update coverage verify clean run run-staging run-prod run-prod-dev \
-        showcase showcase-build \
+        showcase showcase-build google-sign-in-setup google-sign-in-check \
         build-prod build-staging
 
 # Build configuration comes from a .env file, read natively by Flutter's
@@ -33,6 +33,9 @@ help:
 	@echo "golden        Run only the pixel comparisons"
 	@echo "golden-update Re-bless the pixel comparisons"
 	@echo "coverage      Check coverage thresholds"
+	@echo "google-sign-in-setup  Write iOS Google Sign-In keys into Info.plist from .env"
+	@echo "google-sign-in-check  Fail if Info.plist is stale"
+	@echo "google-android-sha1   Print debug SHA-1 for Google Cloud Console"
 	@echo "verify        Everything CI runs, in CI's order"
 
 setup:
@@ -94,6 +97,16 @@ build-staging:
 
 build-prod:
 	flutter build apk --release --dart-define-from-file=.env.production
+
+google-sign-in-setup:
+	dart run tool/configure_google_sign_in.dart
+
+google-sign-in-check:
+	dart run tool/configure_google_sign_in.dart --check
+
+# Debug keystore SHA-1 for the Android OAuth client in Google Cloud Console.
+google-android-sha1:
+	cd android && ./gradlew :app:signingReport 2>&1 | grep -A6 'Variant: debug' | grep 'SHA1:'
 
 arch:
 	dart run tool/check_architecture.dart

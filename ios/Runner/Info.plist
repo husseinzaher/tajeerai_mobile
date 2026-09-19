@@ -66,6 +66,29 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>tajeerai</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.387470381057-m556n2mg3overj37q8p4qkpsnl97gcab</string>
+			</array>
+		</dict>
+	</array>
+		<!-- GOOGLE_SIGN_IN_BEGIN -->
+	<key>GIDClientID</key>
+	<string>387470381057-m556n2mg3overj37q8p4qkpsnl97gcab.apps.googleusercontent.com</string>
+	<!-- GOOGLE_SIGN_IN_END -->
 	<key>NSMicrophoneUsageDescription</key>
 	<string>TajeerAi needs the microphone to record voice messages in conversations.</string>
 </dict>
