@@ -3,7 +3,7 @@
 # Flutter is invoked by name; ensure it is on your PATH.
 
 .PHONY: help setup tokens tokens-check generate watch migrations arch format format-check analyze \
-        test golden golden-update coverage verify clean run run-staging run-prod \
+        test golden golden-update coverage verify clean run run-staging run-prod run-prod-dev \
         showcase showcase-build \
         build-prod build-staging
 
@@ -24,6 +24,7 @@ help:
 	@echo "showcase      Run the design system on its own, in a browser"
 	@echo "run-staging   Run against .env.staging"
 	@echo "run-prod      Run against .env.production"
+	@echo "run-prod-dev  Production backend, debug build (hot reload)"
 	@echo "build-prod    Release APK against .env.production"
 	@echo "arch          Run the architecture guard"
 	@echo "format        Format lib, test and tool"
@@ -83,6 +84,10 @@ run-staging:
 
 run-prod:
 	flutter run --release --dart-define-from-file=.env.production
+
+# Production backend in debug mode — hot reload works; use this while developing.
+run-prod-dev:
+	flutter run --dart-define-from-file=.env.production
 
 build-staging:
 	flutter build apk --release --dart-define-from-file=.env.staging

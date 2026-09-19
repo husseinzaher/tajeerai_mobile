@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tajeerai_mobile/app/bootstrap/dependencies.dart';
 import 'package:tajeerai_mobile/design_system/auth/social_button.dart';
+import 'package:tajeerai_mobile/design_system/auth/social_provider_mark.dart';
 import 'package:tajeerai_mobile/design_system/buttons/app_button.dart';
 import 'package:tajeerai_mobile/design_system/feedback/inline_error.dart';
 import 'package:tajeerai_mobile/design_system/inputs/app_checkbox.dart';
@@ -141,11 +142,7 @@ void main() {
 
       expect(find.byType(AppSocialButton), findsNWidgets(2));
       expect(find.text('Or continue with'), findsOneWidget);
-      // The button draws a glyph, not its name: the name is what a screen
-      // reader announces, and the initial is what distinguishes the two until
-      // the brand marks exist.
-      expect(find.text('G'), findsOneWidget);
-      expect(find.text('F'), findsOneWidget);
+      expect(find.byType(AppSocialProviderMark), findsNWidgets(2));
     });
 
     /* The server's vocabulary grows; an unknown provider is drawn, not dropped. */
@@ -156,7 +153,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(AppSocialButton), findsOneWidget);
-      expect(find.text('A'), findsOneWidget);
+      expect(find.text('A'), findsOneWidget); // unknown providers keep an initial
     });
   });
 

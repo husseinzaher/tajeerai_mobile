@@ -7,6 +7,7 @@ import 'package:tajeerai_mobile/design_system/auth/auth_header.dart';
 import 'package:tajeerai_mobile/design_system/auth/auth_layout.dart';
 import 'package:tajeerai_mobile/design_system/auth/brand_logo.dart';
 import 'package:tajeerai_mobile/design_system/auth/social_button.dart';
+import 'package:tajeerai_mobile/design_system/auth/social_provider_mark.dart';
 
 import '../../support/widget_harness.dart';
 
@@ -243,6 +244,36 @@ void main() {
 
       expect(tester.takeException(), isNull);
       expect(find.byType(SingleChildScrollView), findsOneWidget);
+    });
+  });
+
+  group('AppSocialProviderMark', () {
+    testWidgets('draws the official marks for Google and Facebook', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        wrapWidget(
+          const Row(
+            children: <Widget>[
+              AppSocialProviderMark('google'),
+              AppSocialProviderMark('facebook'),
+            ],
+          ),
+        ),
+      );
+
+      expect(find.byType(CustomPaint), findsNWidgets(2));
+      expect(find.byType(Text), findsNothing);
+    });
+
+    testWidgets('falls back to an initial for an unknown provider', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        wrapWidget(const AppSocialProviderMark('apple')),
+      );
+
+      expect(find.text('A'), findsOneWidget);
     });
   });
 

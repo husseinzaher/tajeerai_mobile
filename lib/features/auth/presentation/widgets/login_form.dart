@@ -149,7 +149,7 @@ class _SocialSignIn extends ConsumerWidget {
             for (final String provider in providers)
               Expanded(
                 child: AppSocialButton(
-                  glyph: _glyphFor(strings.socialProviderName(provider)),
+                  glyph: AppSocialProviderMark(provider.toLowerCase()),
                   label: strings.socialProviderName(provider),
                   onPressed: busy
                       ? null
@@ -166,26 +166,4 @@ class _SocialSignIn extends ConsumerWidget {
     );
   }
 
-  /// The provider's initial, until its real mark exists.
-  ///
-  /// **Deliberately a letter and not a lookalike.** `AppSocialButton` draws
-  /// its glyph and nothing else - the label is only its accessible name - so
-  /// two providers need two distinguishable marks or they are the same button
-  /// twice. Lucide carries no brand icons, and Google's branding rules require
-  /// their own "G" on a button that offers Google, so drawing something merely
-  /// round and colourful would be worse than plainly provisional. The official
-  /// marks are an asset task; this reads correctly in both languages in the
-  /// meantime.
-  static Widget _glyphFor(String name) {
-    final String initial = name.isEmpty
-        ? '?'
-        : String.fromCharCodes(name.runes.take(1)).toUpperCase();
-
-    return Builder(
-      builder: (BuildContext context) => Text(
-        initial,
-        style: context.type.titleMd.copyWith(color: context.colors.textPrimary),
-      ),
-    );
-  }
 }

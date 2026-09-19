@@ -45,10 +45,11 @@ final StreamProvider<List<Conversation>> conversationListProvider =
 /// Separate from the connection state on purpose: the UI has to be able to say
 /// "connected, but still catching up".
 final StreamProvider<ConversationSyncState> conversationSyncStateProvider =
-    StreamProvider<ConversationSyncState>((ref) {
+    StreamProvider<ConversationSyncState>((ref) async* {
       final coordinator = ref.watch(conversationSyncProvider);
 
-      return coordinator.states;
+      yield coordinator.state;
+      yield* coordinator.states;
     });
 
 /// Actions the rail offers.

@@ -37,6 +37,14 @@ extension SyncStatePresentation on ConversationSyncState {
     SyncPhase.failed => AppConnectionStatus.failed,
     SyncPhase.idle || SyncPhase.synchronized => AppConnectionStatus.current,
   };
+
+  /// Whether the Inbox is still waiting for its first confirmed server pass.
+  ///
+  /// The local database emits an empty list immediately, so "loaded and empty"
+  /// is not the same as "there are no conversations" until a sync has
+  /// succeeded at least once.
+  bool get isAwaitingFirstInboxData =>
+      syncedAt == null && phase != SyncPhase.failed;
 }
 
 String? _present(String? value) {

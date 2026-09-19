@@ -19,8 +19,9 @@ import '../widgets/conversation_view_data.dart';
 ///
 /// Composition, and nothing else. The rows, the four states, the banner and
 /// the search field are the design system's; what they show is mapped from the
-/// domain in `conversation_view_data.dart`. The list reads the local database,
-/// so "loading" is the moment before its first emission, never a network wait.
+/// domain in `conversation_view_data.dart`. The list reads the local database.
+/// Loading is before its first emission, or while the first server pass is
+/// still in flight with nothing local to show.
 class ConversationListScreen extends ConsumerStatefulWidget {
   const ConversationListScreen({super.key});
 
@@ -65,10 +66,12 @@ class _ConversationListScreenState
         .value;
     final bool searching = ref.watch(conversationSearchProvider).isNotEmpty;
 
+    final bool awaitingFirstInbox = sync?.isAwaitingFirstInboxData ?? true;
+
     return AppScaffold(
       // The menu button is implied by the signed-in shell's drawer.
       toolbar: AppToolbar(title: strings.inbox, centerTitle: true),
-      banner: sync == null
+      banner: sync == null || awaitingFirstInbox
           ? null
           : AppConnectionBanner(
               status: sync.connectionStatus,
@@ -91,11 +94,13 @@ class _ConversationListScreenState
             child: AppConversationList(
               state: ref
                   .watch(conversationListProvider)
-                  .toViewState(
+                  .toInboxViewState(
                     (List<Conversation> items) => <AppConversationSummary>[
                       for (final Conversation item in items)
                         item.toSummary(strings),
                     ],
+                    sync: sync,
+                    searching: searching,
                     failure: strings.conversationsUnreadable,
                     onRetry: () => ref.invalidate(conversationListProvider),
                   ),

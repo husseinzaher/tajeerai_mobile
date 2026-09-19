@@ -140,6 +140,9 @@ void main() {
     ) async {
       await tester.pumpWidget(subject());
       await tester.pump();
+      sync.add(
+        ConversationSyncState(phase: SyncPhase.synchronized, syncedAt: testEpoch),
+      );
       conversations.add(<Conversation>[]);
       await settle(tester);
 
@@ -223,14 +226,33 @@ void main() {
       expect(controller?.refreshes, 1);
     });
 
+    testWidgets('before the first sync lands, an empty Inbox draws placeholders', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(subject());
+      await tester.pump();
+      sync.add(const ConversationSyncState(phase: SyncPhase.syncing));
+      conversations.add(<Conversation>[]);
+      await settle(tester);
+
+      expect(find.byType(AppLoadingState), findsOneWidget);
+      expect(find.text('No conversations yet'), findsNothing);
+      expect(find.byType(AppStatusBanner), findsNothing);
+    });
+
     testWidgets('the banner follows synchronisation, and leaves when current', (
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(subject());
       await tester.pump();
       conversations.add(<Conversation>[_conversation()]);
+      sync.add(
+        ConversationSyncState(phase: SyncPhase.synchronized, syncedAt: testEpoch),
+      );
 
-      sync.add(const ConversationSyncState(phase: SyncPhase.stale));
+      sync.add(
+        ConversationSyncState(phase: SyncPhase.stale, syncedAt: testEpoch),
+      );
       await settle(tester);
       expect(
         tester
@@ -254,6 +276,9 @@ void main() {
     ) async {
       await tester.pumpWidget(subject());
       await tester.pump();
+      sync.add(
+        ConversationSyncState(phase: SyncPhase.synchronized, syncedAt: testEpoch),
+      );
       conversations.add(<Conversation>[]);
       await settle(tester);
 

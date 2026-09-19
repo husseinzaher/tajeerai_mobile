@@ -3,7 +3,11 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tajeerai_mobile/design_system/feedback/async_view.dart';
+import 'package:tajeerai_mobile/features/conversations/application/state/sync_state.dart';
+import 'package:tajeerai_mobile/features/conversations/domain/entities/conversation.dart';
 import 'package:tajeerai_mobile/features/conversations/presentation/widgets/async_view_state.dart';
+
+import '../../../support/fixed_clock.dart';
 
 void main() {
   test('nothing yet is loading', () {
@@ -93,5 +97,40 @@ void main() {
     );
     expect(state, isA<AppViewLoaded<int>>());
     expect((state as AppViewLoaded<int>).value, 7);
+  });
+
+  test('an empty local inbox before the first sync is loading', () {
+    const AsyncData<List<Conversation>> empty = AsyncData<List<Conversation>>(
+      <Conversation>[],
+    );
+
+    expect(
+      empty.toInboxViewState(
+        (List<Conversation> items) => items.length,
+        sync: const ConversationSyncState(phase: SyncPhase.syncing),
+        searching: false,
+        failure: 'unused',
+      ),
+      isA<AppViewLoading<int>>(),
+    );
+  });
+
+  test('an empty inbox after a confirmed sync is loaded', () {
+    const AsyncData<List<Conversation>> empty = AsyncData<List<Conversation>>(
+      <Conversation>[],
+    );
+
+    final AppViewState<int> state = empty.toInboxViewState(
+      (List<Conversation> items) => items.length,
+      sync: ConversationSyncState(
+        phase: SyncPhase.synchronized,
+        syncedAt: testEpoch,
+      ),
+      searching: false,
+      failure: 'unused',
+    );
+
+    expect(state, isA<AppViewLoaded<int>>());
+    expect((state as AppViewLoaded<int>).value, 0);
   });
 }

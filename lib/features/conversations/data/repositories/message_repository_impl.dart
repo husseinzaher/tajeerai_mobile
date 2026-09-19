@@ -132,10 +132,13 @@ class MessageRepositoryImpl implements MessageRepository {
     if (messages.isEmpty) return 0;
 
     try {
-      final written = await _dao.upsertMessages(
-        messages.map(_toCompanion).toList(growable: false),
-        eventAt: eventAt,
-      );
+      var written = 0;
+
+      await _dao.transaction(() async {
+        for (final Message message in messages) {
+          if (await _upsertOne(message, eventAt: eventAt)) written += 1;
+        }
+      });
 
       // Keep the rail's preview and ordering in step with the newest message
       // written, so an incoming message reorders the list without a separate
@@ -200,6 +203,31 @@ class MessageRepositoryImpl implements MessageRepository {
     required String serverMessageId,
     required MessageState state,
   }) async {
+    final MessageRow? heldByClient = await _dao.findByClientMessageId(
+      clientMessageId,
+    );
+    final MessageRow? heldByServer = await _dao.findMessage(serverMessageId);
+
+    // A realtime broadcast may have re-keyed the row before the command ack
+    // lands. Advance the server row rather than looking for the client id.
+    if (heldByClient != null && heldByClient.id == serverMessageId) {
+      await updateState(
+        messageId: serverMessageId,
+        state: _toEntityState(heldByClient.state).prefer(state),
+      );
+
+      return;
+    }
+
+    if (heldByClient == null && heldByServer != null) {
+      await updateState(
+        messageId: serverMessageId,
+        state: _toEntityState(heldByServer.state).prefer(state),
+      );
+
+      return;
+    }
+
     // Already re-keyed -- a duplicate acknowledgement, which the idempotency
     // key makes possible and which must be a no-op rather than an error.
     if (clientMessageId == serverMessageId) {
@@ -285,6 +313,49 @@ class MessageRepositoryImpl implements MessageRepository {
   Future<void> remove(String messageId) async {
     await _dao.removeMessage(messageId);
     await _outbox.remove(messageId);
+  }
+
+  /// Writes one server-originated message without regressing delivery state.
+  ///
+  /// A broadcast that still says `queued` must not undo a local `sent` written
+  /// by the outbox acknowledgement, and a row keyed by [Message.clientMessageId]
+  /// must be re-keyed rather than duplicated beside its optimistic twin.
+  Future<bool> _upsertOne(Message message, {DateTime? eventAt}) async {
+    final String? clientId = message.clientMessageId;
+
+    if (clientId != null) {
+      final MessageRow? optimistic = await _dao.findByClientMessageId(clientId);
+
+      if (optimistic != null && optimistic.id != message.id) {
+        final MessageState merged = _toEntityState(
+          optimistic.state,
+        ).prefer(message.state);
+
+        await _dao.rekeyMessage(
+          fromId: optimistic.id,
+          toId: message.id,
+          changes: MessagesCompanion(
+            clientMessageId: Value<String?>(clientId),
+            state: Value(_toRowState(merged)),
+            updatedAt: Value<DateTime?>(_clock().toUtc()),
+          ),
+        );
+
+        return _dao.upsertMessage(
+          _toCompanion(message.copyWith(state: merged)),
+          eventAt: eventAt,
+        );
+      }
+    }
+
+    final MessageRow? existing = await _dao.findMessage(message.id);
+    final Message incoming = existing == null
+        ? message
+        : message.copyWith(
+            state: _toEntityState(existing.state).prefer(message.state),
+          );
+
+    return _dao.upsertMessage(_toCompanion(incoming), eventAt: eventAt);
   }
 
   /// A one-line rail preview, or null when there is no text to preview.

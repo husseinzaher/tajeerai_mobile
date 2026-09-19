@@ -10,11 +10,9 @@ import '../primitives/pressable.dart';
 /// unlabelled marks is three identical buttons to a screen reader, and the
 /// only way to make that impossible is to refuse to build one without a name.
 ///
-/// **Not on the production sign-in screen.** Mobile has no OAuth flow yet, and
-/// a provider button that does nothing is worse than an absent one. It lives
-/// here, documented in the showcase, for the day that flow exists. The brand
-/// marks themselves will ship as assets then; the showcase uses neutral glyphs
-/// rather than imitating anybody's logo.
+/// The production sign-in screen draws one per provider the deployment offers,
+/// with [AppSocialProviderMark] as the glyph. The label is never drawn — only
+/// announced — so a row of three marks is never three identical buttons.
 class AppSocialButton extends StatelessWidget {
   const AppSocialButton({
     required this.glyph,

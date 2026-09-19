@@ -271,6 +271,86 @@ void main() {
       expect(stored, hasLength(1));
       expect(stored.single.state, MessageState.delivered);
     });
+
+    test(
+      'a stale queued broadcast does not undo a sent acknowledgement',
+      () async {
+        remote.nextMessageId = 'server-1';
+
+        await messageService.compose(
+          conversation: await thread(),
+          rawBody: 'hello',
+        );
+        await outbox.drain();
+
+        expect((await threadMessages()).single.state, MessageState.sent);
+
+        await handler.handle(
+          SocketEvent.fromWire(
+            ConversationRealtimeEvents.messageCreated,
+            <String, Object?>{
+              'eventId': 'e-queued',
+              'occurredAt': testEpoch.add(const Duration(seconds: 1)).toIso8601String(),
+              'conversationId': 'c1',
+              'message': <String, Object?>{
+                'id': 'server-1',
+                'conversationId': 'c1',
+                'direction': 'outbound',
+                'state': 'queued',
+                'body': 'hello',
+                'clientMessageId': 'client-1',
+                'createdAt': testEpoch.toIso8601String(),
+              },
+            },
+          ),
+        );
+
+        final stored = await threadMessages();
+
+        expect(stored, hasLength(1));
+        expect(stored.single.state, MessageState.sent);
+      },
+    );
+
+    test(
+      'a broadcast that arrives before the acknowledgement does not duplicate',
+      () async {
+        remote.nextMessageId = 'server-1';
+
+        await messageService.compose(
+          conversation: await thread(),
+          rawBody: 'hello',
+        );
+
+        await handler.handle(
+          SocketEvent.fromWire(
+            ConversationRealtimeEvents.messageCreated,
+            <String, Object?>{
+              'eventId': 'e-early',
+              'occurredAt': testEpoch.toIso8601String(),
+              'conversationId': 'c1',
+              'message': <String, Object?>{
+                'id': 'server-1',
+                'conversationId': 'c1',
+                'direction': 'outbound',
+                'state': 'queued',
+                'body': 'hello',
+                'clientMessageId': 'client-1',
+                'createdAt': testEpoch.toIso8601String(),
+              },
+            },
+          ),
+        );
+
+        await outbox.drain();
+
+        final stored = await threadMessages();
+
+        expect(stored, hasLength(1));
+        expect(stored.single.id, 'server-1');
+        expect(stored.single.state, MessageState.sent);
+      },
+    );
   });
 
   group('realtime into local state', () {

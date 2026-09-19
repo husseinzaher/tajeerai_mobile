@@ -28,6 +28,7 @@ export 'auth/auth_header.dart';
 export 'auth/auth_layout.dart';
 export 'auth/brand_logo.dart';
 export 'auth/social_button.dart';
+export 'auth/social_provider_mark.dart';
 export 'buttons/app_button.dart';
 export 'cards/app_card.dart';
 export 'channels/channel_badge.dart';

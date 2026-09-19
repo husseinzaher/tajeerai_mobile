@@ -37,6 +37,37 @@ enum MessageState {
 
   /// Whether the UI should offer a retry.
   bool get canRetry => this == MessageState.failed;
+
+  /// Whether [other] is a forward move from this state.
+  ///
+  /// Delivery states only advance. WhatsApp receipts arrive out of order often
+  /// enough that without this a `read` message flips back to `delivered` when
+  /// the older receipt lands a moment later.
+  bool canAdvanceTo(MessageState other) {
+    if (this == other) return false;
+    if (other == MessageState.failed) return true;
+    if (other == MessageState.discarded) return true;
+
+    return _rank(other) > _rank(this);
+  }
+
+  /// The further-along of two delivery states.
+  MessageState prefer(MessageState other) {
+    if (canAdvanceTo(other)) return other;
+    if (other.canAdvanceTo(this)) return this;
+
+    return this;
+  }
+
+  static int _rank(MessageState state) => switch (state) {
+    MessageState.pending => 0,
+    MessageState.sending => 1,
+    MessageState.failed => 1,
+    MessageState.sent => 2,
+    MessageState.delivered => 3,
+    MessageState.read => 4,
+    MessageState.discarded => 5,
+  };
 }
 
 /// One message in a thread.

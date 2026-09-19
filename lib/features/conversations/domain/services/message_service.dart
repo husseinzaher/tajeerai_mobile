@@ -105,30 +105,8 @@ class MessageService {
   }
 
   /// Whether an incoming state is allowed to replace the one held.
-  ///
-  /// Delivery states only move forward. WhatsApp's receipts arrive out of
-  /// order often enough that without this a `read` message flips back to
-  /// `delivered` when the older receipt lands a moment later.
-  ///
-  /// A move to [MessageState.failed] is always allowed: a failure is current
-  /// news whatever came before it.
-  static bool canTransition(MessageState from, MessageState to) {
-    if (from == to) return false;
-    if (to == MessageState.failed) return true;
-    if (to == MessageState.discarded) return true;
-
-    return _rank(to) > _rank(from);
-  }
-
-  static int _rank(MessageState state) => switch (state) {
-    MessageState.pending => 0,
-    MessageState.sending => 1,
-    MessageState.failed => 1,
-    MessageState.sent => 2,
-    MessageState.delivered => 3,
-    MessageState.read => 4,
-    MessageState.discarded => 5,
-  };
+  static bool canTransition(MessageState from, MessageState to) =>
+      from.canAdvanceTo(to);
 
   /// Marks a failed message ready to try again.
   ///

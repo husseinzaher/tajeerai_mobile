@@ -47,11 +47,13 @@ class SocialSignInCoordinator {
     required String provider,
     required String locale,
   }) async {
-    if (provider == 'google') {
+    final String normalized = provider.toLowerCase();
+
+    if (normalized == 'google') {
       return _signInWithGoogle(locale: locale);
     }
 
-    return _signInWithBrowser(provider: provider, locale: locale);
+    return _signInWithBrowser(provider: normalized, locale: locale);
   }
 
   Future<SocialSignInOutcome> _signInWithGoogle({required String locale}) async {
