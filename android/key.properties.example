@@ -1,0 +1,17 @@
+# Copy to android/key.properties (gitignored) before release builds.
+#
+# storeFile paths are relative to android/app/, where this app's build.gradle.kts
+# lives. With upload-keystore.jks beside it:
+#
+#     android/app/upload-keystore.jks
+#
+# set:
+#
+#     storeFile=upload-keystore.jks
+#
+# Never commit android/key.properties or any .jks file.
+
+storePassword=
+keyPassword=
+keyAlias=upload
+storeFile=upload-keystore.jks
