@@ -154,7 +154,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(AppSocialButton), findsOneWidget);
-      expect(find.text('A'), findsOneWidget); // unknown providers keep an initial
+      expect(
+        find.text('A'),
+        findsOneWidget,
+      ); // unknown providers keep an initial
     });
   });
 
@@ -459,7 +462,12 @@ void main() {
           .widgetList<AppTextField>(find.byType(AppTextField))
           .toList();
       expect(fields, hasLength(2));
-      expect(fields.every((AppTextField field) => field.textDirection == TextDirection.ltr), isTrue);
+      expect(
+        fields.every(
+          (AppTextField field) => field.textDirection == TextDirection.ltr,
+        ),
+        isTrue,
+      );
     });
 
     testWidgets('the switcher changes the copy without leaving the screen', (

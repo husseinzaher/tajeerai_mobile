@@ -64,16 +64,16 @@ class MessageMediaCoordinator {
         bytes,
       );
 
-      await _messages.updateMedia(
-        messageId: message.id,
-        localMediaPath: path,
-      );
+      await _messages.updateMedia(messageId: message.id, localMediaPath: path);
     } on Object catch (error, stackTrace) {
       _logger.debug(
         'media cache failed',
         data: <String, Object?>{'messageId': message.id, 'error': error},
       );
-      _logger.debug('media cache stack', data: <String, Object?>{'trace': '$stackTrace'});
+      _logger.debug(
+        'media cache stack',
+        data: <String, Object?>{'trace': '$stackTrace'},
+      );
     } finally {
       _inFlight.remove(message.id);
     }

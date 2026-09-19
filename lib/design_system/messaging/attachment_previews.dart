@@ -75,11 +75,7 @@ class AppImagePreview extends StatelessWidget {
         width: width,
         height: height,
         fit: BoxFit.cover,
-        errorBuilder: (
-          BuildContext context,
-          Object error,
-          StackTrace? stack,
-        ) =>
+        errorBuilder: (BuildContext context, Object error, StackTrace? stack) =>
             placeholder(LucideIcons.imageOff),
       ),
       (_, final String networkUrl) => Image.network(
@@ -87,16 +83,12 @@ class AppImagePreview extends StatelessWidget {
         width: width,
         height: height,
         fit: BoxFit.cover,
-        loadingBuilder:
-            (BuildContext context, Widget child, ImageChunkEvent? chunk) =>
-                chunk == null
-                ? child
-                : AppSkeleton(width: width, height: height),
-        errorBuilder: (
+        loadingBuilder: (
           BuildContext context,
-          Object error,
-          StackTrace? stack,
-        ) =>
+          Widget child,
+          ImageChunkEvent? chunk,
+        ) => chunk == null ? child : AppSkeleton(width: width, height: height),
+        errorBuilder: (BuildContext context, Object error, StackTrace? stack) =>
             placeholder(LucideIcons.imageOff),
       ),
       _ => placeholder(LucideIcons.image),

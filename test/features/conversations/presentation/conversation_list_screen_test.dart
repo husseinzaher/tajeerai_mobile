@@ -141,7 +141,10 @@ void main() {
       await tester.pumpWidget(subject());
       await tester.pump();
       sync.add(
-        ConversationSyncState(phase: SyncPhase.synchronized, syncedAt: testEpoch),
+        ConversationSyncState(
+          phase: SyncPhase.synchronized,
+          syncedAt: testEpoch,
+        ),
       );
       conversations.add(<Conversation>[]);
       await settle(tester);
@@ -226,19 +229,20 @@ void main() {
       expect(controller?.refreshes, 1);
     });
 
-    testWidgets('before the first sync lands, an empty Inbox draws placeholders', (
-      WidgetTester tester,
-    ) async {
-      await tester.pumpWidget(subject());
-      await tester.pump();
-      sync.add(const ConversationSyncState(phase: SyncPhase.syncing));
-      conversations.add(<Conversation>[]);
-      await settle(tester);
+    testWidgets(
+      'before the first sync lands, an empty Inbox draws placeholders',
+      (WidgetTester tester) async {
+        await tester.pumpWidget(subject());
+        await tester.pump();
+        sync.add(const ConversationSyncState(phase: SyncPhase.syncing));
+        conversations.add(<Conversation>[]);
+        await settle(tester);
 
-      expect(find.byType(AppLoadingState), findsOneWidget);
-      expect(find.text('No conversations yet'), findsNothing);
-      expect(find.byType(AppStatusBanner), findsNothing);
-    });
+        expect(find.byType(AppLoadingState), findsOneWidget);
+        expect(find.text('No conversations yet'), findsNothing);
+        expect(find.byType(AppStatusBanner), findsNothing);
+      },
+    );
 
     testWidgets('the banner follows synchronisation, and leaves when current', (
       WidgetTester tester,
@@ -247,7 +251,10 @@ void main() {
       await tester.pump();
       conversations.add(<Conversation>[_conversation()]);
       sync.add(
-        ConversationSyncState(phase: SyncPhase.synchronized, syncedAt: testEpoch),
+        ConversationSyncState(
+          phase: SyncPhase.synchronized,
+          syncedAt: testEpoch,
+        ),
       );
 
       sync.add(
@@ -277,7 +284,10 @@ void main() {
       await tester.pumpWidget(subject());
       await tester.pump();
       sync.add(
-        ConversationSyncState(phase: SyncPhase.synchronized, syncedAt: testEpoch),
+        ConversationSyncState(
+          phase: SyncPhase.synchronized,
+          syncedAt: testEpoch,
+        ),
       );
       conversations.add(<Conversation>[]);
       await settle(tester);

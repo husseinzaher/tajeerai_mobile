@@ -56,7 +56,9 @@ class SocialSignInCoordinator {
     return _signInWithBrowser(provider: normalized, locale: locale);
   }
 
-  Future<SocialSignInOutcome> _signInWithGoogle({required String locale}) async {
+  Future<SocialSignInOutcome> _signInWithGoogle({
+    required String locale,
+  }) async {
     final SocialAuthConfig config = await _repository.socialAuthConfig();
     final String? serverClientId = config.googleWebClientId;
 

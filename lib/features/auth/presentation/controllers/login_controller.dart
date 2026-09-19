@@ -102,16 +102,15 @@ final class LoginBuildInfo {
 ///
 /// Presentation reads this rather than [PlatformInfo] directly, so the screen
 /// stays decoupled from infrastructure.
-final Provider<LoginBuildInfo> loginBuildInfoProvider = Provider<LoginBuildInfo>(
-  (Ref ref) {
-    final platform = ref.watch(platformInfoProvider);
+final Provider<LoginBuildInfo> loginBuildInfoProvider =
+    Provider<LoginBuildInfo>((Ref ref) {
+      final platform = ref.watch(platformInfoProvider);
 
-    return LoginBuildInfo(
-      version: platform.appVersion,
-      buildNumber: platform.buildNumber,
-    );
-  },
-);
+      return LoginBuildInfo(
+        version: platform.appVersion,
+        buildNumber: platform.buildNumber,
+      );
+    });
 
 /// Owns the login screen's state and actions.
 ///

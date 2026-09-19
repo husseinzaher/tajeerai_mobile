@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../../../app/bootstrap/dependencies.dart';
 import '../../../../app/localization/locale_manager.dart';
 import '../../../../app/localization/translations/app_strings.dart';
 import '../../../../app/theme/theme.dart';
@@ -48,12 +47,18 @@ class LoginScreen extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               spacing: TajeerSpacing.xs,
               children: <Widget>[
-                Icon(LucideIcons.shieldCheck, size: 16, color: colors.textMuted),
+                Icon(
+                  LucideIcons.shieldCheck,
+                  size: 16,
+                  color: colors.textMuted,
+                ),
                 Flexible(
                   child: Text(
                     strings.securityNotice,
                     textAlign: TextAlign.center,
-                    style: context.type.caption.copyWith(color: colors.textMuted),
+                    style: context.type.caption.copyWith(
+                      color: colors.textMuted,
+                    ),
                   ),
                 ),
               ],

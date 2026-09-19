@@ -105,10 +105,7 @@ abstract final class LoginPhoneReader {
 
       if (!parsed.isValid()) return null;
 
-      return DialledNumber(
-        country: parsed.isoCode.name,
-        number: _e164(parsed),
-      );
+      return DialledNumber(country: parsed.isoCode.name, number: _e164(parsed));
     } on Object {
       return null;
     }
@@ -124,10 +121,7 @@ abstract final class LoginPhoneReader {
 
       if (!parsed.isValid()) return null;
 
-      return DialledNumber(
-        country: parsed.isoCode.name,
-        number: _e164(parsed),
-      );
+      return DialledNumber(country: parsed.isoCode.name, number: _e164(parsed));
     } on Object {
       return null;
     }

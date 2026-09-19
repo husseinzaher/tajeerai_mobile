@@ -10,12 +10,18 @@ final class ConversationAudioController extends ChangeNotifier
     implements AppAudioController {
   ConversationAudioController({AudioPlayer? player})
     : _player = player ?? AudioPlayer() {
-    _subscription = _player.onPlayerStateChanged.listen((_) => notifyListeners());
-    _positionSubscription = _player.onPositionChanged.listen((Duration position) {
+    _subscription = _player.onPlayerStateChanged.listen(
+      (_) => notifyListeners(),
+    );
+    _positionSubscription = _player.onPositionChanged.listen((
+      Duration position,
+    ) {
       _position = position;
       notifyListeners();
     });
-    _durationSubscription = _player.onDurationChanged.listen((Duration duration) {
+    _durationSubscription = _player.onDurationChanged.listen((
+      Duration duration,
+    ) {
       _duration = duration;
       notifyListeners();
     });

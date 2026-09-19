@@ -101,9 +101,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
       AsyncValue<List<Message>> next,
     ) {
       next.whenData((List<Message> items) {
-        unawaited(
-          ref.read(messageMediaCoordinatorProvider).cacheAll(items),
-        );
+        unawaited(ref.read(messageMediaCoordinatorProvider).cacheAll(items));
       });
     });
 
