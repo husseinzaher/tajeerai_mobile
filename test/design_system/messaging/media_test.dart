@@ -19,6 +19,26 @@ import 'package:tajeerai_mobile/design_system/shell/toolbar.dart';
 
 import '../../support/widget_harness.dart';
 
+/// A video player that records what it was asked to do.
+class _FakeVideo extends ChangeNotifier implements AppVideoController {
+  int toggles = 0;
+
+  @override
+  AppVideoPlayback playbackOf(String messageId) => const AppVideoPlayback();
+
+  @override
+  Widget? surfaceFor(String messageId) => null;
+
+  @override
+  Future<void> toggle({
+    required String messageId,
+    required AppAttachmentData attachment,
+  }) async {
+    toggles += 1;
+    notifyListeners();
+  }
+}
+
 /// A player that records what it was asked to do.
 class _FakeAudio extends ChangeNotifier implements AppAudioController {
   final List<AppAttachmentData> toggled = <AppAttachmentData>[];
@@ -67,6 +87,32 @@ void main() {
   });
 
   group('previews', () {
+    testWidgets('a video preview toggles inline playback through the app', (
+      WidgetTester tester,
+    ) async {
+      final _FakeVideo controller = _FakeVideo();
+      await tester.pumpWidget(
+        wrapWidget(
+          Center(
+            child: AppVideoPreview(
+              attachment: const AppAttachmentData(
+                name: 'clip.mp4',
+                mimeType: 'video/mp4',
+              ),
+              messageId: 'm1',
+              controller: controller,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byIcon(LucideIcons.play), findsOneWidget);
+      expect(find.byIcon(LucideIcons.video), findsOneWidget);
+      tester.semantics.tap(find.semantics.byLabel('clip.mp4'));
+      await tester.pump();
+      expect(controller.toggles, 1);
+    });
+
     testWidgets(
       'a picture not yet uploaded is a placeholder that still opens',
       (WidgetTester tester) async {
@@ -87,6 +133,32 @@ void main() {
         expect(opened, 1);
       },
     );
+
+    testWidgets('a video bubble draws a video preview instead of a file row', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        wrapWidget(
+          AppMessageBubble(
+            message: AppMessageData(
+              id: 'm1',
+              side: AppMessageSide.outgoing,
+              sentAt: DateTime(2026, 3, 12, 9, 40),
+              kind: AppMessageKind.video,
+              attachment: const AppAttachmentData(
+                name: 'clip.mp4',
+                mimeType: 'video/mp4',
+              ),
+              status: AppMessageStatus.delivered,
+            ),
+            videoController: _FakeVideo(),
+          ),
+        ),
+      );
+
+      expect(find.byType(AppVideoPreview), findsOneWidget);
+      expect(find.byType(AppFilePreview), findsNothing);
+    });
 
     testWidgets('a file shows its name and size, and reads as both', (
       WidgetTester tester,

@@ -269,9 +269,7 @@ void main() {
     testWidgets('falls back to an initial for an unknown provider', (
       WidgetTester tester,
     ) async {
-      await tester.pumpWidget(
-        wrapWidget(const AppSocialProviderMark('apple')),
-      );
+      await tester.pumpWidget(wrapWidget(const AppSocialProviderMark('apple')));
 
       expect(find.text('A'), findsOneWidget);
     });

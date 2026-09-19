@@ -1,7 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as p;
 import 'package:tajeerai_mobile/design_system/messaging/message_data.dart';
 import 'package:tajeerai_mobile/features/conversations/domain/entities/message.dart';
 import 'package:tajeerai_mobile/features/conversations/presentation/widgets/message_view_data.dart';
+import 'package:tajeerai_mobile/infrastructure/storage/file_storage.dart';
 
 import '../../../support/fixed_clock.dart';
 
@@ -106,6 +110,40 @@ void main() {
       AppMessageKind.unsupported,
     );
   });
+
+  test('video without a cached file still carries a preview attachment', () {
+    final AppMessageData data = _message(
+      type: 'video',
+      body: null,
+    ).toMessageData();
+
+    expect(data.kind, AppMessageKind.video);
+    expect(data.attachment?.mimeType, 'video/mp4');
+    expect(data.attachment?.name, 'video.mp4');
+  });
+
+  test(
+    'video poster path is wired when a thumbnail exists beside the file',
+    () async {
+      final Directory temp = await Directory.systemTemp.createTemp(
+        'poster-test',
+      );
+      addTearDown(() => temp.delete(recursive: true));
+
+      final String videoPath = p.join(temp.path, 'clip.mp4');
+      await File(videoPath).writeAsBytes(const <int>[0]);
+      final String thumbPath = FileStorage.thumbnailPathFor(videoPath);
+      await File(thumbPath).writeAsBytes(const <int>[0]);
+
+      expect(
+        _message(
+          type: 'video',
+          localMediaPath: videoPath,
+        ).toMessageData().attachment?.posterPath,
+        thumbPath,
+      );
+    },
+  );
 
   test('media carries its file; a message without one carries none', () {
     expect(

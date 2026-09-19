@@ -459,8 +459,9 @@ void main() {
       expect(field.textDirection, TextDirection.ltr);
       expect(field.textAlign, TextAlign.left);
 
-      final InputDecoration decoration =
-          tester.widget<InputDecorator>(find.byType(InputDecorator)).decoration;
+      final InputDecoration decoration = tester
+          .widget<InputDecorator>(find.byType(InputDecorator))
+          .decoration;
       expect(decoration.hintTextDirection, TextDirection.ltr);
 
       final Directionality directionality = tester

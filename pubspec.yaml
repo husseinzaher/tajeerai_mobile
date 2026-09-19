@@ -67,7 +67,10 @@ dependencies:
   file_picker: ^13.1.0
   record: ^7.1.1
   audioplayers: ^6.8.1
+  open_filex: ^4.7.0
   phone_numbers_parser: ^9.0.26
+  video_player: ^2.10.0
+  video_thumbnail: ^0.5.6
 
 dev_dependencies:
   flutter_test:

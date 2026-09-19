@@ -10,10 +10,13 @@ void main() {
       );
     });
 
-    test('leaves a number that is already local to the selected country alone', () {
-      expect(LoginPhoneReader.readDialledNumber('501234567'), isNull);
-      expect(LoginPhoneReader.readDialledNumber('0501234567'), isNull);
-    });
+    test(
+      'leaves a number that is already local to the selected country alone',
+      () {
+        expect(LoginPhoneReader.readDialledNumber('501234567'), isNull);
+        expect(LoginPhoneReader.readDialledNumber('0501234567'), isNull);
+      },
+    );
 
     test('strips a calling code that repeats the selected country', () {
       expect(
@@ -22,16 +25,19 @@ void main() {
       );
     });
 
-    test('reads a stated calling code even where the local number would be valid', () {
-      expect(
-        LoginPhoneReader.readDialledNumber('+201008755187')?.country,
-        'EG',
-      );
-      expect(
-        LoginPhoneReader.readDialledNumber('00201008755187')?.country,
-        'EG',
-      );
-    });
+    test(
+      'reads a stated calling code even where the local number would be valid',
+      () {
+        expect(
+          LoginPhoneReader.readDialledNumber('+201008755187')?.country,
+          'EG',
+        );
+        expect(
+          LoginPhoneReader.readDialledNumber('00201008755187')?.country,
+          'EG',
+        );
+      },
+    );
 
     test('says nothing until the digits are a whole number', () {
       for (final String partial in <String>[

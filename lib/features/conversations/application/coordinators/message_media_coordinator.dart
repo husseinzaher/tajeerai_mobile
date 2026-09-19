@@ -37,17 +37,26 @@ class MessageMediaCoordinator {
 
   /// Downloads one message's attachment when needed.
   Future<void> cacheOne(Message message) async {
-    if (!message.isInbound) return;
-    if (!OutboundMedia.supportedTypes.contains(message.type) &&
-        message.type != 'sticker') {
-      return;
+    await ensureCached(message);
+  }
+
+  /// Returns a readable local path for [message], downloading when needed.
+  Future<String?> ensureCached(Message message) async {
+    if (!_isCacheable(message)) {
+      return message.localMediaPath;
     }
 
     final String? existing = message.localMediaPath;
 
-    if (existing != null && _storage.exists(existing)) return;
+    if (existing != null && _storage.exists(existing)) {
+      if (message.type == 'video') {
+        await _storage.ensureVideoThumbnail(existing);
+      }
 
-    if (_inFlight.contains(message.id)) return;
+      return existing;
+    }
+
+    if (_inFlight.contains(message.id)) return existing;
 
     _inFlight.add(message.id);
 
@@ -57,26 +66,38 @@ class MessageMediaCoordinator {
         messageId: message.id,
       );
 
-      if (bytes.isEmpty || _looksLikeJsonError(bytes)) return;
+      if (bytes.isEmpty || _looksLikeJsonError(bytes)) return existing;
 
       final path = await _storage.writeCachedMedia(
         '${message.id}${_extensionFor(message.type)}',
         bytes,
       );
 
-      await _messages.updateMedia(
-        messageId: message.id,
-        localMediaPath: path,
-      );
+      if (message.type == 'video') {
+        await _storage.ensureVideoThumbnail(path);
+      }
+
+      await _messages.updateMedia(messageId: message.id, localMediaPath: path);
+
+      return path;
     } on Object catch (error, stackTrace) {
       _logger.debug(
         'media cache failed',
         data: <String, Object?>{'messageId': message.id, 'error': error},
       );
-      _logger.debug('media cache stack', data: <String, Object?>{'trace': '$stackTrace'});
+      _logger.debug(
+        'media cache stack',
+        data: <String, Object?>{'trace': '$stackTrace'},
+      );
+      return existing;
     } finally {
       _inFlight.remove(message.id);
     }
+  }
+
+  static bool _isCacheable(Message message) {
+    return OutboundMedia.supportedTypes.contains(message.type) ||
+        message.type == 'sticker';
   }
 
   static bool _looksLikeJsonError(List<int> bytes) {

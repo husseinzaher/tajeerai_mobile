@@ -87,7 +87,8 @@ class AuthRemoteDataSource {
 
     return SocialAuthConfig(
       providers: resolved,
-      googleWebClientId: googleWebClientId is String && googleWebClientId.isNotEmpty
+      googleWebClientId:
+          googleWebClientId is String && googleWebClientId.isNotEmpty
           ? googleWebClientId
           : null,
     );

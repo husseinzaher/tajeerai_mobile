@@ -75,11 +75,7 @@ class AppImagePreview extends StatelessWidget {
         width: width,
         height: height,
         fit: BoxFit.cover,
-        errorBuilder: (
-          BuildContext context,
-          Object error,
-          StackTrace? stack,
-        ) =>
+        errorBuilder: (BuildContext context, Object error, StackTrace? stack) =>
             placeholder(LucideIcons.imageOff),
       ),
       (_, final String networkUrl) => Image.network(
@@ -87,16 +83,12 @@ class AppImagePreview extends StatelessWidget {
         width: width,
         height: height,
         fit: BoxFit.cover,
-        loadingBuilder:
-            (BuildContext context, Widget child, ImageChunkEvent? chunk) =>
-                chunk == null
-                ? child
-                : AppSkeleton(width: width, height: height),
-        errorBuilder: (
+        loadingBuilder: (
           BuildContext context,
-          Object error,
-          StackTrace? stack,
-        ) =>
+          Widget child,
+          ImageChunkEvent? chunk,
+        ) => chunk == null ? child : AppSkeleton(width: width, height: height),
+        errorBuilder: (BuildContext context, Object error, StackTrace? stack) =>
             placeholder(LucideIcons.imageOff),
       ),
       _ => placeholder(LucideIcons.image),
@@ -114,6 +106,225 @@ class AppImagePreview extends StatelessWidget {
           borderRadius: TajeerRadii.mdAll,
           scaleOnPress: false,
           child: ClipRRect(borderRadius: TajeerRadii.mdAll, child: picture),
+        ),
+      ),
+    );
+  }
+}
+
+/// Where one video is in its playback.
+@immutable
+class AppVideoPlayback {
+  const AppVideoPlayback({
+    this.playing = false,
+    this.loading = false,
+    this.initialized = false,
+  });
+
+  final bool playing;
+  final bool loading;
+  final bool initialized;
+}
+
+/// Plays videos inline, supplied by the app.
+///
+/// An interface and not an implementation: the design system draws the card
+/// and must not grow a playback dependency to do it. The app holds the one real
+/// player and hands it in; a test hands in a fake.
+abstract interface class AppVideoController implements Listenable {
+  AppVideoPlayback playbackOf(String messageId);
+
+  /// The surface drawn inside the card while [messageId] is playing.
+  Widget? surfaceFor(String messageId);
+
+  Future<void> toggle({
+    required String messageId,
+    required AppAttachmentData attachment,
+  });
+}
+
+/// A video a message carries: a play affordance and inline playback.
+class AppVideoPreview extends StatelessWidget {
+  const AppVideoPreview({
+    required this.attachment,
+    this.messageId,
+    this.controller,
+    this.width = 220,
+    this.height = 160,
+    super.key,
+  });
+
+  final AppAttachmentData attachment;
+  final String? messageId;
+  final AppVideoController? controller;
+  final double width;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    final AppVideoController? player = controller;
+    if (player == null || messageId == null) {
+      return _VideoFrame(attachment: attachment, width: width, height: height);
+    }
+
+    return ListenableBuilder(
+      listenable: player,
+      builder: (BuildContext context, Widget? child) => _VideoFrame(
+        attachment: attachment,
+        messageId: messageId!,
+        controller: player,
+        width: width,
+        height: height,
+      ),
+    );
+  }
+}
+
+class _VideoFrame extends StatelessWidget {
+  const _VideoFrame({
+    required this.attachment,
+    required this.width,
+    required this.height,
+    this.messageId,
+    this.controller,
+  });
+
+  final AppAttachmentData attachment;
+  final String? messageId;
+  final AppVideoController? controller;
+  final double width;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    final TajeerColors colors = context.colors;
+    final AppMessages strings = context.strings;
+    final String label = attachment.name ?? strings.video;
+    final AppVideoController? player = controller;
+    final String? id = messageId;
+    final AppVideoPlayback playback = player == null || id == null
+        ? const AppVideoPlayback()
+        : player.playbackOf(id);
+    final Widget? surface = player == null || id == null
+        ? null
+        : player.surfaceFor(id);
+    final bool showControls =
+        !playback.initialized || !playback.playing || playback.loading;
+    final String? posterPath = attachment.posterPath;
+    final bool hasPoster = posterPath != null && File(posterPath).existsSync();
+    final bool showSurface = playback.initialized && surface != null;
+
+    Future<void> toggle() async {
+      if (player == null || id == null) return;
+
+      await player.toggle(messageId: id, attachment: attachment);
+    }
+
+    return Semantics(
+      container: true,
+      button: player != null,
+      label: label,
+      onTap: player == null ? null : toggle,
+      child: ExcludeSemantics(
+        child: AppPressable(
+          onTap: player == null ? null : () => unawaited(toggle()),
+          borderRadius: TajeerRadii.mdAll,
+          scaleOnPress: false,
+          child: ClipRRect(
+            borderRadius: TajeerRadii.mdAll,
+            child: SizedBox(
+              width: width,
+              height: height,
+              child: Stack(
+                fit: StackFit.expand,
+                alignment: Alignment.center,
+                children: <Widget>[
+                  if (showSurface)
+                    FittedBox(
+                      fit: BoxFit.cover,
+                      clipBehavior: Clip.hardEdge,
+                      child: surface,
+                    )
+                  else if (hasPoster)
+                    Image.file(
+                      File(posterPath),
+                      fit: BoxFit.cover,
+                      width: width,
+                      height: height,
+                      errorBuilder: (
+                        BuildContext context,
+                        Object error,
+                        StackTrace? stack,
+                      ) => ColoredBox(color: colors.surfaceMuted),
+                    )
+                  else
+                    ColoredBox(color: colors.surfaceMuted),
+                  if (playback.loading)
+                    Center(
+                      child: SizedBox.square(
+                        dimension: 28,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: colors.textInverse,
+                        ),
+                      ),
+                    ),
+                  if (showControls && !playback.loading)
+                    Container(
+                      width: 48,
+                      height: 48,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: colors.surfaceOverlay,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        playback.playing ? LucideIcons.pause : LucideIcons.play,
+                        size: 22,
+                        color: colors.textInverse,
+                      ),
+                    ),
+                  PositionedDirectional(
+                    start: TajeerSpacing.sm,
+                    end: TajeerSpacing.sm,
+                    bottom: TajeerSpacing.sm,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: colors.surfaceOverlay.withValues(alpha: 0.72),
+                        borderRadius: TajeerRadii.smAll,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: TajeerSpacing.xs,
+                          vertical: TajeerSpacing.xs2,
+                        ),
+                        child: Row(
+                          spacing: TajeerSpacing.xs2,
+                          children: <Widget>[
+                            Icon(
+                              LucideIcons.video,
+                              size: 14,
+                              color: colors.textInverse,
+                            ),
+                            Expanded(
+                              child: Text(
+                                label,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: context.type.caption.copyWith(
+                                  color: colors.textInverse,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -464,7 +675,52 @@ class AppAttachmentPreview extends StatelessWidget {
   Widget build(BuildContext context) {
     final TajeerColors colors = context.colors;
     final AppMessages strings = context.strings;
-    final bool picture = attachment.mimeType?.startsWith('image/') ?? false;
+    final String? mimeType = attachment.mimeType;
+    final bool picture = mimeType?.startsWith('image/') ?? false;
+    final bool video = mimeType?.startsWith('video/') ?? false;
+
+    if (video) {
+      return SizedBox.square(
+        dimension: thumbnail,
+        child: Stack(
+          children: <Widget>[
+            Positioned.fill(
+              child: AppVideoPreview(
+                attachment: attachment,
+                width: thumbnail,
+                height: thumbnail,
+              ),
+            ),
+            PositionedDirectional(
+              top: TajeerSpacing.xs2,
+              end: TajeerSpacing.xs2,
+              child: Semantics(
+                button: true,
+                label: strings.remove,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: onRemove,
+                  child: Container(
+                    width: 28,
+                    height: 28,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: colors.surfaceOverlay,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      LucideIcons.x,
+                      size: 14,
+                      color: colors.textInverse,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     if (!picture) {
       return DecoratedBox(

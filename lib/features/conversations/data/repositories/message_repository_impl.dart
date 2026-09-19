@@ -147,10 +147,12 @@ class MessageRepositoryImpl implements MessageRepository {
     final String stagedPath;
 
     try {
-      stagedPath = await _storage.stageOutboundMedia(
-        sourcePath: media.localPath,
-        destinationName: '$clientMessageId-${p.basename(media.filename)}',
-      );
+      stagedPath = _storage.isStagedOutboundPath(media.localPath)
+          ? media.localPath
+          : await _storage.stageOutboundMedia(
+              sourcePath: media.localPath,
+              destinationName: '$clientMessageId-${p.basename(media.filename)}',
+            );
     } on FileSystemException catch (error, stackTrace) {
       _logger.error(
         'failed to stage outbound media',

@@ -49,6 +49,7 @@ class AppAttachmentData {
   const AppAttachmentData({
     this.url,
     this.localPath,
+    this.posterPath,
     this.name,
     this.sizeBytes,
     this.mimeType,
@@ -59,6 +60,9 @@ class AppAttachmentData {
   /// Set while an outgoing file has not left the device yet.
   final String? localPath;
 
+  /// A generated still frame for video attachments.
+  final String? posterPath;
+
   final String? name;
   final int? sizeBytes;
   final String? mimeType;
@@ -68,12 +72,14 @@ class AppAttachmentData {
       other is AppAttachmentData &&
       other.url == url &&
       other.localPath == localPath &&
+      other.posterPath == posterPath &&
       other.name == name &&
       other.sizeBytes == sizeBytes &&
       other.mimeType == mimeType;
 
   @override
-  int get hashCode => Object.hash(url, localPath, name, sizeBytes, mimeType);
+  int get hashCode =>
+      Object.hash(url, localPath, posterPath, name, sizeBytes, mimeType);
 }
 
 /// The message a reply quotes.

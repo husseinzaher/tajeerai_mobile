@@ -132,7 +132,8 @@ void main() {
 
       expect(outcome, isA<SocialSignedIn>());
 
-      final String? challenge = browser.opened?.queryParameters['codeChallenge'];
+      final String? challenge =
+          browser.opened?.queryParameters['codeChallenge'];
       expect(challenge, isNotNull);
 
       final String spent = repository.exchanged.single;

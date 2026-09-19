@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:open_filex/open_filex.dart';
 
 import '../../../../app/bootstrap/dependencies.dart';
 import '../../../../app/localization/translations/app_strings.dart';
@@ -10,8 +12,10 @@ import '../../../../design_system/design_system.dart';
 import '../../domain/entities/conversation.dart';
 import '../../domain/entities/message.dart';
 import '../controllers/conversation_thread_controller.dart';
+import '../helpers/conversation_attachment_opener.dart';
 import '../helpers/conversation_audio_controller.dart';
 import '../helpers/conversation_media_picker.dart';
+import '../helpers/conversation_video_controller.dart';
 import '../helpers/conversation_voice_recorder.dart';
 import '../widgets/async_view_state.dart';
 import '../widgets/conversation_view_data.dart';
@@ -37,6 +41,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
   final AppComposerController _composer = AppComposerController();
   late final ConversationVoiceRecorder _voiceRecorder;
   late final ConversationAudioController _audio;
+  late final ConversationVideoController _video;
 
   /// Matches the WhatsApp channel capability set until channel metadata
   /// arrives with the conversation.
@@ -50,6 +55,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
 
   bool _recording = false;
   Duration _recordingElapsed = Duration.zero;
+  int _mediaCacheGeneration = 0;
 
   @override
   void initState() {
@@ -61,6 +67,10 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
         }
       };
     _audio = ConversationAudioController();
+    _video = ConversationVideoController(
+      cache: ref.read(messageMediaCoordinatorProvider),
+      messages: ref.read(messageRepositoryProvider),
+    );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref
@@ -78,6 +88,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     _composer.dispose();
     unawaited(_voiceRecorder.dispose());
     unawaited(_audio.dispose());
+    unawaited(_video.dispose());
     super.dispose();
   }
 
@@ -101,9 +112,12 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
       AsyncValue<List<Message>> next,
     ) {
       next.whenData((List<Message> items) {
-        unawaited(
-          ref.read(messageMediaCoordinatorProvider).cacheAll(items),
-        );
+        unawaited(() async {
+          await ref.read(messageMediaCoordinatorProvider).cacheAll(items);
+          if (mounted) {
+            setState(() => _mediaCacheGeneration += 1);
+          }
+        }());
       });
     });
 
@@ -131,6 +145,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
               onBack: () => context.pop(),
             ),
       timeline: AppMessageTimeline(
+        key: ValueKey<int>(_mediaCacheGeneration),
         state: messages.toViewState(
           (List<Message> items) => <AppMessageData>[
             for (final Message item in items) item.toMessageData(),
@@ -143,6 +158,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
         emptyDescription: strings.sendFirstMessage,
         controller: _scroll,
         audioController: _audio,
+        videoController: _video,
         onRetry: (AppMessageData data) => _act(data, _thread.retry),
         onDiscard: (AppMessageData data) => _act(data, _thread.discard),
         onLongPress: (AppMessageData data) => AppMessageActions.show(
@@ -151,6 +167,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
           onRetry: () => _act(data, _thread.retry),
           onDiscard: () => _act(data, _thread.discard),
         ),
+        onOpenAttachment: _openAttachment,
       ),
       composer: AppComposer(
         controller: _composer,
@@ -173,10 +190,22 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
   }
 
   Future<void> _attach() async {
-    final AppAttachmentData? picked = await ConversationMediaPicker.pick();
+    try {
+      final AppAttachmentData? picked = await ConversationMediaPicker.pick(
+        storage: ref.read(fileStorageProvider),
+      );
 
-    if (picked != null && mounted) {
-      _composer.addAttachment(picked);
+      if (picked != null && mounted) {
+        _composer.addAttachment(picked);
+      }
+    } on FileSystemException {
+      if (!mounted) return;
+
+      AppSnackbar.show(
+        context,
+        message: ref.read(appStringsProvider).sendNotSaved,
+        tone: AppSnackbarTone.warning,
+      );
     }
   }
 
@@ -224,6 +253,32 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
         ComposerError.notSaved => strings.sendNotSaved,
         ComposerError.unknown => strings.sendFailed,
       };
+
+  Future<void> _openAttachment(AppMessageData data) async {
+    if (data.kind == AppMessageKind.video) return;
+
+    final Message? message = ref
+        .read(threadMessagesProvider(widget.conversationId))
+        .value
+        ?.where((Message candidate) => candidate.id == data.id)
+        .firstOrNull;
+
+    if (message == null || !mounted) return;
+
+    final result = await ConversationAttachmentOpener.open(
+      message: message,
+      cache: ref.read(messageMediaCoordinatorProvider),
+      messages: ref.read(messageRepositoryProvider),
+    );
+
+    if (!mounted || result.type == ResultType.done) return;
+
+    AppSnackbar.show(
+      context,
+      message: ref.read(appStringsProvider).sendFailed,
+      tone: AppSnackbarTone.warning,
+    );
+  }
 
   void _act(AppMessageData data, Future<void> Function(Message) action) {
     final Message? message = ref

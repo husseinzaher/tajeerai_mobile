@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:video_thumbnail/video_thumbnail.dart';
 
 /// Device file locations and basic file operations.
 ///
@@ -59,6 +60,11 @@ class FileStorage {
     return path;
   }
 
+  /// Whether [path] already lives in the outbound staging directory.
+  bool isStagedOutboundPath(String path) {
+    return p.normalize(path).replaceAll(r'\', '/').contains('/outbound/');
+  }
+
   /// Copies a picked attachment into permanent storage before it is queued.
   ///
   /// Gallery and document pickers often hand back a cache path or a URI-backed
@@ -68,6 +74,8 @@ class FileStorage {
     required String sourcePath,
     required String destinationName,
   }) async {
+    if (isStagedOutboundPath(sourcePath)) return sourcePath;
+
     final File source = File(sourcePath);
 
     if (!source.existsSync()) {
@@ -77,6 +85,94 @@ class FileStorage {
       );
     }
 
+    final String destinationPath = await _outboundDestination(destinationName);
+
+    await source.copy(destinationPath);
+
+    if (_isVideoPath(destinationPath)) {
+      await ensureVideoThumbnail(destinationPath);
+    }
+
+    return destinationPath;
+  }
+
+  /// Writes a picked attachment from memory into outbound storage.
+  Future<String> stageOutboundMediaFromBytes({
+    required List<int> bytes,
+    required String destinationName,
+  }) async {
+    final String destinationPath = await _outboundDestination(destinationName);
+
+    await File(destinationPath).writeAsBytes(bytes, flush: true);
+
+    if (_isVideoPath(destinationPath)) {
+      await ensureVideoThumbnail(destinationPath);
+    }
+
+    return destinationPath;
+  }
+
+  /// Streams a picked attachment into outbound storage.
+  ///
+  /// Used when the picker only exposes a content URI or byte stream, which is
+  /// common for gallery videos on Android.
+  Future<String> stageOutboundMediaFromStream({
+    required Stream<List<int>> stream,
+    required String destinationName,
+  }) async {
+    final String destinationPath = await _outboundDestination(destinationName);
+    final IOSink sink = File(destinationPath).openWrite();
+
+    await stream.forEach(sink.add);
+    await sink.flush();
+    await sink.close();
+
+    if (_isVideoPath(destinationPath)) {
+      await ensureVideoThumbnail(destinationPath);
+    }
+
+    return destinationPath;
+  }
+
+  static bool _isVideoPath(String path) {
+    return switch (p.extension(path).toLowerCase()) {
+      '.mp4' || '.mov' || '.m4v' || '.3gp' || '.webm' || '.mkv' => true,
+      _ => false,
+    };
+  }
+
+  /// The thumbnail path that sits beside a cached or staged video file.
+  static String thumbnailPathFor(String videoPath) {
+    return p.setExtension(
+      p.join(
+        p.dirname(videoPath),
+        '${p.basenameWithoutExtension(videoPath)}_thumb',
+      ),
+      '.jpg',
+    );
+  }
+
+  /// Writes a still frame next to [videoPath] when one is not already there.
+  Future<String?> ensureVideoThumbnail(String videoPath) async {
+    if (!exists(videoPath)) return null;
+
+    final String thumbnailPath = thumbnailPathFor(videoPath);
+    if (exists(thumbnailPath)) return thumbnailPath;
+
+    final String? generated = await VideoThumbnail.thumbnailFile(
+      video: videoPath,
+      thumbnailPath: thumbnailPath,
+      imageFormat: ImageFormat.JPEG,
+      maxHeight: 320,
+      quality: 75,
+    );
+
+    if (generated == null || !exists(generated)) return null;
+
+    return generated;
+  }
+
+  Future<String> _outboundDestination(String destinationName) async {
     final Directory documents = await documentsDirectory();
     final Directory outbound = Directory(p.join(documents.path, 'outbound'));
 
@@ -84,10 +180,6 @@ class FileStorage {
       await outbound.create(recursive: true);
     }
 
-    final String destinationPath = p.join(outbound.path, destinationName);
-
-    await source.copy(destinationPath);
-
-    return destinationPath;
+    return p.join(outbound.path, destinationName);
   }
 }
