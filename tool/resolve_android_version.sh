@@ -19,6 +19,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 MODE="${1:-}"
+SOURCE="${2:-auto}"
 
 read_pubspec_version() {
   sed -n 's/^version:[[:space:]]*//p' "$ROOT/pubspec.yaml" | head -1
@@ -28,7 +29,10 @@ TAG="$(
   git -C "$ROOT" describe --tags --match 'v[0-9]*.[0-9]*.[0-9]*' --abbrev=0 2>/dev/null || true
 )"
 
-if [[ -n "$TAG" ]]; then
+if [[ "$SOURCE" == "pubspec" ]]; then
+  VERSION="$(read_pubspec_version)"
+  VERSION="${VERSION%%+*}"
+elif [[ -n "$TAG" ]]; then
   VERSION="${TAG#v}"
 else
   VERSION="$(read_pubspec_version)"

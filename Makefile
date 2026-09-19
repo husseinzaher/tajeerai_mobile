@@ -27,7 +27,7 @@ help:
 	@echo "run-prod-dev  Production backend, debug build (hot reload)"
 	@echo "build-prod    Release APK against .env.production"
 	@echo "android-build Release App Bundle for Google Play (.aab)"
-	@echo "cd-local      Local Android CD: verify, build signed AAB, validate artifact"
+	@echo "cd-local      Local Android CD: tag from pubspec, verify, build signed AAB"
 	@echo "arch          Run the architecture guard"
 	@echo "format        Format lib, test and tool"
 	@echo "analyze       Static analysis (infos and warnings fatal)"
@@ -174,5 +174,5 @@ android-build: ## Build a signed release App Bundle for Google Play
 	@echo "  versionName=$(ANDROID_BUILD_NAME)  versionCode=$(ANDROID_BUILD_NUMBER)"
 
 cd-local: ## Run the local Android CD pipeline
-	ALLOW_DIRTY="$(ALLOW_DIRTY)" SKIP_VERIFY="$(SKIP_VERIFY)" DRY_RUN="$(DRY_RUN)" UPLOAD="$(UPLOAD)" \
+	ALLOW_DIRTY="$(ALLOW_DIRTY)" SKIP_VERIFY="$(SKIP_VERIFY)" DRY_RUN="$(DRY_RUN)" PUSH_TAG="$(PUSH_TAG)" \
 		bash scripts/release/android-cd.sh

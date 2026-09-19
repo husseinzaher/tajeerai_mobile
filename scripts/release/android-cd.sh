@@ -1,29 +1,35 @@
 #!/usr/bin/env bash
 # Local Android CD pipeline for Tajeer AI mobile.
 #
-# Validates repository state, resolves version from the release Git tag,
-# runs verification, builds a signed App Bundle, and optionally uploads to
-# Google Play. Designed to be invoked by `make cd-local` and reusable from
-# future CI without GitHub-specific logic.
+# Reads the release version from pubspec.yaml, ensures a matching annotated Git
+# tag exists on the current commit, runs verification, builds a signed App
+# Bundle, and validates the artifact. Designed to be invoked by `make cd-local`
+# and reusable from future CI without GitHub-specific logic.
 #
 # Environment overrides:
 #   ALLOW_DIRTY=1   Continue with uncommitted changes (default: fail)
 #   SKIP_VERIFY=1   Skip `make verify` (default: run verify)
-#   DRY_RUN=1       Validate and print planned steps only (no build/upload)
-#   UPLOAD=1        Upload the AAB to Google Play after a successful build
+#   DRY_RUN=1       Validate and print planned steps only (no tag/build)
+#   PUSH_TAG=1      Push a newly created release tag to origin (default: local only)
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 AAB_REL="build/app/outputs/bundle/release/app-release.aab"
 AAB_PATH="$ROOT/$AAB_REL"
-PACKAGE_NAME="com.tajeerai.mobile"
 RELEASE_TAG_PATTERN='^v[0-9]+\.[0-9]+\.[0-9]+$'
 
 ALLOW_DIRTY="${ALLOW_DIRTY:-0}"
 SKIP_VERIFY="${SKIP_VERIFY:-0}"
 DRY_RUN="${DRY_RUN:-0}"
-UPLOAD="${UPLOAD:-0}"
+PUSH_TAG="${PUSH_TAG:-0}"
+
+TAG_ACTION="NONE"
+TAG_STATUS="UNKNOWN"
+TAG_PUSHED="no"
+VERIFY_STATUS="SKIPPED"
+BUILD_STATUS="SKIPPED"
+AAB_SIZE=""
 
 log() {
   printf '%s\n' "$*"
@@ -51,10 +57,6 @@ human_size() {
   fi
 }
 
-print_planned() {
-  log "Would run: $*"
-}
-
 validate_commands() {
   require_command git
   require_command flutter
@@ -76,143 +78,160 @@ validate_clean_worktree() {
   fi
 }
 
-validate_release_tag() {
-  mapfile -t matching_tags < <(
-    git -C "$ROOT" tag --points-at HEAD --list 'v[0-9]*.[0-9]*.[0-9]*' | sort -u
-  )
+read_release_version() {
+  VERSION_NAME="$(bash "$ROOT/tool/resolve_android_version.sh" name pubspec)"
+  VERSION_CODE="$(bash "$ROOT/tool/resolve_android_version.sh" number pubspec)"
+  RELEASE_TAG="v${VERSION_NAME}"
 
-  if ((${#matching_tags[@]} == 0)); then
-    fail "HEAD is not on a release tag. Check out an annotated release tag such as v1.0.0 before running CD."
+  if [[ -z "$VERSION_NAME" || -z "$VERSION_CODE" ]]; then
+    fail "Version resolver returned empty values from pubspec.yaml."
   fi
-
-  if ((${#matching_tags[@]} > 1)); then
-    fail "Multiple release tags point at HEAD: ${matching_tags[*]}. Use a single unambiguous tag."
-  fi
-
-  RELEASE_TAG="${matching_tags[0]}"
 
   if [[ ! "$RELEASE_TAG" =~ $RELEASE_TAG_PATTERN ]]; then
-    fail "Release tag '$RELEASE_TAG' is invalid. Expected format: vMAJOR.MINOR.PATCH (example: v1.2.3)."
-  fi
-
-  local exact_tag
-  exact_tag="$(git -C "$ROOT" describe --tags --exact-match HEAD 2>/dev/null || true)"
-
-  if [[ "$exact_tag" != "$RELEASE_TAG" ]]; then
-    fail "HEAD must be exactly on release tag $RELEASE_TAG (git describe --exact-match mismatch)."
+    fail "Release version '$VERSION_NAME' is invalid. Expected MAJOR.MINOR.PATCH in pubspec.yaml."
   fi
 }
 
 resolve_version() {
-  VERSION_NAME="$(bash "$ROOT/tool/resolve_android_version.sh" name)"
-  VERSION_CODE="$(bash "$ROOT/tool/resolve_android_version.sh" number)"
+  read_release_version
 
-  if [[ -z "$VERSION_NAME" || -z "$VERSION_CODE" ]]; then
-    fail "Version resolver returned empty values."
+  local resolved_name resolved_code
+  resolved_name="$(bash "$ROOT/tool/resolve_android_version.sh" name pubspec)"
+  resolved_code="$(bash "$ROOT/tool/resolve_android_version.sh" number pubspec)"
+
+  if [[ "$resolved_name" != "$VERSION_NAME" || "$resolved_code" != "$VERSION_CODE" ]]; then
+    fail "Version resolver mismatch for pubspec release $VERSION_NAME."
+  fi
+}
+
+inspect_existing_tag() {
+  local head_sha tag_sha
+
+  head_sha="$(git -C "$ROOT" rev-parse HEAD)"
+
+  if ! git -C "$ROOT" rev-parse "$RELEASE_TAG" >/dev/null 2>&1; then
+    TAG_STATUS="MISSING"
+    return 1
   fi
 
-  local expected="${RELEASE_TAG#v}"
-  if [[ "$VERSION_NAME" != "$expected" ]]; then
-    fail "Version resolver produced versionName=$VERSION_NAME but release tag is $RELEASE_TAG."
+  tag_sha="$(git -C "$ROOT" rev-parse "$RELEASE_TAG^{commit}")"
+
+  if [[ "$tag_sha" == "$head_sha" ]]; then
+    TAG_STATUS="EXISTS (HEAD)"
+    return 0
+  fi
+
+  TAG_STATUS="EXISTS (OTHER COMMIT)"
+  fail "Release tag $RELEASE_TAG already exists on commit ${tag_sha:0:7} but HEAD is ${head_sha:0:7}. Bump the version in pubspec.yaml before creating another release."
+}
+
+ensure_release_tag() {
+  if inspect_existing_tag; then
+    TAG_ACTION="REUSED"
+    return
+  fi
+
+  if [[ "$DRY_RUN" == "1" ]]; then
+    TAG_ACTION="WOULD CREATE ANNOTATED TAG"
+    return
+  fi
+
+  git -C "$ROOT" tag -a "$RELEASE_TAG" -m "Release $RELEASE_TAG"
+  TAG_ACTION="CREATED"
+
+  if [[ "$PUSH_TAG" == "1" ]]; then
+    require_command git
+    log "Pushing release tag $RELEASE_TAG to origin..."
+    git -C "$ROOT" push origin "$RELEASE_TAG"
+    TAG_PUSHED="yes"
   fi
 }
 
 run_verify() {
   if [[ "$SKIP_VERIFY" == "1" ]]; then
+    VERIFY_STATUS="SKIPPED"
     log "WARNING: SKIP_VERIFY=1 — skipping make verify."
     return
   fi
 
-  if [[ "$DRY_RUN" == "1" ]]; then
-    print_planned "make verify"
-    return
-  fi
-
   log "Running make verify..."
-  make -C "$ROOT" verify
+  if make -C "$ROOT" verify; then
+    VERIFY_STATUS="PASSED"
+  else
+    VERIFY_STATUS="FAILED"
+    fail "make verify failed."
+  fi
 }
 
 run_build() {
-  if [[ "$DRY_RUN" == "1" ]]; then
-    print_planned "make android-build"
-    return
-  fi
-
   log "Running make android-build..."
-  make -C "$ROOT" android-build
+  if make -C "$ROOT" android-build \
+    "ANDROID_BUILD_NAME=$VERSION_NAME" \
+    "ANDROID_BUILD_NUMBER=$VERSION_CODE"; then
+    BUILD_STATUS="PASSED"
+  else
+    BUILD_STATUS="FAILED"
+    fail "make android-build failed."
+  fi
 }
 
 verify_artifact() {
-  if [[ "$DRY_RUN" == "1" ]]; then
-    print_planned "test -s $AAB_REL"
-    AAB_SIZE="(dry run)"
-    return
-  fi
-
   [[ -f "$AAB_PATH" ]] || fail "Expected AAB not found at $AAB_REL."
   [[ -s "$AAB_PATH" ]] || fail "AAB exists but is empty: $AAB_REL."
 
   AAB_SIZE="$(human_size "$(wc -c < "$AAB_PATH" | tr -d ' ')")"
 }
 
-play_upload_configured() {
-  local service_account="${GOOGLE_PLAY_SERVICE_ACCOUNT_JSON:-$ROOT/android/play-service-account.json}"
-
-  [[ -f "$service_account" ]]
-}
-
-upload_to_play() {
-  local service_account="${GOOGLE_PLAY_SERVICE_ACCOUNT_JSON:-$ROOT/android/play-service-account.json}"
-  local track="${GOOGLE_PLAY_TRACK:-internal}"
-
-  if [[ "$DRY_RUN" == "1" ]]; then
-    print_planned "fastlane supply --aab $AAB_REL --package_name $PACKAGE_NAME --track $track --json_key <service-account> --skip_upload_apk --skip_upload_metadata --skip_upload_images --skip_upload_screenshots"
-    return
+print_dry_run_plan() {
+  log ""
+  log "Release version: $VERSION_NAME"
+  log "Release tag:     $RELEASE_TAG"
+  log "Tag status:      $TAG_STATUS"
+  if [[ "$TAG_ACTION" == "WOULD CREATE ANNOTATED TAG" ]]; then
+    log "Action:          WOULD CREATE ANNOTATED TAG"
+  elif [[ "$TAG_ACTION" == "REUSED" ]]; then
+    log "Action:          WOULD REUSE EXISTING TAG"
   fi
-
-  if ! play_upload_configured; then
-    fail "Google Play upload is not configured. Set GOOGLE_PLAY_SERVICE_ACCOUNT_JSON to a service-account JSON file, or place the file at android/play-service-account.json (gitignored)."
+  if [[ "$SKIP_VERIFY" != "1" ]]; then
+    log "Action:          WOULD RUN VERIFY"
+  else
+    log "Action:          WOULD SKIP VERIFY (SKIP_VERIFY=1)"
   fi
-
-  require_command fastlane
-
-  log "Uploading AAB to Google Play (track: $track)..."
-
-  fastlane supply \
-    --aab "$AAB_PATH" \
-    --package_name "$PACKAGE_NAME" \
-    --track "$track" \
-    --json_key "$service_account" \
-    --skip_upload_apk \
-    --skip_upload_metadata \
-    --skip_upload_images \
-    --skip_upload_screenshots
+  log "Action:          WOULD BUILD AAB"
 }
 
 print_summary() {
   log ""
   log "========================================"
   if [[ "$DRY_RUN" == "1" ]]; then
-    log "Android CD dry run completed"
+    log "Local Android CD (dry run)"
   else
-    log "Android CD completed successfully"
+    log "Local Android CD"
   fi
   log "========================================"
-  log "Tag:          $RELEASE_TAG"
-  log "Version:      $VERSION_NAME"
-  log "Version code: $VERSION_CODE"
-  if [[ "$DRY_RUN" != "1" ]]; then
-    log "Artifact:     $AAB_REL"
-    log "Size:         $AAB_SIZE"
-  fi
-  if [[ "$UPLOAD" == "1" ]]; then
-    if play_upload_configured; then
-      log "Upload:       Google Play (${GOOGLE_PLAY_TRACK:-internal})"
-    else
-      log "Upload:       requested but not configured"
-    fi
+  log "Version:       $VERSION_NAME"
+  log "Version code:  $VERSION_CODE"
+  log "Release tag:   $RELEASE_TAG"
+  if [[ "$DRY_RUN" == "1" ]]; then
+    log "Tag status:    $TAG_STATUS"
+    log "Tag action:    $TAG_ACTION"
+    log "Verification:  $VERIFY_STATUS"
+    log "Build:         $BUILD_STATUS"
   else
-    log "Upload:       skipped (set UPLOAD=1 to enable)"
+    log "Tag action:    $TAG_ACTION"
+    log "Verification:  $VERIFY_STATUS"
+    log "Build:         $BUILD_STATUS"
+    log "Artifact:      $AAB_REL"
+    if [[ -n "$AAB_SIZE" ]]; then
+      log "Size:          $AAB_SIZE"
+    fi
+    if [[ "$TAG_ACTION" == "CREATED" ]]; then
+      if [[ "$TAG_PUSHED" == "yes" ]]; then
+        log "Tag pushed:    yes"
+      else
+        log "Tag pushed:    no (local only; set PUSH_TAG=1 to push)"
+      fi
+    fi
   fi
   log "========================================"
 }
@@ -222,26 +241,24 @@ main() {
 
   validate_commands
   validate_clean_worktree
-  validate_release_tag
   resolve_version
-
-  log "Release tag:  $RELEASE_TAG"
-  log "Version:      $VERSION_NAME"
-  log "Version code: $VERSION_CODE"
+  ensure_release_tag
 
   if [[ "$DRY_RUN" == "1" ]]; then
-    log ""
-    log "DRY_RUN=1 — planned steps:"
+    if [[ "$SKIP_VERIFY" == "1" ]]; then
+      VERIFY_STATUS="SKIPPED"
+    else
+      VERIFY_STATUS="WOULD RUN"
+    fi
+    BUILD_STATUS="WOULD RUN"
+    print_dry_run_plan
+    print_summary
+    return
   fi
 
   run_verify
   run_build
   verify_artifact
-
-  if [[ "$UPLOAD" == "1" ]]; then
-    upload_to_play
-  fi
-
   print_summary
 }
 
