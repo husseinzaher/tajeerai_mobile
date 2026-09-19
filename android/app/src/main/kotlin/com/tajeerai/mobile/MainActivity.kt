@@ -1,4 +1,4 @@
-package net.tajeerai.mobile
+package com.tajeerai.mobile
 
 import io.flutter.embedding.android.FlutterActivity
 
