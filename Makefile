@@ -5,7 +5,7 @@
 .PHONY: help setup tokens tokens-check generate watch migrations arch format format-check analyze \
         test golden golden-update coverage verify clean run run-staging run-prod run-prod-dev \
         showcase showcase-build google-sign-in-setup google-sign-in-check \
-        build-prod build-staging android-build cd-local
+        build-prod build-staging android-build cd cd-local
 
 # Build configuration comes from a .env file, read natively by Flutter's
 # --dart-define-from-file. A local `.env` (gitignored) wins when present, so a
@@ -27,6 +27,7 @@ help:
 	@echo "run-prod-dev  Production backend, debug build (hot reload)"
 	@echo "build-prod    Release APK against .env.production"
 	@echo "android-build Release App Bundle for Google Play (.aab)"
+	@echo "cd            Android CD pipeline (MODE=local|github)"
 	@echo "cd-local      Local Android CD: tag from pubspec, verify, build signed AAB"
 	@echo "arch          Run the architecture guard"
 	@echo "format        Format lib, test and tool"
@@ -173,6 +174,12 @@ android-build: ## Build a signed release App Bundle for Google Play
 	@echo "  build/app/outputs/bundle/release/app-release.aab"
 	@echo "  versionName=$(ANDROID_BUILD_NAME)  versionCode=$(ANDROID_BUILD_NUMBER)"
 
+MODE ?= local
+
+cd: ## Run the shared Android CD pipeline (MODE=local|github)
+	ALLOW_DIRTY="$(ALLOW_DIRTY)" SKIP_VERIFY="$(SKIP_VERIFY)" DRY_RUN="$(DRY_RUN)" \
+		PUSH_TAG="$(PUSH_TAG)" UPLOAD="$(UPLOAD)" GOOGLE_PLAY_TRACK="$(GOOGLE_PLAY_TRACK)" \
+		bash scripts/release/android-cd.sh --mode "$(MODE)"
+
 cd-local: ## Run the local Android CD pipeline
-	ALLOW_DIRTY="$(ALLOW_DIRTY)" SKIP_VERIFY="$(SKIP_VERIFY)" DRY_RUN="$(DRY_RUN)" PUSH_TAG="$(PUSH_TAG)" \
-		bash scripts/release/android-cd.sh
+	$(MAKE) cd MODE=local

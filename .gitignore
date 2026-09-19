@@ -36,6 +36,7 @@ coverage/
 android/.gradle/
 android/local.properties
 android/key.properties
+android/app/key.properties
 android/play-service-account.json
 android/app/upload-keystore.jks
 android/app/debug/
