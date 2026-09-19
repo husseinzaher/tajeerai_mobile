@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 
 import '../../../../design_system/design_system.dart';
+import '../../../../infrastructure/storage/file_storage.dart';
 import '../../domain/entities/message.dart';
 
 /// A message, as the thread draws it.
@@ -24,7 +25,9 @@ extension MessagePresentation on Message {
   );
 
   AppAttachmentData? get _attachment {
-    if (mediaUrl == null && localMediaPath == null) return null;
+    if (mediaUrl == null && localMediaPath == null) {
+      return _attachmentPlaceholder;
+    }
 
     final String? path = localMediaPath;
     final File? file = path == null ? null : File(path);
@@ -32,12 +35,41 @@ extension MessagePresentation on Message {
     return AppAttachmentData(
       url: mediaUrl,
       localPath: localMediaPath,
-      name: path == null ? null : p.basename(path),
+      posterPath: type == 'video' ? _posterPathFor(path) : null,
+      name: _attachmentName(path),
       mimeType: path == null
           ? _mimeFromType(type)
           : _mimeFromPath(path) ?? _mimeFromType(type),
       sizeBytes: file != null && file.existsSync() ? file.lengthSync() : null,
     );
+  }
+
+  AppAttachmentData? get _attachmentPlaceholder => switch (type) {
+    'image' || 'sticker' => const AppAttachmentData(
+      mimeType: 'image/jpeg',
+      name: 'photo.jpg',
+    ),
+    'video' => const AppAttachmentData(
+      mimeType: 'video/mp4',
+      name: 'video.mp4',
+    ),
+    'audio' ||
+    'voice' ||
+    'ptt' => const AppAttachmentData(mimeType: 'audio/mp4', name: 'voice.m4a'),
+    'document' ||
+    'file' => const AppAttachmentData(mimeType: 'application/octet-stream'),
+    _ => null,
+  };
+
+  String? _attachmentName(String? path) {
+    if (path != null) return p.basename(path);
+
+    return switch (type) {
+      'video' => 'video.mp4',
+      'image' || 'sticker' => 'photo.jpg',
+      'audio' || 'voice' || 'ptt' => 'voice.m4a',
+      _ => null,
+    };
   }
 
   /// The provider's type vocabulary grows server-side, so an unknown type
@@ -84,6 +116,14 @@ String? _mimeFromType(String type) => switch (type) {
   'document' || 'file' => 'application/octet-stream',
   _ => null,
 };
+
+String? _posterPathFor(String? videoPath) {
+  if (videoPath == null) return null;
+
+  final String thumbnailPath = FileStorage.thumbnailPathFor(videoPath);
+
+  return File(thumbnailPath).existsSync() ? thumbnailPath : null;
+}
 
 String? _mimeFromPath(String path) {
   return switch (p.extension(path).toLowerCase()) {

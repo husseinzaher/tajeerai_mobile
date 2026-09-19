@@ -38,6 +38,7 @@ class AppMessageBubble extends StatelessWidget {
     this.onLongPress,
     this.onOpenAttachment,
     this.audioController,
+    this.videoController,
     this.onToggleReaction,
     super.key,
   });
@@ -65,6 +66,9 @@ class AppMessageBubble extends StatelessWidget {
 
   /// Plays voice notes. Without one a voice note is drawn but cannot play.
   final AppAudioController? audioController;
+
+  /// Plays videos inline. Without one a video card is drawn but cannot play.
+  final AppVideoController? videoController;
 
   final ValueChanged<String>? onToggleReaction;
 
@@ -185,6 +189,7 @@ class AppMessageBubble extends StatelessWidget {
                   message: message,
                   onOpen: onOpenAttachment,
                   audioController: audioController,
+                  videoController: videoController,
                 ),
               ),
             ),
@@ -259,11 +264,17 @@ class AppMessageBubble extends StatelessWidget {
 /// carries the file; without one — a type the server named but sent no file
 /// for — it is a labelled line, never an empty bubble and never a crash.
 class _Content extends StatelessWidget {
-  const _Content({required this.message, this.onOpen, this.audioController});
+  const _Content({
+    required this.message,
+    this.onOpen,
+    this.audioController,
+    this.videoController,
+  });
 
   final AppMessageData message;
   final VoidCallback? onOpen;
   final AppAudioController? audioController;
+  final AppVideoController? videoController;
 
   static (IconData, String)? _media(AppMessageKind kind, AppMessages strings) =>
       switch (kind) {
@@ -306,9 +317,10 @@ class _Content extends StatelessWidget {
         attachment: file,
         onOpen: onOpen,
       ),
-      AppMessageKind.video when file != null => AppFilePreview(
+      AppMessageKind.video when file != null => AppVideoPreview(
         attachment: file,
-        onOpen: onOpen,
+        messageId: message.id,
+        controller: videoController,
       ),
       AppMessageKind.document when file != null => AppFilePreview(
         attachment: file,

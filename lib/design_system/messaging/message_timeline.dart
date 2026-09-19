@@ -35,6 +35,7 @@ class AppMessageTimeline extends StatelessWidget {
     this.onLongPress,
     this.onOpenAttachment,
     this.audioController,
+    this.videoController,
     this.onToggleReaction,
     this.controller,
     this.now,
@@ -60,6 +61,7 @@ class AppMessageTimeline extends StatelessWidget {
   final ValueChanged<AppMessageData>? onLongPress;
   final ValueChanged<AppMessageData>? onOpenAttachment;
   final AppAudioController? audioController;
+  final AppVideoController? videoController;
   final void Function(AppMessageData message, String emoji)? onToggleReaction;
 
   final ScrollController? controller;
@@ -161,6 +163,7 @@ class AppMessageTimeline extends StatelessWidget {
                           ? null
                           : () => onOpenAttachment!(message),
                       audioController: audioController,
+                      videoController: videoController,
                       onToggleReaction: onToggleReaction == null
                           ? null
                           : (String emoji) => onToggleReaction!(message, emoji),
