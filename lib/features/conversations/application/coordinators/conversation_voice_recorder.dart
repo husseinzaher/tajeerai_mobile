@@ -7,8 +7,8 @@ import 'package:record/record.dart';
 
 /// Records a voice note to a temporary file.
 ///
-/// Lives in the feature layer because it uses a device API the design system
-/// must not import.
+/// Lives in the application layer because it orchestrates a device workflow the
+/// design system must not import.
 final class ConversationVoiceRecorder {
   ConversationVoiceRecorder({AudioRecorder? recorder})
     : _recorder = recorder ?? AudioRecorder();

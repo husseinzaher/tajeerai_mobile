@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../app/theme/theme.dart';
 import '../../domain/value_objects/login_phone_reader.dart';
 
 /// The icon the sign-in identifier field shows: mail, phone, or a country flag.
@@ -21,7 +22,7 @@ class LoginIdentifierLeading extends StatelessWidget {
     if (country != null && country.length == 2) {
       return Text(
         _flagEmoji(country),
-        style: const TextStyle(fontSize: 18, height: 1),
+        style: context.type.titleLg.copyWith(height: 1),
       );
     }
 

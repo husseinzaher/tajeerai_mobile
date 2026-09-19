@@ -1,11 +1,11 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../app/bootstrap/dependencies.dart';
-import '../../../../design_system/messaging/composer.dart';
+import '../../../../design_system/design_system.dart';
 import '../../../../failures/app_failure.dart';
 import '../../domain/entities/conversation.dart';
 import '../../domain/entities/message.dart';
-import '../helpers/conversation_media_picker.dart';
+import '../../domain/value_objects/outbound_media.dart';
 
 part 'conversation_thread_controller.g.dart';
 
@@ -117,7 +117,7 @@ class ConversationThreadController extends _$ConversationThreadController {
       if (path == null || path.isEmpty) return false;
 
       return _sendMedia(
-        type: ConversationMediaPicker.messageTypeFor(attachment),
+        type: messageTypeFromMime(attachment.mimeType),
         localPath: path,
         filename: attachment.name ?? 'attachment',
         mimeType: attachment.mimeType ?? 'application/octet-stream',

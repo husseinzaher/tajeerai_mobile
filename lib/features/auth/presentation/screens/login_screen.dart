@@ -9,7 +9,7 @@ import '../../../../app/localization/locale_manager.dart';
 import '../../../../app/localization/translations/app_strings.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../design_system/design_system.dart';
-import '../../../../infrastructure/device/platform_info.dart';
+import '../controllers/login_controller.dart';
 import '../widgets/login_form.dart';
 
 /// The sign-in screen.
@@ -30,7 +30,7 @@ class LoginScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AppStrings strings = ref.watch(appStringsProvider);
-    final PlatformInfo platform = ref.watch(platformInfoProvider);
+    final LoginBuildInfo buildInfo = ref.watch(loginBuildInfoProvider);
     final TajeerColors colors = context.colors;
 
     return AppScaffold(
@@ -59,7 +59,7 @@ class LoginScreen extends ConsumerWidget {
               ],
             ),
             Text(
-              '${strings.appVersion} ${platform.appVersion} (${platform.buildNumber})',
+              '${strings.appVersion} ${buildInfo.version} (${buildInfo.buildNumber})',
               textAlign: TextAlign.center,
               textDirection: TextDirection.ltr,
               style: context.type.caption.copyWith(color: colors.textMuted),

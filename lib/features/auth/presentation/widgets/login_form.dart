@@ -10,7 +10,7 @@ import '../../../../app/theme/theme.dart';
 import '../../../../design_system/design_system.dart';
 import '../../domain/value_objects/login_phone_reader.dart';
 import '../controllers/login_controller.dart';
-import '../helpers/login_identifier_input_formatter.dart';
+import 'login_identifier_input_formatter.dart';
 import 'login_identifier_leading.dart';
 
 /// The sign-in form.

@@ -90,6 +90,29 @@ final class LoginState {
 final NotifierProvider<LoginController, LoginState> loginControllerProvider =
     NotifierProvider<LoginController, LoginState>(LoginController.new);
 
+/// Build metadata shown on the sign-in footer.
+final class LoginBuildInfo {
+  const LoginBuildInfo({required this.version, required this.buildNumber});
+
+  final String version;
+  final String buildNumber;
+}
+
+/// Resolves the running build's version label for the login screen.
+///
+/// Presentation reads this rather than [PlatformInfo] directly, so the screen
+/// stays decoupled from infrastructure.
+final Provider<LoginBuildInfo> loginBuildInfoProvider = Provider<LoginBuildInfo>(
+  (Ref ref) {
+    final platform = ref.watch(platformInfoProvider);
+
+    return LoginBuildInfo(
+      version: platform.appVersion,
+      buildNumber: platform.buildNumber,
+    );
+  },
+);
+
 /// Owns the login screen's state and actions.
 ///
 /// It validates nothing itself. `AuthService` decides what a valid identifier
