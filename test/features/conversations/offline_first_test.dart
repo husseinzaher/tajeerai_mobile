@@ -31,6 +31,8 @@ import 'application/fakes/fake_conversation_remote.dart';
 /// socket. It is the test that would catch a break in the seam between two
 /// correct-in-isolation pieces -- which is where offline bugs actually live.
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   late AppDatabase database;
   late FakeConversationRemote remote;
   late ConversationRepositoryImpl conversations;

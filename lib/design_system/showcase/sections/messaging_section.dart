@@ -6,6 +6,7 @@ import '../../display/labelled_separator.dart';
 import '../../feedback/async_view.dart';
 import '../../localization/ds_localization.dart';
 import '../../localization/ds_messages.dart';
+import '../../messaging/attachment_previews.dart';
 import '../../messaging/day_and_system_lines.dart';
 import '../../messaging/message_bubble.dart';
 import '../../messaging/message_data.dart';
@@ -189,6 +190,18 @@ ShowcaseSection messagingSection() => ShowcaseSection(
             if (status != AppMessageStatus.none)
               AppMessageStatusIcon(status: status),
         ],
+      ),
+    ),
+    ShowcaseExample(
+      name: 'Video preview',
+      description:
+          'The play affordance for a video attachment before inline playback '
+          'starts. Shown without a controller here — the frame only.',
+      builder: (BuildContext context) => AppVideoPreview(
+        attachment: const AppAttachmentData(
+          mimeType: 'video/mp4',
+          name: 'clip.mp4',
+        ),
       ),
     ),
     ShowcaseExample(

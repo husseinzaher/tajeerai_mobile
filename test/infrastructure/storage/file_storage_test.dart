@@ -22,7 +22,7 @@ void main() {
         <int>[1, 2, 3],
         <int>[4, 5],
       ]),
-      destinationName: 'clip.mp4',
+      destinationName: 'clip.bin',
     );
 
     expect(storage.isStagedOutboundPath(path), isTrue);

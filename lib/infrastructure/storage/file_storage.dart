@@ -159,17 +159,23 @@ class FileStorage {
     final String thumbnailPath = thumbnailPathFor(videoPath);
     if (exists(thumbnailPath)) return thumbnailPath;
 
-    final String? generated = await VideoThumbnail.thumbnailFile(
-      video: videoPath,
-      thumbnailPath: thumbnailPath,
-      imageFormat: ImageFormat.JPEG,
-      maxHeight: 320,
-      quality: 75,
-    );
+    try {
+      final String? generated = await VideoThumbnail.thumbnailFile(
+        video: videoPath,
+        thumbnailPath: thumbnailPath,
+        imageFormat: ImageFormat.JPEG,
+        maxHeight: 320,
+        quality: 75,
+      );
 
-    if (generated == null || !exists(generated)) return null;
+      if (generated == null || !exists(generated)) return null;
 
-    return generated;
+      return generated;
+    } on Object {
+      // Thumbnail generation is best-effort: a corrupt clip, an unsupported
+      // codec, or a test environment without the plugin must not block staging.
+      return null;
+    }
   }
 
   Future<String> _outboundDestination(String destinationName) async {

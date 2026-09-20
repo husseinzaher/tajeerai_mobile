@@ -6,6 +6,7 @@ import '../../auth/auth_header.dart';
 import '../../auth/auth_layout.dart';
 import '../../auth/brand_logo.dart';
 import '../../auth/social_button.dart';
+import '../../auth/social_provider_mark.dart';
 import '../../display/labelled_separator.dart';
 import '../../inputs/otp_field.dart';
 import '../showcase_section.dart';
@@ -68,8 +69,8 @@ ShowcaseSection authenticationSection() => ShowcaseSection(
             children: <Widget>[
               Expanded(
                 child: AppSocialButton(
-                  glyph: const Icon(LucideIcons.globe),
-                  label: 'المتابعة عبر الموقع',
+                  glyph: const AppSocialProviderMark('google'),
+                  label: 'المتابعة عبر Google',
                   onPressed: () {},
                 ),
               ),
