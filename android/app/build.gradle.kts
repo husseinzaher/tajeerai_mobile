@@ -38,13 +38,36 @@ val keystoreProperties = Properties()
 val keystorePropertiesFile =
     sequenceOf(rootProject.file("key.properties"), file("key.properties")).firstOrNull { it.exists() }
 
+// Whether this invocation is actually assembling a release. This file is
+// evaluated at configuration time, for every build, so a release-only check
+// that throws here would take the debug build down with it.
+val assemblingRelease = gradle.startParameter.taskNames.any { it.contains("elease") }
+
+val requiredKeystoreProperties = listOf("keyAlias", "keyPassword", "storePassword", "storeFile")
+
+// Three cases, and only the middle one is a failure:
+//
+// - no key.properties at all -- legitimate. A contributor without the upload
+//   keystore still builds and runs debug;
+// - key.properties present but incomplete -- a mistake, not a request for an
+//   unsigned build. Left to fall through it produces an APK the device rejects
+//   with INSTALL_PARSE_FAILED_NO_CERTIFICATES, an error that names nothing.
+//   Say which property is missing, when a release is what was asked for;
+// - complete -- sign with it.
 val releaseSigningConfigured =
     keystorePropertiesFile?.let { propertiesFile ->
         keystoreProperties.load(FileInputStream(propertiesFile))
 
-        listOf("keyAlias", "keyPassword", "storePassword", "storeFile").all { name ->
-            !keystoreProperties.getProperty(name).isNullOrBlank()
+        val complete =
+            requiredKeystoreProperties.all { !keystoreProperties.getProperty(it).isNullOrBlank() }
+
+        if (!complete && assemblingRelease) {
+            requiredKeystoreProperties.forEach { name ->
+                requireKeystoreProperty(keystoreProperties, name, propertiesFile)
+            }
         }
+
+        complete
     } == true
 
 android {

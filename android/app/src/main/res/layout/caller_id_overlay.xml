@@ -27,14 +27,14 @@
             android:id="@+id/caller_direction"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+            android:textAppearance="@style/CallerIdCaption"
             android:textColor="#676B73" />
 
         <TextView
             android:id="@+id/caller_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+            android:textAppearance="@style/CallerIdTitle"
             android:textColor="#353535"
             android:textStyle="bold" />
 
@@ -42,14 +42,14 @@
             android:id="@+id/caller_phone"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+            android:textAppearance="@style/CallerIdBody"
             android:textColor="#676B73" />
 
         <TextView
             android:id="@+id/caller_business"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
+            android:textAppearance="@style/CallerIdBody"
             android:textColor="#454545" />
 
         <LinearLayout

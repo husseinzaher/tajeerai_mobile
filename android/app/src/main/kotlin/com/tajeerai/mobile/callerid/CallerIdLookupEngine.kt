@@ -172,7 +172,10 @@ class CallerIdLookupEngine(private val context: android.content.Context) {
                   fetched_at = excluded.fetched_at,
                   expires_at = excluded.expires_at
                 """.trimIndent(),
-                arrayOf(
+                // Explicitly Any?: the values mix String? and Long, and Kotlin 2.4
+                // rejects reifying the inferred Comparable/Serializable
+                // intersection. execSQL takes Array<out Any?> anyway.
+                arrayOf<Any?>(
                     identity.phoneNumber,
                     identity.displayName,
                     identity.businessName,

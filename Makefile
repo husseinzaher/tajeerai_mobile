@@ -3,15 +3,22 @@
 # Flutter is invoked by name; ensure it is on your PATH.
 
 .PHONY: help setup tokens tokens-check generate watch migrations arch format format-check analyze \
-        test golden golden-update coverage verify clean run run-staging run-prod run-prod-dev \
+        test test-file golden golden-update coverage coverage-detail verify clean run run-staging run-prod run-prod-dev \
         showcase showcase-build google-sign-in-setup google-sign-in-check \
-        build-prod build-staging android-build android-apk cd cd-local
+        build-prod build-staging build-debug android-build android-apk cd cd-local
 
 # Build configuration comes from a .env file, read natively by Flutter's
 # --dart-define-from-file. A local `.env` (gitignored) wins when present, so a
 # developer on a physical device can point at their LAN address without editing
 # a committed file.
 ENV_FILE ?= $(firstword $(wildcard .env) .env.development)
+
+# Which device `run`, `run-staging`, `run-prod` and `run-prod-dev` launch on.
+# Left empty, Flutter asks -- which it cannot do from a script, and cannot do
+# at all when more than one device is attached. `flutter devices` prints the
+# ids: DEVICE=bf275662 for a phone over adb, DEVICE=chrome, DEVICE=linux.
+DEVICE ?=
+ON_DEVICE = $(if $(DEVICE),-d $(DEVICE),)
 
 help:
 	@echo "setup         Install dependencies and generate code"
@@ -20,12 +27,13 @@ help:
 	@echo "generate      Regenerate the theme, drift, Riverpod and JSON sources"
 	@echo "watch         Regenerate continuously while developing"
 	@echo "migrations    Snapshot a new database schema version"
-	@echo "run           Run against $(ENV_FILE)"
+	@echo "run           Run against $(ENV_FILE)   (DEVICE=<id> to pick one)"
 	@echo "showcase      Run the design system on its own, in a browser"
 	@echo "run-staging   Run against .env.staging"
 	@echo "run-prod      Run against .env.production"
 	@echo "run-prod-dev  Production backend, debug build (hot reload)"
 	@echo "build-prod    Release APK against .env.production (legacy alias)"
+	@echo "build-debug   Debug APK against $(ENV_FILE) — the quickest way to prove the Android build compiles"
 	@echo "android-build Release App Bundle for Google Play (.aab)"
 	@echo "android-apk   Release APK for local device testing (not used in CD)"
 	@echo "cd            Android CD pipeline (MODE=local|github)"
@@ -34,9 +42,11 @@ help:
 	@echo "format        Format lib, test and tool"
 	@echo "analyze       Static analysis (infos and warnings fatal)"
 	@echo "test          Run the test suite with coverage"
+	@echo "test-file     Run one test file or directory: make test-file FILE=test/..."
 	@echo "golden        Run only the pixel comparisons"
 	@echo "golden-update Re-bless the pixel comparisons"
 	@echo "coverage      Check coverage thresholds"
+	@echo "coverage-detail  Per-file coverage and unreached lines: make coverage-detail PATH=lib/..."
 	@echo "google-sign-in-setup  Write iOS Google Sign-In keys into Info.plist from .env"
 	@echo "google-sign-in-check  Fail if Info.plist is stale"
 	@echo "google-android-sha1   Print debug SHA-1 for Google Cloud Console"
@@ -71,7 +81,7 @@ migrations:
 	dart format lib/infrastructure/database test/drift
 
 run:
-	flutter run --dart-define-from-file=$(ENV_FILE)
+	flutter run $(ON_DEVICE) --dart-define-from-file=$(ENV_FILE)
 
 # The design system, with none of the app around it.
 #
@@ -87,20 +97,25 @@ showcase-build:
 	flutter build web -t lib/main_showcase.dart --no-tree-shake-icons
 
 run-staging:
-	flutter run --dart-define-from-file=.env.staging
+	flutter run $(ON_DEVICE) --dart-define-from-file=.env.staging
 
 run-prod:
-	flutter run --release --dart-define-from-file=.env.production
+	flutter run $(ON_DEVICE) --release --dart-define-from-file=.env.production
 
 # Production backend in debug mode — hot reload works; use this while developing.
 run-prod-dev:
-	flutter run --dart-define-from-file=.env.production
+	flutter run $(ON_DEVICE) --dart-define-from-file=.env.production
 
 build-staging:
 	flutter build apk --release --dart-define-from-file=.env.staging
 
 build-prod:
 	flutter build apk --release --dart-define-from-file=.env.production
+
+# Unsigned debug APK. No keystore, no release shrinking — this is what to run
+# when the question is "does the Android build still work?".
+build-debug:
+	flutter build apk --debug --dart-define-from-file=$(ENV_FILE)
 
 google-sign-in-setup:
 	dart run tool/configure_google_sign_in.dart
@@ -127,6 +142,12 @@ analyze:
 test:
 	flutter test --coverage
 
+# One file or directory, no coverage — for the edit/run loop. `make test` is
+# still what has to pass before finishing.
+test-file:
+	@test -n "$(FILE)" || (echo "Usage: make test-file FILE=test/path/to/foo_test.dart" >&2; exit 1)
+	flutter test $(FILE)
+
 # The pixel comparisons. They are the only tests whose result depends on how
 # the machine rasterises a font, so an environment that cannot reproduce the
 # reference rendering runs `flutter test --exclude-tags golden` instead of
@@ -142,6 +163,11 @@ golden-update:
 
 coverage:
 	dart run tool/check_coverage.dart
+
+# Which behaviour is untested, once `coverage` has said which area is under.
+coverage-detail:
+	@test -n "$(PATH_PREFIX)" || (echo "Usage: make coverage-detail PATH_PREFIX=lib/features/<f>/" >&2; exit 1)
+	dart run tool/check_coverage.dart --detail $(PATH_PREFIX)
 
 # The order matters: a layering violation explains failures that would
 # otherwise look like unrelated compile errors, so the guard runs early.

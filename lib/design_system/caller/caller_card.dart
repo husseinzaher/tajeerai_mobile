@@ -5,6 +5,7 @@ import '../../app/theme/theme.dart';
 import '../display/avatar.dart';
 import '../display/badge.dart';
 import '../display/chip.dart';
+import '../primitives/bidi_text.dart';
 
 /// Presentation data for the Caller Card overlay.
 @immutable
@@ -86,7 +87,11 @@ class AppCallerCard extends StatelessWidget {
       spacing: TajeerSpacing.sm,
       children: <Widget>[
         if (data.showAvatar)
-          AppAvatar(name: data.primaryLabel, imageUrl: data.avatarUrl, size: 48),
+          AppAvatar(
+            name: data.primaryLabel,
+            imageUrl: data.avatarUrl,
+            size: 48,
+          ),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -97,9 +102,15 @@ class AppCallerCard extends StatelessWidget {
                 style: context.type.caption.copyWith(color: colors.textMuted),
               ),
               if (data.showCallerName)
-                Text(
+                // The caller wrote neither of these, and the primary label is
+                // the phone number when there is no name: laid out in the
+                // app's direction, "+966…" reads "966…+" in Arabic.
+                AppBidiText(
                   data.primaryLabel,
-                  style: context.type.titleMd.copyWith(color: colors.textPrimary),
+                  alignToAmbient: true,
+                  style: context.type.titleMd.copyWith(
+                    color: colors.textPrimary,
+                  ),
                 ),
               if (data.showPhoneNumber && data.displayName != null)
                 Text(
@@ -108,12 +119,18 @@ class AppCallerCard extends StatelessWidget {
                   textDirection: TextDirection.ltr,
                 ),
               if (data.showBusinessInfo && data.businessName != null)
-                Text(
+                AppBidiText(
                   data.businessName!,
-                  style: context.type.bodySm.copyWith(color: colors.textSecondary),
+                  alignToAmbient: true,
+                  style: context.type.bodySm.copyWith(
+                    color: colors.textSecondary,
+                  ),
                 ),
               if (data.showSpamStatus && data.spamLabel != null)
-                AppBadge(label: data.spamLabel!, variant: AppBadgeVariant.warning),
+                AppBadge(
+                  label: data.spamLabel!,
+                  variant: AppBadgeVariant.warning,
+                ),
               if (data.showTags && data.tags.isNotEmpty) _tags(context),
             ],
           ),
@@ -131,9 +148,7 @@ class AppCallerCard extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           spacing: TajeerSpacing.xs,
-          children: const <Widget>[
-            Icon(LucideIcons.phoneIncoming, size: 16),
-          ],
+          children: const <Widget>[Icon(LucideIcons.phoneIncoming, size: 16)],
         ),
       ],
     );

@@ -15,4 +15,15 @@
     <style name="NormalTheme" parent="@android:style/Theme.Light.NoTitleBar">
         <item name="android:windowBackground">?android:colorBackground</item>
     </style>
+    <!-- Caller ID overlay text.
+
+         The app's own themes are platform themes (Theme.Light.NoTitleBar), not
+         MaterialComponents ones, and the overlay is inflated into a
+         WindowManager window rather than into an activity. Naming the roles
+         here, over the platform text appearances, keeps the two layouts
+         consistent without adding the Material Components library for four
+         attribute references. -->
+    <style name="CallerIdCaption" parent="@android:style/TextAppearance.Material.Caption" />
+    <style name="CallerIdTitle" parent="@android:style/TextAppearance.Material.Subhead" />
+    <style name="CallerIdBody" parent="@android:style/TextAppearance.Material.Body1" />
 </resources>

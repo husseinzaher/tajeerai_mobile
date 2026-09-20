@@ -17,8 +17,7 @@ class AndroidCallerIdGateway {
 
     if (result is Map<Object?, Object?>) {
       return result.map(
-        (Object? key, Object? value) =>
-            MapEntry(key.toString(), value),
+        (Object? key, Object? value) => MapEntry(key.toString(), value),
       );
     }
 

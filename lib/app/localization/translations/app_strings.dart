@@ -338,10 +338,7 @@ class AppStrings {
     },
 
     // -- caller id ----------------------------------------------------------
-    'callerIdTitle': <String, String>{
-      'en': 'Caller ID',
-      'ar': 'معرف المتصل',
-    },
+    'callerIdTitle': <String, String>{'en': 'Caller ID', 'ar': 'معرف المتصل'},
     'callerIdSubtitle': <String, String>{
       'en': 'Show a card for incoming and outgoing calls',
       'ar': 'اعرض بطاقة للمكالمات الواردة والصادرة',
@@ -374,10 +371,7 @@ class AppStrings {
       'en': 'Open overlay settings',
       'ar': 'فتح إعدادات العرض فوق التطبيقات',
     },
-    'callerIdGeneral': <String, String>{
-      'en': 'General',
-      'ar': 'عام',
-    },
+    'callerIdGeneral': <String, String>{'en': 'General', 'ar': 'عام'},
     'callerIdShowIncoming': <String, String>{
       'en': 'Show for incoming calls',
       'ar': 'عرض للمكالمات الواردة',
@@ -394,10 +388,7 @@ class AppStrings {
       'en': 'Show for saved contacts',
       'ar': 'عرض لجهات الاتصال المحفوظة',
     },
-    'callerIdAppearance': <String, String>{
-      'en': 'Appearance',
-      'ar': 'المظهر',
-    },
+    'callerIdAppearance': <String, String>{'en': 'Appearance', 'ar': 'المظهر'},
     'callerIdIncomingPreview': <String, String>{
       'en': 'Incoming call',
       'ar': 'مكالمة واردة',
@@ -410,22 +401,13 @@ class AppStrings {
       'en': 'Returning customer',
       'ar': 'عميلة عائدة',
     },
-    'callerIdPreviewTag': <String, String>{
-      'en': 'VIP',
-      'ar': 'عميلة مميزة',
-    },
+    'callerIdPreviewTag': <String, String>{'en': 'VIP', 'ar': 'عميلة مميزة'},
     'callerIdShowAvatar': <String, String>{
       'en': 'Show avatar',
       'ar': 'عرض الصورة',
     },
-    'callerIdAnimation': <String, String>{
-      'en': 'Animation',
-      'ar': 'الحركة',
-    },
-    'callerIdBehavior': <String, String>{
-      'en': 'Behavior',
-      'ar': 'السلوك',
-    },
+    'callerIdAnimation': <String, String>{'en': 'Animation', 'ar': 'الحركة'},
+    'callerIdBehavior': <String, String>{'en': 'Behavior', 'ar': 'السلوك'},
     'callerIdAutoDismiss': <String, String>{
       'en': 'Auto dismiss',
       'ar': 'إخفاء تلقائي',
@@ -434,10 +416,7 @@ class AppStrings {
       'en': 'Dismiss on tap',
       'ar': 'إخفاء عند النقر',
     },
-    'callerIdData': <String, String>{
-      'en': 'Data',
-      'ar': 'البيانات',
-    },
+    'callerIdData': <String, String>{'en': 'Data', 'ar': 'البيانات'},
     'callerIdLocalLookup': <String, String>{
       'en': 'Local lookup',
       'ar': 'بحث محلي',

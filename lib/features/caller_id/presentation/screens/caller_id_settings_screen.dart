@@ -137,7 +137,8 @@ class CallerIdSettingsScreen extends ConsumerWidget {
                         displayName: strings.callerIdPreviewName,
                         businessName: strings.callerIdPreviewBusiness,
                         tags: <String>[strings.callerIdPreviewTag],
-                        compact: state.settings.cardSize == CallerCardLayout.compact,
+                        compact:
+                            state.settings.cardSize == CallerCardLayout.compact,
                         showAvatar: state.settings.showAvatar,
                         showCallerName: state.settings.showCallerName,
                         showPhoneNumber: state.settings.showPhoneNumber,
@@ -175,7 +176,11 @@ class CallerIdSettingsScreen extends ConsumerWidget {
                         horizontal: TajeerSpacing.sm,
                       ),
                       child: AppSegmentedControl<int>(
-                        options: const <int, String>{10: '10s', 15: '15s', 30: '30s'},
+                        options: const <int, String>{
+                          10: '10s',
+                          15: '15s',
+                          30: '30s',
+                        },
                         value: state.settings.autoDismissSeconds,
                         onChanged: (int value) => controller.updateSettings(
                           state.settings.copyWith(autoDismissSeconds: value),

@@ -465,10 +465,10 @@ final Provider<CallerIdSettingsRepository> callerIdSettingsRepositoryProvider =
       ),
     );
 
-final Provider<CallerLookupRemoteDataSource> callerLookupRemoteDataSourceProvider =
-    Provider<CallerLookupRemoteDataSource>(
-      (ref) => CallerLookupRemoteDataSource(ref.watch(httpClientProvider)),
-    );
+final Provider<CallerLookupRemoteDataSource>
+callerLookupRemoteDataSourceProvider = Provider<CallerLookupRemoteDataSource>(
+  (ref) => CallerLookupRemoteDataSource(ref.watch(httpClientProvider)),
+);
 
 final Provider<CallerLookupRepository> callerLookupRepositoryProvider =
     Provider<CallerLookupRepository>((ref) {
@@ -486,10 +486,10 @@ final Provider<CallerLookupCoordinator> callerLookupCoordinatorProvider =
       ),
     );
 
-final Provider<CallerIdSettingsCoordinator> callerIdSettingsCoordinatorProvider =
-    Provider<CallerIdSettingsCoordinator>(
-      (ref) => CallerIdSettingsCoordinator(
-        settings: ref.watch(callerIdSettingsRepositoryProvider),
-        platform: ref.watch(callerIdPlatformPortProvider),
-      ),
-    );
+final Provider<CallerIdSettingsCoordinator>
+callerIdSettingsCoordinatorProvider = Provider<CallerIdSettingsCoordinator>(
+  (ref) => CallerIdSettingsCoordinator(
+    settings: ref.watch(callerIdSettingsRepositoryProvider),
+    platform: ref.watch(callerIdPlatformPortProvider),
+  ),
+);

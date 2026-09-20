@@ -29,7 +29,5 @@ final class CallerIdPermissionStatus {
   final bool callScreeningAvailable;
 
   bool get isReady =>
-      callScreeningAvailable &&
-      callScreeningRoleHeld &&
-      canDrawOverlays;
+      callScreeningAvailable && callScreeningRoleHeld && canDrawOverlays;
 }

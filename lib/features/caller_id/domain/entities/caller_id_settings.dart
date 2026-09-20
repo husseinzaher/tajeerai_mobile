@@ -46,10 +46,7 @@ final class CallerIdSettings {
   final bool serverLookupEnabled;
   final bool useCachedData;
 
-  bool shouldShowFor({
-    required bool isIncoming,
-    required bool isKnownContact,
-  }) {
+  bool shouldShowFor({required bool isIncoming, required bool isKnownContact}) {
     if (!enabled || !cardEnabled) return false;
 
     if (isIncoming && !showIncoming) return false;

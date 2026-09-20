@@ -12,11 +12,10 @@ class CallerIdentityCacheDao extends DatabaseAccessor<AppDatabase>
   CallerIdentityCacheDao(super.db);
 
   Future<CallerIdentityCache?> findByPhone(String normalizedPhone) {
-    return (select(callerIdentityCaches)
-          ..where(
-            ($CallerIdentityCachesTable tbl) =>
-                tbl.normalizedPhone.equals(normalizedPhone),
-          ))
+    return (select(callerIdentityCaches)..where(
+          ($CallerIdentityCachesTable tbl) =>
+              tbl.normalizedPhone.equals(normalizedPhone),
+        ))
         .getSingleOrNull();
   }
 

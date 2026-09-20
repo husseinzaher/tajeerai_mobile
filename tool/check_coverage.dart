@@ -6,6 +6,11 @@
 // Exits non-zero when overall coverage, or any business-critical area, falls
 // below its floor.
 //
+// With `--detail <path prefix>` it reports instead of gating: every file under
+// that prefix, worst first, with the lines no test reached. That is the list to
+// work from when an area is under its floor -- the gate says which area, this
+// says which behaviour.
+//
 // ## Why two thresholds
 //
 // A single global percentage lets weakly-tested business logic hide behind
@@ -92,6 +97,16 @@ void main(List<String> arguments) {
     exit(2);
   }
 
+  if (arguments.isNotEmpty && arguments.first == '--detail') {
+    if (arguments.length < 2) {
+      stderr.writeln('Usage: check_coverage.dart --detail <path prefix>');
+      exit(2);
+    }
+
+    _detail(records, arguments[1]);
+    exit(0);
+  }
+
   var totalFound = 0;
   var totalHit = 0;
 
@@ -159,6 +174,81 @@ void main(List<String> arguments) {
   exit(0);
 }
 
+/// Every file under [prefix], least covered first, and the lines nothing ran.
+void _detail(Map<String, _Record> records, String prefix) {
+  final matching =
+      records.entries
+          .where(
+            (MapEntry<String, _Record> record) => record.key.startsWith(prefix),
+          )
+          .toList()
+        ..sort((MapEntry<String, _Record> a, MapEntry<String, _Record> b) {
+          return _percentage(
+            a.value.hit,
+            a.value.found,
+          ).compareTo(_percentage(b.value.hit, b.value.found));
+        });
+
+  if (matching.isEmpty) {
+    stderr.writeln('No coverage records under $prefix.');
+    exit(2);
+  }
+
+  var found = 0;
+  var hit = 0;
+
+  for (final entry in matching) {
+    found += entry.value.found;
+    hit += entry.value.hit;
+  }
+
+  stdout.writeln(prefix);
+  stdout.writeln('-' * 72);
+
+  for (final entry in matching) {
+    final record = entry.value;
+    final percentage = _percentage(record.hit, record.found);
+
+    stdout.writeln(
+      '${percentage.toStringAsFixed(1).padLeft(6)}%  '
+      '${record.hit.toString().padLeft(4)}/${record.found.toString().padRight(4)}  '
+      '${entry.key.substring(prefix.length)}',
+    );
+
+    if (record.uncovered.isNotEmpty) {
+      stdout.writeln('          uncovered: ${_ranges(record.uncovered)}');
+    }
+  }
+
+  stdout.writeln('-' * 72);
+  stdout.writeln(
+    '${_percentage(hit, found).toStringAsFixed(1)}%  ($hit/$found lines)',
+  );
+}
+
+/// `1 2 3 9` as `1-3, 9`, because a run of lines is one untested branch.
+String _ranges(List<int> lines) {
+  final parts = <String>[];
+  var start = lines.first;
+  var previous = start;
+
+  for (final line in lines.skip(1)) {
+    if (line == previous + 1) {
+      previous = line;
+
+      continue;
+    }
+
+    parts.add(start == previous ? '$start' : '$start-$previous');
+    start = line;
+    previous = line;
+  }
+
+  parts.add(start == previous ? '$start' : '$start-$previous');
+
+  return parts.join(', ');
+}
+
 double _percentage(int hit, int found) => found == 0 ? 100 : hit / found * 100;
 
 /// Reads the `SF`/`DA` records of an lcov report.
@@ -168,6 +258,7 @@ Map<String, _Record> _parse(List<String> lines) {
   String? current;
   var found = 0;
   var hit = 0;
+  var uncovered = <int>[];
 
   void flush() {
     final path = current;
@@ -178,12 +269,14 @@ Map<String, _Record> _parse(List<String> lines) {
       records[path] = _Record(
         found: (existing?.found ?? 0) + found,
         hit: (existing?.hit ?? 0) + hit,
+        uncovered: <int>[...?existing?.uncovered, ...uncovered]..sort(),
       );
     }
 
     current = null;
     found = 0;
     hit = 0;
+    uncovered = <int>[];
   }
 
   for (final line in lines) {
@@ -200,7 +293,14 @@ Map<String, _Record> _parse(List<String> lines) {
       if (parts.length < 2) continue;
 
       found += 1;
-      if ((int.tryParse(parts[1]) ?? 0) > 0) hit += 1;
+
+      if ((int.tryParse(parts[1]) ?? 0) > 0) {
+        hit += 1;
+      } else {
+        final line = int.tryParse(parts[0]);
+
+        if (line != null) uncovered.add(line);
+      }
 
       continue;
     }
@@ -214,8 +314,15 @@ Map<String, _Record> _parse(List<String> lines) {
 }
 
 class _Record {
-  const _Record({required this.found, required this.hit});
+  const _Record({
+    required this.found,
+    required this.hit,
+    this.uncovered = const <int>[],
+  });
 
   final int found;
   final int hit;
+
+  /// The lines no test reached, in file order.
+  final List<int> uncovered;
 }

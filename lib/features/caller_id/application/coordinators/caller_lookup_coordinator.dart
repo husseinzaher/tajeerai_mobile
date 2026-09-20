@@ -56,21 +56,13 @@ class CallerLookupCoordinator {
     }
 
     if (settings.serverLookupEnabled && onUpdate != null) {
-      unawaited(
-        _lookupServerWithTimeout(
-          key,
-          onUpdate: onUpdate,
-        ),
-      );
+      unawaited(_lookupServerWithTimeout(key, onUpdate: onUpdate));
     } else if (settings.serverLookupEnabled) {
       identity = await _lookupServerWithTimeout(key);
     }
 
     return identity ??
-        CallerIdentity(
-          phoneNumber: key,
-          source: CallerIdentitySource.unknown,
-        );
+        CallerIdentity(phoneNumber: key, source: CallerIdentitySource.unknown);
   }
 
   Future<CallerIdentity?> _lookupServerWithTimeout(

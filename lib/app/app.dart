@@ -105,14 +105,18 @@ class _TajeerAppState extends ConsumerState<TajeerApp> {
     if (!Platform.isAndroid) return;
 
     final String databasePath = await resolveDriftDatabasePath();
-    final String? accessToken = await ref.read(authRepositoryProvider).accessToken();
+    final String? accessToken = await ref
+        .read(authRepositoryProvider)
+        .accessToken();
     final config = ref.read(appConfigProvider);
 
-    await ref.read(callerIdSettingsCoordinatorProvider).syncRuntimeConfig(
-      databasePath: databasePath,
-      apiBaseUrl: config.apiRoot,
-      accessToken: accessToken,
-    );
+    await ref
+        .read(callerIdSettingsCoordinatorProvider)
+        .syncRuntimeConfig(
+          databasePath: databasePath,
+          apiBaseUrl: config.apiRoot,
+          accessToken: accessToken,
+        );
 
     final settings = await ref.read(callerIdSettingsCoordinatorProvider).read();
     await ref.read(callerIdSettingsCoordinatorProvider).save(settings);

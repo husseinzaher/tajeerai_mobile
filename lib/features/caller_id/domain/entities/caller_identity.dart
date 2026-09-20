@@ -22,8 +22,7 @@ final class CallerIdentity {
   /// When the match came from the workspace directory.
   final String? customerId;
 
-  bool get isKnown =>
-      displayName != null && displayName!.trim().isNotEmpty;
+  bool get isKnown => displayName != null && displayName!.trim().isNotEmpty;
 
   String get primaryLabel {
     final String? name = displayName?.trim();

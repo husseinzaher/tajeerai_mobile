@@ -78,7 +78,9 @@ class CallerIdSettingsController extends Notifier<CallerIdSettingsViewState> {
   }
 
   Future<void> requestCallScreeningRole() async {
-    await ref.read(callerIdSettingsCoordinatorProvider).requestCallScreeningRole();
+    await ref
+        .read(callerIdSettingsCoordinatorProvider)
+        .requestCallScreeningRole();
     await refresh();
   }
 

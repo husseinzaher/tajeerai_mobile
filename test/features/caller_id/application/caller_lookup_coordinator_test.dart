@@ -18,8 +18,15 @@ class _FakeLookupRepository implements CallerLookupRepository {
   final Duration remoteDelay;
   int serverCalls = 0;
 
+  final List<CallerIdentity> cachedWrites = <CallerIdentity>[];
+
   @override
-  Future<void> cache(CallerIdentity identity, {required DateTime expiresAt}) async {}
+  Future<void> cache(
+    CallerIdentity identity, {
+    required DateTime expiresAt,
+  }) async {
+    cachedWrites.add(identity);
+  }
 
   @override
   Future<CallerIdentity?> findCached(String normalizedPhone) async => cached;
@@ -43,7 +50,9 @@ void main() {
         displayName: 'Sara',
         source: CallerIdentitySource.localCache,
       );
-      final _FakeLookupRepository repository = _FakeLookupRepository(cached: cached);
+      final _FakeLookupRepository repository = _FakeLookupRepository(
+        cached: cached,
+      );
       final CallerLookupCoordinator coordinator = CallerLookupCoordinator(
         repository: repository,
       );
@@ -54,6 +63,29 @@ void main() {
       );
 
       expect(identity?.displayName, 'Sara');
+      expect(repository.serverCalls, 0);
+    });
+
+    test('caches a contact found locally and never asks the server', () async {
+      const CallerIdentity local = CallerIdentity(
+        phoneNumber: '+966501234567',
+        displayName: 'Sara',
+        source: CallerIdentitySource.localCustomer,
+      );
+      final _FakeLookupRepository repository = _FakeLookupRepository(
+        local: local,
+      );
+      final CallerLookupCoordinator coordinator = CallerLookupCoordinator(
+        repository: repository,
+      );
+
+      final CallerIdentity? identity = await coordinator.resolve(
+        rawPhone: '+966501234567',
+        settings: const CallerIdSettings(),
+      );
+
+      expect(identity?.displayName, 'Sara');
+      expect(repository.cachedWrites, <CallerIdentity>[local]);
       expect(repository.serverCalls, 0);
     });
 
@@ -73,31 +105,34 @@ void main() {
       expect(repository.serverCalls, 0);
     });
 
-    test('does not block on a slow server lookup when onUpdate is provided', () async {
-      final _FakeLookupRepository repository = _FakeLookupRepository(
-        remote: const CallerIdentity(
-          phoneNumber: '+966501234567',
-          displayName: 'Remote Sara',
-          source: CallerIdentitySource.server,
-        ),
-        remoteDelay: const Duration(seconds: 5),
-      );
-      final CallerLookupCoordinator coordinator = CallerLookupCoordinator(
-        repository: repository,
-      );
-      CallerIdentity? updated;
+    test(
+      'does not block on a slow server lookup when onUpdate is provided',
+      () async {
+        final _FakeLookupRepository repository = _FakeLookupRepository(
+          remote: const CallerIdentity(
+            phoneNumber: '+966501234567',
+            displayName: 'Remote Sara',
+            source: CallerIdentitySource.server,
+          ),
+          remoteDelay: const Duration(seconds: 5),
+        );
+        final CallerLookupCoordinator coordinator = CallerLookupCoordinator(
+          repository: repository,
+        );
+        CallerIdentity? updated;
 
-      final CallerIdentity? immediate = await coordinator.resolve(
-        rawPhone: '+966501234567',
-        settings: const CallerIdSettings(serverLookupEnabled: true),
-        onUpdate: (CallerIdentity identity) => updated = identity,
-      );
+        final CallerIdentity? immediate = await coordinator.resolve(
+          rawPhone: '+966501234567',
+          settings: const CallerIdSettings(serverLookupEnabled: true),
+          onUpdate: (CallerIdentity identity) => updated = identity,
+        );
 
-      expect(immediate?.source, CallerIdentitySource.unknown);
-      expect(updated, isNull);
+        expect(immediate?.source, CallerIdentitySource.unknown);
+        expect(updated, isNull);
 
-      await Future<void>.delayed(const Duration(milliseconds: 50));
-      expect(repository.serverCalls, 1);
-    });
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        expect(repository.serverCalls, 1);
+      },
+    );
   });
 }

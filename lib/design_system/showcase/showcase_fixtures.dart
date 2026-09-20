@@ -16,6 +16,9 @@ abstract final class ShowcaseFixtures {
   /// A customer who writes in English, for the mixed-direction cases.
   static const String latinCustomer = 'Lina Hassan';
 
+  /// The number she calls from, for the Caller Card.
+  static const String customerPhone = '+966501234567';
+
   // The store.
   static const String store = 'متجر النخبة';
 

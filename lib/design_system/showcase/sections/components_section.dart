@@ -3,6 +3,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../app/theme/theme.dart';
 import '../../buttons/app_button.dart';
+import '../../caller/caller_card.dart';
 import '../../cards/app_card.dart';
 import '../../display/avatar.dart';
 import '../../display/badge.dart';
@@ -245,6 +246,36 @@ ShowcaseSection displaySection() => ShowcaseSection(
         children: <Widget>[
           for (final AppBadgeVariant variant in AppBadgeVariant.values)
             AppBadge(label: variant.name, variant: variant),
+        ],
+      ),
+    ),
+    ShowcaseExample(
+      name: 'Caller card',
+      description:
+          'What the Caller ID overlay draws over a ringing call. Compact is '
+          'what a member sees; full adds the call affordance.',
+      builder: (BuildContext context) => Column(
+        spacing: TajeerSpacing.sm,
+        children: <Widget>[
+          AppCallerCard(
+            data: const AppCallerCardData(
+              phoneNumber: ShowcaseFixtures.customerPhone,
+              directionLabel: 'مكالمة واردة',
+              displayName: ShowcaseFixtures.customer,
+              businessName: ShowcaseFixtures.store,
+              tags: <String>['عميل مميز', 'طلب مفتوح'],
+            ),
+            onTap: () {},
+          ),
+          AppCallerCard(
+            data: const AppCallerCardData(
+              phoneNumber: ShowcaseFixtures.customerPhone,
+              directionLabel: 'مكالمة واردة',
+              spamLabel: 'مشتبه به',
+              compact: false,
+            ),
+            onTap: () {},
+          ),
         ],
       ),
     ),

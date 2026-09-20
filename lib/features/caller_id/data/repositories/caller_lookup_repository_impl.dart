@@ -63,10 +63,7 @@ class CallerLookupRepositoryImpl implements CallerLookupRepository {
 
     if (remote == null) return null;
 
-    await cache(
-      remote,
-      expiresAt: DateTime.now().add(cacheTtl),
-    );
+    await cache(remote, expiresAt: DateTime.now().add(cacheTtl));
 
     return remote;
   }

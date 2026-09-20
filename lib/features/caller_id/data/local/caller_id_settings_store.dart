@@ -30,9 +30,6 @@ class CallerIdSettingsStore {
   }
 
   Future<void> write(CallerIdSettings settings) {
-    return _preferences.writeString(
-      settingsKey,
-      jsonEncode(settings.toJson()),
-    );
+    return _preferences.writeString(settingsKey, jsonEncode(settings.toJson()));
   }
 }

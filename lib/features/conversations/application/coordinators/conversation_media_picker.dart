@@ -8,6 +8,9 @@ import '../../../../design_system/design_system.dart';
 import '../../../../infrastructure/storage/file_storage.dart';
 import '../../domain/value_objects/outbound_media.dart';
 
+/// Opens a file picker and answers with one picked file, or nothing.
+typedef PickOneFile = Future<PlatformFile?> Function();
+
 /// Opens the system file picker and returns an attachment the composer can show.
 abstract final class ConversationMediaPicker {
   /// Picks a file and copies it into app-owned storage before returning.
@@ -15,14 +18,14 @@ abstract final class ConversationMediaPicker {
   /// Gallery videos on Android often come back as content URIs with no local
   /// [PlatformFile.path]. Staging here — via path, stream, or bytes — keeps
   /// the attachment readable when the member sends it.
-  static Future<AppAttachmentData?> pick({required FileStorage storage}) async {
-    final PlatformFile? file = await FilePicker.pickFile(
-      type: FileType.any,
-      compressionQuality: 0,
-      darwinOptions: const DarwinOptions(
-        assetRepresentationMode: DarwinAssetRepresentationMode.current,
-      ),
-    );
+  ///
+  /// [pickFile] is the system picker, and is a parameter only so that the
+  /// three staging routes can be exercised without a gallery.
+  static Future<AppAttachmentData?> pick({
+    required FileStorage storage,
+    PickOneFile pickFile = _systemPicker,
+  }) async {
+    final PlatformFile? file = await pickFile();
 
     if (file == null) return null;
 
@@ -48,6 +51,14 @@ abstract final class ConversationMediaPicker {
       mimeType: mimeType,
     );
   }
+
+  static Future<PlatformFile?> _systemPicker() => FilePicker.pickFile(
+    type: FileType.any,
+    compressionQuality: 0,
+    darwinOptions: const DarwinOptions(
+      assetRepresentationMode: DarwinAssetRepresentationMode.current,
+    ),
+  );
 
   static Future<String> _stagePickedFile({
     required FileStorage storage,

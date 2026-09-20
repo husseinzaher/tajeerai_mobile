@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../design_system/design_system.dart';
+
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/domain/entities/user.dart';

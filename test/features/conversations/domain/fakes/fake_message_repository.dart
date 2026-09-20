@@ -20,6 +20,21 @@ class StateUpdate {
   final String? externalId;
 }
 
+/// Records a media path the coordinator wrote back.
+class MediaUpdate {
+  const MediaUpdate({
+    required this.messageId,
+    this.mediaUrl,
+    this.localMediaPath,
+    this.type,
+  });
+
+  final String messageId;
+  final String? mediaUrl;
+  final String? localMediaPath;
+  final String? type;
+}
+
 /// Records a reconciliation.
 class Reconciliation {
   const Reconciliation({
@@ -43,6 +58,7 @@ class FakeMessageRepository implements MessageRepository {
   final List<Message> enqueued = <Message>[];
   final List<StateUpdate> stateUpdates = <StateUpdate>[];
   final List<Reconciliation> reconciliations = <Reconciliation>[];
+  final List<MediaUpdate> mediaUpdates = <MediaUpdate>[];
   final List<String> removed = <String>[];
   final List<Message> upserted = <Message>[];
 
@@ -151,6 +167,15 @@ class FakeMessageRepository implements MessageRepository {
     String? type,
     DateTime? eventAt,
   }) async {
+    mediaUpdates.add(
+      MediaUpdate(
+        messageId: messageId,
+        mediaUrl: mediaUrl,
+        localMediaPath: localMediaPath,
+        type: type,
+      ),
+    );
+
     final existing = _messages[messageId];
 
     if (existing == null) return;

@@ -2,7 +2,12 @@ import 'package:TajeerAi/features/conversations/data/remote/conversation_media_p
 
 class FakeConversationMediaRemote implements ConversationMediaPort {
   int uploadCalls = 0;
+  int downloadCalls = 0;
   Object? failureToThrow;
+
+  /// What the next download answers with. A PNG header by default; set it to
+  /// `[]` for an empty body, or to `{` for the JSON an error page returns.
+  List<int> nextDownload = const <int>[0x89, 0x50, 0x4e, 0x47];
 
   UploadedConversationMedia nextUpload = const UploadedConversationMedia(
     mediaId: 'media-1',
@@ -32,10 +37,12 @@ class FakeConversationMediaRemote implements ConversationMediaPort {
     required String conversationId,
     required String messageId,
   }) async {
+    downloadCalls += 1;
+
     final failure = failureToThrow;
 
     if (failure != null) throw failure;
 
-    return <int>[0x89, 0x50, 0x4e, 0x47];
+    return nextDownload;
   }
 }

@@ -137,6 +137,118 @@ void main() {
     });
   });
 
+  group('composeMedia', () {
+    test('queues an attachment with its local path and caption', () async {
+      final message = await service.composeMedia(
+        conversation: _conversation(),
+        type: 'image',
+        localPath: '/tmp/photo.jpg',
+        filename: 'photo.jpg',
+        mimeType: 'image/jpeg',
+        rawCaption: 'هذا اللون',
+        authorId: 'u1',
+        authorName: 'Ada',
+      );
+
+      // The local path is the whole point: the row is sendable before the
+      // file has been anywhere near the network.
+      expect(message.state, MessageState.pending);
+      expect(message.type, 'image');
+      expect(message.localMediaPath, '/tmp/photo.jpg');
+      expect(message.body, 'هذا اللون');
+      expect(messages.enqueued.single.clientMessageId, 'generated-1');
+    });
+
+    test('a voice note needs no caption', () async {
+      final message = await service.composeMedia(
+        conversation: _conversation(),
+        type: 'audio',
+        localPath: '/tmp/voice.m4a',
+        filename: 'voice.m4a',
+        mimeType: 'audio/mp4',
+      );
+
+      expect(message.type, 'audio');
+      expect(message.body, isNull);
+    });
+
+    test('refuses to send into an archived conversation', () async {
+      await expectLater(
+        service.composeMedia(
+          conversation: _conversation(isArchived: true),
+          type: 'image',
+          localPath: '/tmp/photo.jpg',
+          filename: 'photo.jpg',
+          mimeType: 'image/jpeg',
+        ),
+        throwsA(
+          isA<ConflictFailure>().having(
+            (failure) => failure.message,
+            'message',
+            contains('archived'),
+          ),
+        ),
+      );
+
+      expect(messages.enqueued, isEmpty);
+    });
+
+    test('refuses to send into an unknown conversation', () async {
+      await expectLater(
+        service.composeMedia(
+          conversation: null,
+          type: 'image',
+          localPath: '/tmp/photo.jpg',
+          filename: 'photo.jpg',
+          mimeType: 'image/jpeg',
+        ),
+        throwsA(isA<ConflictFailure>()),
+      );
+
+      expect(messages.enqueued, isEmpty);
+    });
+
+    test('a caption is held to the same limit a message body is', () async {
+      await expectLater(
+        service.composeMedia(
+          conversation: _conversation(),
+          type: 'image',
+          localPath: '/tmp/photo.jpg',
+          filename: 'photo.jpg',
+          mimeType: 'image/jpeg',
+          rawCaption: 'x' * (MessageContent.maxLength + 1),
+        ),
+        throwsA(
+          isA<ValidationFailure>().having(
+            (failure) => failure.errorsFor('body'),
+            'body errors',
+            <String>['message.tooLong'],
+          ),
+        ),
+      );
+
+      expect(messages.enqueued, isEmpty);
+    });
+
+    test(
+      'an attachment with no file is refused before anything is written',
+      () async {
+        await expectLater(
+          service.composeMedia(
+            conversation: _conversation(),
+            type: 'image',
+            localPath: '',
+            filename: 'photo.jpg',
+            mimeType: 'image/jpeg',
+          ),
+          throwsA(isA<ValidationFailure>()),
+        );
+
+        expect(messages.enqueued, isEmpty);
+      },
+    );
+  });
+
   group('thread ordering', () {
     test('sorts oldest first, which is reading order', () {
       final sorted = MessageService.sortForThread(<Message>[

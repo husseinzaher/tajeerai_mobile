@@ -6,5 +6,5 @@
     android:background="@drawable/caller_id_tag_background"
     android:paddingHorizontal="8dp"
     android:paddingVertical="4dp"
-    android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+    android:textAppearance="@style/CallerIdCaption"
     android:textColor="#353535" />

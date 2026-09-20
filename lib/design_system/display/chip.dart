@@ -76,45 +76,59 @@ class AppChip extends StatelessWidget {
               borderRadius: TajeerRadii.fullAll,
               border: Border.fromBorderSide(BorderSide(color: border)),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              spacing: TajeerSpacing.xs2,
-              children: <Widget>[
-                if (leading != null)
-                  IconTheme.merge(
-                    data: IconThemeData(color: foreground, size: 14),
-                    child: leading!,
-                  ),
-                ExcludeSemantics(
+            // A chip sits in a Wrap as often as it sits in a horizontal
+            // scroller, and the label has to behave differently in each: given
+            // a width it must ellipsize rather than overflow, and given none a
+            // Flexible label is a RenderFlex assertion, not a layout. Only the
+            // incoming constraints say which of the two this chip is in.
+            child: LayoutBuilder(
+              builder: (BuildContext context, BoxConstraints constraints) {
+                final Widget text = ExcludeSemantics(
                   child: Text(
                     label,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: context.type.labelMd.copyWith(color: foreground),
                   ),
-                ),
-                if (onRemove != null)
-                  Semantics(
-                    button: true,
-                    label: removeLabel ?? context.strings.dismiss,
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: enabled ? onRemove : null,
-                      // Its own target inside the chip: removing a filter and
-                      // toggling it must not be the same tap.
-                      child: SizedBox.square(
-                        dimension: 32,
-                        child: Center(
-                          child: Icon(
-                            LucideIcons.x,
-                            size: 14,
-                            color: foreground,
+                );
+
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  spacing: TajeerSpacing.xs2,
+                  children: <Widget>[
+                    if (leading != null)
+                      IconTheme.merge(
+                        data: IconThemeData(color: foreground, size: 14),
+                        child: leading!,
+                      ),
+                    if (constraints.hasBoundedWidth)
+                      Flexible(child: text)
+                    else
+                      text,
+                    if (onRemove != null)
+                      Semantics(
+                        button: true,
+                        label: removeLabel ?? context.strings.dismiss,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: enabled ? onRemove : null,
+                          // Its own target inside the chip: removing a filter
+                          // and toggling it must not be the same tap.
+                          child: SizedBox.square(
+                            dimension: 32,
+                            child: Center(
+                              child: Icon(
+                                LucideIcons.x,
+                                size: 14,
+                                color: foreground,
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
-              ],
+                  ],
+                );
+              },
             ),
           ),
         ),

@@ -20,9 +20,18 @@ void main() {
         showOnlyUnknown: true,
       );
 
-      expect(settings.shouldShowFor(isIncoming: true, isKnownContact: false), isTrue);
-      expect(settings.shouldShowFor(isIncoming: true, isKnownContact: true), isFalse);
-      expect(settings.shouldShowFor(isIncoming: false, isKnownContact: false), isFalse);
+      expect(
+        settings.shouldShowFor(isIncoming: true, isKnownContact: false),
+        isTrue,
+      );
+      expect(
+        settings.shouldShowFor(isIncoming: true, isKnownContact: true),
+        isFalse,
+      );
+      expect(
+        settings.shouldShowFor(isIncoming: false, isKnownContact: false),
+        isFalse,
+      );
     });
 
     test('round-trips through json without losing values', () {
@@ -36,7 +45,9 @@ void main() {
         cardSize: CallerCardLayout.full,
       );
 
-      final CallerIdSettings restored = CallerIdSettings.fromJson(original.toJson());
+      final CallerIdSettings restored = CallerIdSettings.fromJson(
+        original.toJson(),
+      );
 
       expect(restored.enabled, original.enabled);
       expect(restored.showIncoming, original.showIncoming);

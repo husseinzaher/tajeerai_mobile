@@ -20,7 +20,10 @@ final class NormalizedPhone {
       raw.toLowerCase() == 'restricted' ||
       raw.toLowerCase() == 'private';
 
-  static NormalizedPhone? parse(String input, {IsoCode defaultRegion = IsoCode.SA}) {
+  static NormalizedPhone? parse(
+    String input, {
+    IsoCode defaultRegion = IsoCode.SA,
+  }) {
     final String trimmed = input.trim();
 
     if (trimmed.isEmpty ||
@@ -31,7 +34,10 @@ final class NormalizedPhone {
     }
 
     try {
-      final PhoneNumber parsed = PhoneNumber.parse(trimmed, callerCountry: defaultRegion);
+      final PhoneNumber parsed = PhoneNumber.parse(
+        trimmed,
+        callerCountry: defaultRegion,
+      );
       final String digits = parsed.nsn;
       final String suffix = digits.length >= 9
           ? digits.substring(digits.length - 9)

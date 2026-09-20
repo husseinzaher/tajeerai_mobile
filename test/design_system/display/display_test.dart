@@ -434,6 +434,53 @@ void main() {
       expect(selected, 1, reason: 'removing must not also select');
     });
 
+    testWidgets('a long label ellipsizes inside a width, and never overflows', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        wrapWidget(
+          const SizedBox(
+            width: 120,
+            child: Wrap(
+              children: <Widget>[
+                AppChip(label: 'عميل مميز لديه طلب مفتوح منذ أسبوع'),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      expect(tester.takeException(), isNull);
+      expect(
+        tester.getSize(find.byType(AppChip)).width,
+        lessThanOrEqualTo(120),
+      );
+    });
+
+    testWidgets(
+      'without a width it keeps its natural size, and still lays out',
+      (WidgetTester tester) async {
+        // The horizontal scrollers chips live in — the quick replies above the
+        // composer, the tag filter over the customer list — give the chip no
+        // width at all. A flexible label there is a RenderFlex assertion.
+        await tester.pumpWidget(
+          wrapWidget(
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: const <Widget>[
+                  AppChip(label: 'عميل مميز لديه طلب مفتوح منذ أسبوع'),
+                ],
+              ),
+            ),
+          ),
+        );
+
+        expect(tester.takeException(), isNull);
+        expect(tester.getSize(find.byType(AppChip)).width, greaterThan(120));
+      },
+    );
+
     testWidgets('selected reads as selected, not just as coloured', (
       WidgetTester tester,
     ) async {
