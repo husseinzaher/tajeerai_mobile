@@ -53,13 +53,19 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     documents: true,
   );
 
+  /// How close to the top of the thread, in logical pixels, the reader has to
+  /// be before the page above is asked for. Well under a screen, so history
+  /// arrives before they get there rather than when they are already looking
+  /// at the edge.
+  static const double _historyThreshold = 240;
+
   bool _recording = false;
   Duration _recordingElapsed = Duration.zero;
-  int _mediaCacheGeneration = 0;
 
   @override
   void initState() {
     super.initState();
+    _scroll.addListener(_onScroll);
     _voiceRecorder = ConversationVoiceRecorder()
       ..onElapsed = (Duration elapsed) {
         if (mounted) {
@@ -84,6 +90,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
 
   @override
   void dispose() {
+    _scroll.removeListener(_onScroll);
     _scroll.dispose();
     _composer.dispose();
     unawaited(_voiceRecorder.dispose());
@@ -107,6 +114,11 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
       conversationThreadControllerProvider(widget.conversationId),
     );
 
+    // A downloaded attachment reaches the bubble through the database -- the
+    // coordinator writes the path back and the query re-emits. The rebuild
+    // here is for what it writes beside the database: a video poster on disk,
+    // which the bubble finds by path. It is a rebuild, not a remount: the
+    // timeline keeps its scroll position and its playing video across it.
     ref.listen(threadMessagesProvider(widget.conversationId), (
       AsyncValue<List<Message>>? previous,
       AsyncValue<List<Message>> next,
@@ -114,9 +126,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
       next.whenData((List<Message> items) {
         unawaited(() async {
           await ref.read(messageMediaCoordinatorProvider).cacheAll(items);
-          if (mounted) {
-            setState(() => _mediaCacheGeneration += 1);
-          }
+          if (mounted) setState(() {});
         }());
       });
     });
@@ -145,7 +155,6 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
               onBack: () => context.pop(),
             ),
       timeline: AppMessageTimeline(
-        key: ValueKey<int>(_mediaCacheGeneration),
         state: messages.toViewState(
           (List<Message> items) => <AppMessageData>[
             for (final Message item in items) item.toMessageData(),
@@ -187,6 +196,19 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
         onRecordCancel: _cancelRecording,
       ),
     );
+  }
+
+  /// The list is reversed, so its far end is the oldest message. Reaching it
+  /// asks the controller for the page above; the controller decides whether
+  /// there is one to ask for.
+  void _onScroll() {
+    if (!_scroll.hasClients) return;
+
+    final ScrollPosition position = _scroll.position;
+
+    if (position.maxScrollExtent - position.pixels <= _historyThreshold) {
+      unawaited(_thread.loadOlder());
+    }
   }
 
   Future<void> _attach() async {

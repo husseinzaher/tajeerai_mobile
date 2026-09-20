@@ -369,8 +369,13 @@ class MessageRepositoryImpl implements MessageRepository {
     );
   }
 
+  /// Loads the newest page when the screen opens.
+  ///
+  /// Asked for without a cursor: `message:list` answers with the newest page
+  /// when `before` is absent. Sending the device clock instead would cut off
+  /// every message the server stamped later than this phone thinks it is,
+  /// which on a clock a few seconds slow is the message that was just sent.
   @override
-  /// Loads the newest page when the screen opens for the first time.
   Future<int> loadLatest({
     required String conversationId,
     int limit = 50,
@@ -378,8 +383,6 @@ class MessageRepositoryImpl implements MessageRepository {
     try {
       final page = await _remote.listMessages(
         conversationId: conversationId,
-        // قبل "دلوقتي" (أو استخدم API منفصل بترجع آخر N مباشرة)
-        before: _clock().toUtc(),
         limit: limit,
       );
 

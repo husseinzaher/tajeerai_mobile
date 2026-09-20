@@ -88,5 +88,11 @@ abstract interface class MessageRepository {
     DateTime? eventAt,
   });
 
-  Future<void> loadLatest({required String conversationId}) async {}
+  /// Fetches the newest page of a thread and writes it locally.
+  ///
+  /// The call a thread screen makes when it opens. It asks for the newest
+  /// page as such, never "everything before now" -- the device clock is not
+  /// the server's, and a phone a few seconds behind would open every thread
+  /// with its latest messages missing.
+  Future<int> loadLatest({required String conversationId, int limit});
 }

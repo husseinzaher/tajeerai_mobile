@@ -247,6 +247,17 @@ class FakeMessageRepository implements MessageRepository {
     }
   }
 
+  /// The `before` each history request carried, oldest request first.
+  final List<DateTime> loadOlderBefore = <DateTime>[];
+
+  /// What the next history request reports as written. Zero is what the
+  /// beginning of a thread answers with.
+  int loadOlderResult = 0;
+
+  /// Held open until a test completes it, so an in-flight history request
+  /// can be observed. Null means requests complete at once.
+  Completer<void>? loadOlderGate;
+
   @override
   Future<int> loadOlder({
     required String conversationId,
@@ -254,24 +265,33 @@ class FakeMessageRepository implements MessageRepository {
     int limit = 50,
   }) async {
     loadOlderCalls += 1;
+    loadOlderBefore.add(before);
+
+    final Completer<void>? gate = loadOlderGate;
+
+    if (gate != null) await gate.future;
+
+    final failure = failureToThrow;
+
+    if (failure != null) throw failure;
+
+    return loadOlderResult;
+  }
+
+  /// Counted rather than ignored, since the thread's catch-up is worth
+  /// asserting on.
+  @override
+  Future<int> loadLatest({
+    required String conversationId,
+    int limit = 50,
+  }) async {
+    loadLatestCalls += 1;
 
     final failure = failureToThrow;
 
     if (failure != null) throw failure;
 
     return 0;
-  }
-
-  /// `MessageRepository` gives this a body, but `implements` copies the
-  /// signature and not the body - so a fake has to supply its own. Counted
-  /// rather than ignored, since the thread's catch-up is worth asserting on.
-  @override
-  Future<void> loadLatest({required String conversationId}) async {
-    loadLatestCalls += 1;
-
-    final failure = failureToThrow;
-
-    if (failure != null) throw failure;
   }
 
   @override

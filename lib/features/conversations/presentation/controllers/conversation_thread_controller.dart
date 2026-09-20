@@ -9,6 +9,27 @@ import '../../domain/value_objects/outbound_media.dart';
 
 part 'conversation_thread_controller.g.dart';
 
+/// How many messages a thread shows before the reader asks for more.
+///
+/// One page: what `message:list` answers with, and what the local read is
+/// capped at, so the two stay in step.
+const int threadPageSize = 50;
+
+/// How many of a thread's local messages the screen reads.
+///
+/// The local read is capped so a thread with ten thousand cached rows does not
+/// become a ten-thousand-row query because somebody opened it. The cap grows
+/// by a page each time the reader reaches the top, which is also when the
+/// server is asked for the page above -- so history already on the device
+/// shows without a connection, and history that is not gets fetched.
+@riverpod
+class ThreadWindow extends _$ThreadWindow {
+  @override
+  int build(String conversationId) => threadPageSize;
+
+  void grow() => state += threadPageSize;
+}
+
 /// One thread's messages, from local storage.
 ///
 /// Family-scoped by conversation id so two threads never share a subscription.
@@ -17,7 +38,11 @@ part 'conversation_thread_controller.g.dart';
 /// listening to a socket.
 @riverpod
 Stream<List<Message>> threadMessages(Ref ref, String conversationId) {
-  return ref.watch(messageServiceProvider).watchThread(conversationId);
+  final int limit = ref.watch(threadWindowProvider(conversationId));
+
+  return ref
+      .watch(messageServiceProvider)
+      .watchThread(conversationId, limit: limit);
 }
 
 /// The conversation being viewed.
@@ -237,17 +262,76 @@ class ConversationThreadController extends _$ConversationThreadController {
     await ref.read(outboxCoordinatorProvider).discard(key);
   }
 
-  /// Loads older history from the server into local storage.
+  /// True while a page of history is on its way. A scroll listener fires on
+  /// every frame near the top; one request at a time is the whole point.
+  bool _loadingOlder = false;
+
+  /// True once the server answered a history request with nothing, which is
+  /// what the beginning of a thread looks like. Asked again only if the
+  /// controller is rebuilt.
+  bool _reachedStart = false;
+
+  /// Whether a history request is in flight. For the screen's tests.
+  bool get isLoadingOlder => _loadingOlder;
+
+  /// Whether the thread's beginning has been reached. For the screen's tests.
+  bool get hasReachedStart => _reachedStart;
+
+  /// Loads the page of history above what the screen shows.
+  ///
+  /// Called by the screen when the reader reaches the top. Two things happen,
+  /// in this order: the server is asked for the page before the oldest message
+  /// on screen, and the local window widens by a page. The order matters
+  /// offline -- a failed fetch still widens the window, so history the device
+  /// already holds is shown without a connection, which is what local-first
+  /// promises.
   ///
   /// The screen reads the database, so it updates when this lands rather than
   /// through a return value.
-  Future<void> loadOlder(DateTime before) async {
+  Future<void> loadOlder() async {
+    if (_loadingOlder) return;
+
+    final List<Message>? held = ref
+        .read(threadMessagesProvider(conversationId))
+        .value;
+
+    if (held == null || held.isEmpty) return;
+
+    // A window the local read fills to the brim may have more behind it; one
+    // it does not fill has shown everything the device holds.
+    final bool localHasMore =
+        held.length >= ref.read(threadWindowProvider(conversationId));
+
+    if (_reachedStart && !localHasMore) return;
+
+    _loadingOlder = true;
+    bool reveal = localHasMore;
+
     try {
-      await ref
-          .read(messageRepositoryProvider)
-          .loadOlder(conversationId: conversationId, before: before);
+      if (!_reachedStart) {
+        // Oldest first is reading order, so the top of the thread is the head.
+        final int written = await ref
+            .read(messageRepositoryProvider)
+            .loadOlder(
+              conversationId: conversationId,
+              before: held.first.createdAt,
+              limit: threadPageSize,
+            );
+
+        if (written == 0) {
+          _reachedStart = true;
+        } else {
+          reveal = true;
+        }
+      }
     } on AppFailure catch (failure) {
-      state = state.copyWith(error: composerErrorFor(failure));
+      _reportHistoryFailure(failure);
+    } finally {
+      _loadingOlder = false;
+
+      if (reveal) {
+        ref.read(threadWindowProvider(conversationId).notifier).grow();
+      }
     }
   }
 
@@ -257,13 +341,31 @@ class ConversationThreadController extends _$ConversationThreadController {
     state = state.copyWith(clearError: true);
   }
 
+  /// Catches the thread up when the screen opens.
+  ///
+  /// Asks for the newest page and writes it locally; the screen's database
+  /// read shows it. Cached messages are on screen before this returns, so a
+  /// slow or absent connection costs the reader nothing they already had.
   Future<void> loadInitial() async {
     try {
       await ref
           .read(messageRepositoryProvider)
-          .loadLatest(conversationId: conversationId); // ← محتاجة تتعمل
+          .loadLatest(conversationId: conversationId, limit: threadPageSize);
     } on AppFailure catch (failure) {
-      state = state.copyWith(error: composerErrorFor(failure));
+      _reportHistoryFailure(failure);
     }
+  }
+
+  /// Offline is not a failure of a history read: what the device holds is
+  /// what it shows, and the thread catches up on reconnect through sync. The
+  /// composer's copy for it says a message will be sent later, which would
+  /// be the wrong sentence on a screen that was only opened. Anything else is
+  /// reported as the composer would.
+  void _reportHistoryFailure(AppFailure failure) {
+    final ComposerError error = composerErrorFor(failure);
+
+    if (error == ComposerError.offline) return;
+
+    state = state.copyWith(error: error);
   }
 }

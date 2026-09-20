@@ -54,8 +54,15 @@ class _Thread extends ConversationThreadController {
     return accept;
   }
 
+  int loadedOlder = 0;
+
   @override
   Future<void> loadInitial() async {}
+
+  @override
+  Future<void> loadOlder() async {
+    loadedOlder += 1;
+  }
 
   @override
   Future<void> retry(Message message) async {
@@ -83,6 +90,21 @@ Message _message(
   state: state,
   body: body,
   createdAt: testEpoch.add(after),
+);
+
+/// Enough messages to overflow the test viewport, alternating sides, with the
+/// newest one still only delivered.
+List<Message> _longThread(int count) => List<Message>.generate(
+  count,
+  (int index) => _message(
+    'm$index',
+    direction: index.isOdd
+        ? MessageDirection.outbound
+        : MessageDirection.inbound,
+    state: index.isOdd ? MessageState.delivered : MessageState.read,
+    body: 'Message $index',
+    after: Duration(minutes: index),
+  ),
 );
 
 Conversation _conversation({bool archived = false}) => Conversation(
@@ -310,6 +332,67 @@ void main() {
 
       expect(thread?.retried, <String>['m2']);
       expect(thread?.discarded, <String>['m2']);
+    });
+
+    testWidgets('reaching the top of the thread asks for the page above', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(subject());
+      await tester.pump();
+      messages.add(_longThread(40));
+      await settle(tester);
+
+      // Opened at the bottom, nothing has been asked for.
+      expect(thread!.loadedOlder, 0);
+
+      final ScrollPosition position = tester
+          .state<ScrollableState>(find.byType(Scrollable).first)
+          .position;
+      expect(position.maxScrollExtent, greaterThan(0));
+
+      position.jumpTo(position.maxScrollExtent);
+      await tester.pump();
+
+      expect(thread!.loadedOlder, greaterThanOrEqualTo(1));
+    });
+
+    testWidgets('a delivery update does not move the reader', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(subject());
+      await tester.pump();
+      messages.add(_longThread(40));
+      await settle(tester);
+
+      final ScrollPosition before = tester
+          .state<ScrollableState>(find.byType(Scrollable).first)
+          .position;
+      before.jumpTo(before.maxScrollExtent);
+      await tester.pump();
+      final double readingAt = before.pixels;
+      expect(readingAt, greaterThan(0));
+
+      // The newest message is now read. The list is the same list with one
+      // glyph changed; the reader is still where they were.
+      final List<Message> updated = _longThread(40);
+      updated[updated.length - 1] = updated.last.copyWith(
+        state: MessageState.read,
+      );
+      messages.add(updated);
+      await settle(tester);
+
+      // Same list, same position object: the timeline was rebuilt, not
+      // remounted. A remount hands the controller a fresh position that
+      // opens at the bottom, which is what this screen used to do on every
+      // status change.
+      final ScrollPosition after = tester
+          .state<ScrollableState>(find.byType(Scrollable).first)
+          .position;
+      expect(identical(before, after), isTrue);
+      // The newest bubble may change height with its glyph, which moves the
+      // far edge by a line; the reader stays at the top, not at the bottom.
+      expect(after.pixels, closeTo(after.maxScrollExtent, 1));
+      expect(after.pixels, greaterThan(readingAt / 2));
     });
 
     testWidgets('a long press offers copy', (WidgetTester tester) async {

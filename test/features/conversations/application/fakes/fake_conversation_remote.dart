@@ -114,12 +114,18 @@ class FakeConversationRemote extends ConversationRemoteDataSource {
     );
   }
 
+  /// The cursor each `message:list` carried, in call order. Null is a request
+  /// for the newest page.
+  final List<DateTime?> listedBefore = <DateTime?>[];
+
   @override
   Future<MessagePage> listMessages({
     required String conversationId,
     DateTime? before,
     int limit = 50,
   }) async {
+    listedBefore.add(before);
+
     final failure = failureToThrow;
 
     if (failure != null) throw failure;

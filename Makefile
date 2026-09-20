@@ -114,8 +114,14 @@ build-prod:
 
 # Unsigned debug APK. No keystore, no release shrinking — this is what to run
 # when the question is "does the Android build still work?".
+# BUILD_NUMBER is optional. A phone that already carries a Play release refuses
+# a debug APK with a lower version code (INSTALL_FAILED_VERSION_DOWNGRADE), and
+# uninstalling to get past it throws away the signed-in session. Passing a
+# number above the installed one installs over it and keeps the app's data:
+#   make build-debug ENV_FILE=.env.production BUILD_NUMBER=1000001
 build-debug:
-	flutter build apk --debug --dart-define-from-file=$(ENV_FILE)
+	flutter build apk --debug --dart-define-from-file=$(ENV_FILE) \
+		$(if $(BUILD_NUMBER),--build-number=$(BUILD_NUMBER))
 
 google-sign-in-setup:
 	dart run tool/configure_google_sign_in.dart

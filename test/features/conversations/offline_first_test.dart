@@ -572,6 +572,61 @@ void main() {
     });
   });
 
+  group('opening a thread', () {
+    test(
+      'asks for the newest page, not the page before the device clock',
+      () async {
+        // A phone whose clock runs behind the server. Anything the server
+        // stamped in the last minute is "in the future" to this device.
+        clock.now = testEpoch.subtract(const Duration(minutes: 1));
+
+        remote.nextMessages = <Message>[
+          Message(
+            id: 'server-1',
+            conversationId: 'c1',
+            direction: MessageDirection.inbound,
+            state: MessageState.delivered,
+            body: 'Just now',
+            createdAt: testEpoch,
+          ),
+        ];
+
+        final int written = await messages.loadLatest(conversationId: 'c1');
+
+        // No cursor: the server decides what "newest" is.
+        expect(remote.listedBefore, <DateTime?>[null]);
+        expect(written, 1);
+        expect((await threadMessages()).single.body, 'Just now');
+      },
+    );
+
+    test('older history is asked for before the oldest message held', () async {
+      remote.nextMessages = <Message>[
+        Message(
+          id: 'server-0',
+          conversationId: 'c1',
+          direction: MessageDirection.inbound,
+          state: MessageState.read,
+          body: 'Earlier',
+          createdAt: testEpoch.subtract(const Duration(hours: 1)),
+        ),
+      ];
+
+      final DateTime oldest = testEpoch;
+      final int written = await messages.loadOlder(
+        conversationId: 'c1',
+        before: oldest,
+      );
+
+      expect(remote.listedBefore, <DateTime?>[oldest]);
+      expect(written, 1);
+
+      // The start of the thread answers with nothing, and writes nothing.
+      remote.nextMessages = const <Message>[];
+      expect(await messages.loadOlder(conversationId: 'c1', before: oldest), 0);
+    });
+  });
+
   group('media messages', () {
     test('loadLatest preserves local media path on sent photos', () async {
       final File picked = File(
