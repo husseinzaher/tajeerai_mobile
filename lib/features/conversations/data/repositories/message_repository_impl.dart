@@ -436,6 +436,30 @@ class MessageRepositoryImpl implements MessageRepository {
     await _outbox.remove(messageId);
   }
 
+  @override
+  Future<void> discard(Message message) async {
+    if (message.isKnownToServer) {
+      try {
+        await _remote.discardMessage(
+          conversationId: message.conversationId,
+          messageId: message.id,
+        );
+      } on NotFoundFailure {
+        // Already gone there -- another client discarded it, or the row was
+        // cleaned up. The local copy is what is left to tidy, and refusing to
+        // do that would leave a message on screen that exists nowhere else.
+      }
+    }
+
+    await _dao.removeMessage(message.id);
+
+    // Keyed by the idempotency key, not by the row id: an acknowledged message
+    // has been re-keyed to the server's id, and removing the outbox entry by
+    // that id would miss it and leave the send queued behind a message that is
+    // no longer on screen.
+    await _outbox.remove(message.clientMessageId ?? message.id);
+  }
+
   /// Writes one server-originated message without regressing delivery state.
   ///
   /// A broadcast that still says `queued` must not undo a local `sent` written

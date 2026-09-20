@@ -79,6 +79,17 @@ abstract interface class MessageRepository {
   /// Removes a message the server never accepted.
   Future<void> remove(String messageId);
 
+  /// Throws a message away, wherever it lives.
+  ///
+  /// A message that never left this device is simply deleted. One the server
+  /// holds is discarded *there* first, and only removed locally once it has
+  /// agreed -- otherwise the row comes back on the next sync, every other
+  /// client keeps showing it, and the conversation's failed count never moves.
+  ///
+  /// Throws when the server refuses, so the screen can say so rather than
+  /// appearing to have worked.
+  Future<void> discard(Message message);
+
   /// Patches media fields on an existing row.
   Future<void> updateMedia({
     required String messageId,

@@ -453,11 +453,24 @@ class ConversationThreadController extends _$ConversationThreadController {
     }
   }
 
-  /// Throws away a message that never reached the server.
+  /// Throws away a message the provider never accepted.
+  ///
+  /// Through the repository rather than the outbox: the outbox only knows
+  /// about sends composed on this device, so discarding through it did nothing
+  /// at all for a failed message that arrived from a sync -- there was no
+  /// outbox entry to find, and the call returned silently having deleted
+  /// nothing. Even when there was one, the row was only removed here: the
+  /// server still held it, so the next sync brought it back, every other
+  /// client kept showing it, and the thread's failed count never moved.
+  ///
+  /// A refusal is reported. A delete that looks like it worked and did not is
+  /// worse than one that says it failed.
   Future<void> discard(Message message) async {
-    final key = message.clientMessageId ?? message.id;
-
-    await ref.read(outboxCoordinatorProvider).discard(key);
+    try {
+      await ref.read(messageRepositoryProvider).discard(message);
+    } on AppFailure catch (failure) {
+      state = state.copyWith(error: composerErrorFor(failure));
+    }
   }
 
   /// True while a page of history is on its way. A scroll listener fires on

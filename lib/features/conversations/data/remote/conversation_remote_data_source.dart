@@ -190,6 +190,26 @@ class ConversationRemoteDataSource {
     );
   }
 
+  /// `message:discard`. Throws away a message the provider never accepted.
+  ///
+  /// The server refuses this for a message the customer already has -- that is
+  /// `message:delete`, a different act with a different window -- so a
+  /// rejection here is meaningful and is passed up rather than swallowed.
+  Future<void> discardMessage({
+    required String conversationId,
+    required String messageId,
+  }) async {
+    await _send(
+      SocketCommand(
+        name: ConversationCommands.messageDiscard,
+        payload: <String, Object?>{
+          'conversationId': conversationId,
+          'messageId': messageId,
+        },
+      ),
+    );
+  }
+
   /// `conversation.join`. Takes a seat in the thread's room.
   ///
   /// **Without this the thread is only half live.** Delivery ticks, media

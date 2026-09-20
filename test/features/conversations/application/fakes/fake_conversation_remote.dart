@@ -145,6 +145,21 @@ class FakeConversationRemote extends ConversationRemoteDataSource {
   final List<String> joined = <String>[];
   final List<String> left = <String>[];
 
+  /// Message ids discarded on the server, in call order.
+  final List<String> discarded = <String>[];
+
+  @override
+  Future<void> discardMessage({
+    required String conversationId,
+    required String messageId,
+  }) async {
+    final failure = failureToThrow;
+
+    if (failure != null) throw failure;
+
+    discarded.add(messageId);
+  }
+
   @override
   Future<void> joinConversation(String conversationId) async {
     joined.add(conversationId);

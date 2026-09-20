@@ -570,6 +570,90 @@ void main() {
       expect(await threadMessages(), isEmpty);
       expect(await database.outboxDao.find('client-1'), isNull);
     });
+
+    /// A message that failed at the *provider*, which is the common case and
+    /// the one the outbox knows nothing about.
+    ///
+    /// It arrived from a sync, so there is no outbox entry keyed by a client
+    /// id -- and discarding through the outbox found nothing and returned
+    /// having deleted nothing at all. The delete simply did not happen.
+    test(
+      'a failed message that came from the server is discarded there',
+      () async {
+        await messages.upsertAll(<Message>[
+          Message(
+            id: 'server-9',
+            conversationId: 'c1',
+            direction: MessageDirection.outbound,
+            state: MessageState.failed,
+            body: 'never accepted',
+            createdAt: clock(),
+          ),
+        ]);
+
+        final Message stored = (await threadMessages()).single;
+
+        expect(stored.isKnownToServer, isTrue);
+
+        await messages.discard(stored);
+
+        // Told the server, so the row does not come back on the next sync and
+        // the thread's failed count can move.
+        expect(remote.discarded, <String>['server-9']);
+        expect(await threadMessages(), isEmpty);
+      },
+    );
+
+    test(
+      'a message that never left the device is not sent to the server',
+      () async {
+        remote.failureToThrow = const ValidationFailure(message: 'Nope.');
+
+        await messageService.compose(
+          conversation: await thread(),
+          rawBody: 'local only',
+        );
+        await outbox.drain();
+
+        final Message stored = (await threadMessages()).single;
+
+        // Never acknowledged, so it was never re-keyed off its idempotency key.
+        expect(stored.isKnownToServer, isFalse);
+
+        remote.failureToThrow = null;
+        await messages.discard(stored);
+
+        expect(remote.discarded, isEmpty);
+        expect(await threadMessages(), isEmpty);
+        expect(await database.outboxDao.find('client-1'), isNull);
+      },
+    );
+
+    test('a server that refuses the discard keeps the message', () async {
+      await messages.upsertAll(<Message>[
+        Message(
+          id: 'server-9',
+          conversationId: 'c1',
+          direction: MessageDirection.outbound,
+          state: MessageState.failed,
+          body: 'already sent',
+          createdAt: clock(),
+        ),
+      ]);
+
+      remote.failureToThrow = const ConflictFailure(
+        message: 'Use delete for a message the customer already has.',
+      );
+
+      await expectLater(
+        messages.discard((await threadMessages()).single),
+        throwsA(isA<ConflictFailure>()),
+      );
+
+      // Still on screen. Removing it locally after the server said no is how
+      // a message disappears here and stays there.
+      expect(await threadMessages(), hasLength(1));
+    });
   });
 
   group('opening a thread', () {

@@ -300,5 +300,18 @@ class FakeMessageRepository implements MessageRepository {
     _messages.remove(messageId);
   }
 
+  /// Messages discarded, in call order.
+  final List<Message> discarded = <Message>[];
+
+  @override
+  Future<void> discard(Message message) async {
+    final failure = failureToThrow;
+
+    if (failure != null) throw failure;
+
+    discarded.add(message);
+    _messages.remove(message.id);
+  }
+
   Future<void> dispose() => _controller.close();
 }

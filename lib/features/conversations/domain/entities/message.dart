@@ -119,6 +119,19 @@ final class Message {
   final DateTime? readAt;
   final DateTime? queuedAt;
 
+  /// Whether the server has a row for this message.
+  ///
+  /// True the moment a send is acknowledged, because that is when the
+  /// optimistic row is re-keyed from its [clientMessageId] to the server's id
+  /// -- and true for anything that arrived from the server, which carries no
+  /// client id at all. False only while a message exists nowhere but here.
+  ///
+  /// It decides where a discard has to go. Throwing away a row the server
+  /// holds without telling it leaves the message on the server: the next sync
+  /// brings it back, every other client keeps showing it, and the failed
+  /// count never moves.
+  bool get isKnownToServer => id != clientMessageId;
+
   bool get isOutbound => direction == MessageDirection.outbound;
 
   bool get isInbound => direction == MessageDirection.inbound;
