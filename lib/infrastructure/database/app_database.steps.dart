@@ -1375,10 +1375,327 @@ i1.GeneratedColumn<String> _column_73(String aliasedName) =>
       type: i1.DriftSqlType.string,
       $customConstraints: 'NOT NULL',
     );
+
+final class Schema5 extends i0.VersionedSchema {
+  Schema5({required super.database}) : super(version: 5);
+  @override
+  late final List<i1.DatabaseSchemaEntity> entities = [
+    conversations,
+    messages,
+    customers,
+    customerNotes,
+    callerIdentityCaches,
+    sessionUsers,
+    outboxEntries,
+    syncStates,
+    processedEvents,
+  ];
+  late final Shape0 conversations = Shape0(
+    source: i0.VersionedTable(
+      entityName: 'conversations',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_0,
+        _column_1,
+        _column_2,
+        _column_3,
+        _column_4,
+        _column_5,
+        _column_6,
+        _column_7,
+        _column_8,
+        _column_9,
+        _column_10,
+        _column_11,
+        _column_12,
+        _column_13,
+        _column_14,
+        _column_15,
+        _column_16,
+        _column_17,
+        _column_18,
+        _column_19,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape1 messages = Shape1(
+    source: i0.VersionedTable(
+      entityName: 'messages',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_0,
+        _column_20,
+        _column_21,
+        _column_22,
+        _column_1,
+        _column_23,
+        _column_24,
+        _column_25,
+        _column_26,
+        _column_27,
+        _column_28,
+        _column_29,
+        _column_30,
+        _column_31,
+        _column_17,
+        _column_18,
+        _column_32,
+        _column_33,
+        _column_34,
+        _column_19,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape7 customers = Shape7(
+    source: i0.VersionedTable(
+      entityName: 'customers',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_0,
+        _column_35,
+        _column_62,
+        _column_37,
+        _column_63,
+        _column_64,
+        _column_65,
+        _column_10,
+        _column_66,
+        _column_67,
+        _column_68,
+        _column_69,
+        _column_70,
+        _column_17,
+        _column_18,
+        _column_71,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape8 customerNotes = Shape8(
+    source: i0.VersionedTable(
+      entityName: 'customer_notes',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_0,
+        _column_72,
+        _column_73,
+        _column_28,
+        _column_27,
+        _column_17,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape9 callerIdentityCaches = Shape9(
+    source: i0.VersionedTable(
+      entityName: 'caller_identity_caches',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(normalized_phone)'],
+      columns: [
+        _column_74,
+        _column_75,
+        _column_76,
+        _column_40,
+        _column_77,
+        _column_78,
+        _column_79,
+        _column_3,
+        _column_80,
+        _column_81,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape6 sessionUsers = Shape6(
+    source: i0.VersionedTable(
+      entityName: 'session_users',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_0,
+        _column_35,
+        _column_36,
+        _column_37,
+        _column_38,
+        _column_39,
+        _column_40,
+        _column_41,
+        _column_42,
+        _column_61,
+        _column_43,
+        _column_44,
+        _column_45,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape3 outboxEntries = Shape3(
+    source: i0.VersionedTable(
+      entityName: 'outbox_entries',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(id)'],
+      columns: [
+        _column_0,
+        _column_46,
+        _column_47,
+        _column_48,
+        _column_49,
+        _column_50,
+        _column_51,
+        _column_17,
+        _column_45,
+        _column_52,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape4 syncStates = Shape4(
+    source: i0.VersionedTable(
+      entityName: 'sync_states',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(scope)'],
+      columns: [
+        _column_53,
+        _column_54,
+        _column_55,
+        _column_56,
+        _column_57,
+        _column_51,
+      ],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+  late final Shape5 processedEvents = Shape5(
+    source: i0.VersionedTable(
+      entityName: 'processed_events',
+      withoutRowId: false,
+      isStrict: false,
+      tableConstraints: ['PRIMARY KEY(event_id)'],
+      columns: [_column_58, _column_59, _column_60],
+      attachedDatabase: database,
+    ),
+    alias: null,
+  );
+}
+
+class Shape9 extends i0.VersionedTable {
+  Shape9({required super.source, required super.alias}) : super.aliased();
+  i1.GeneratedColumn<String> get normalizedPhone =>
+      columnsByName['normalized_phone']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get displayName =>
+      columnsByName['display_name']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get businessName =>
+      columnsByName['business_name']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get avatarUrl =>
+      columnsByName['avatar_url']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get spamStatus =>
+      columnsByName['spam_status']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get tagsJson =>
+      columnsByName['tags_json']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get source =>
+      columnsByName['source']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get customerId =>
+      columnsByName['customer_id']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get fetchedAt =>
+      columnsByName['fetched_at']! as i1.GeneratedColumn<String>;
+  i1.GeneratedColumn<String> get expiresAt =>
+      columnsByName['expires_at']! as i1.GeneratedColumn<String>;
+}
+
+i1.GeneratedColumn<String> _column_74(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'normalized_phone',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
+    );
+i1.GeneratedColumn<String> _column_75(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'display_name',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NULL',
+    );
+i1.GeneratedColumn<String> _column_76(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'business_name',
+      aliasedName,
+      true,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NULL',
+    );
+i1.GeneratedColumn<String> _column_77(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'spam_status',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL DEFAULT \'unknown\'',
+      defaultValue: const i1.CustomExpression('\'unknown\''),
+    );
+i1.GeneratedColumn<String> _column_78(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'tags_json',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL DEFAULT \'[]\'',
+      defaultValue: const i1.CustomExpression('\'[]\''),
+    );
+i1.GeneratedColumn<String> _column_79(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'source',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL DEFAULT \'unknown\'',
+      defaultValue: const i1.CustomExpression('\'unknown\''),
+    );
+i1.GeneratedColumn<String> _column_80(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'fetched_at',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
+    );
+i1.GeneratedColumn<String> _column_81(String aliasedName) =>
+    i1.GeneratedColumn<String>(
+      'expires_at',
+      aliasedName,
+      false,
+      type: i1.DriftSqlType.string,
+      $customConstraints: 'NOT NULL',
+    );
 i0.MigrationStepWithVersion migrationSteps({
   required Future<void> Function(i1.Migrator m, Schema2 schema) from1To2,
   required Future<void> Function(i1.Migrator m, Schema3 schema) from2To3,
   required Future<void> Function(i1.Migrator m, Schema4 schema) from3To4,
+  required Future<void> Function(i1.Migrator m, Schema5 schema) from4To5,
 }) {
   return (currentVersion, database) async {
     switch (currentVersion) {
@@ -1397,6 +1714,11 @@ i0.MigrationStepWithVersion migrationSteps({
         final migrator = i1.Migrator(database, schema);
         await from3To4(migrator, schema);
         return 4;
+      case 4:
+        final schema = Schema5(database: database);
+        final migrator = i1.Migrator(database, schema);
+        await from4To5(migrator, schema);
+        return 5;
       default:
         throw ArgumentError.value('Unknown migration from $currentVersion');
     }
@@ -1407,10 +1729,12 @@ i1.OnUpgrade stepByStep({
   required Future<void> Function(i1.Migrator m, Schema2 schema) from1To2,
   required Future<void> Function(i1.Migrator m, Schema3 schema) from2To3,
   required Future<void> Function(i1.Migrator m, Schema4 schema) from3To4,
+  required Future<void> Function(i1.Migrator m, Schema5 schema) from4To5,
 }) => i0.VersionedSchema.stepByStepHelper(
   step: migrationSteps(
     from1To2: from1To2,
     from2To3: from2To3,
     from3To4: from3To4,
+    from4To5: from4To5,
   ),
 );

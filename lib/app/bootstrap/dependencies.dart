@@ -24,6 +24,16 @@ import '../../features/conversations/domain/repositories/message_repository.dart
 import '../../features/conversations/domain/services/conversation_service.dart';
 import '../../features/conversations/domain/services/message_service.dart';
 import '../../features/conversations/realtime/conversation_socket_handler.dart';
+import '../../features/caller_id/application/coordinators/caller_id_settings_coordinator.dart';
+import '../../features/caller_id/application/coordinators/caller_lookup_coordinator.dart';
+import '../../features/caller_id/application/ports/caller_id_platform_port.dart';
+import '../../features/caller_id/data/local/caller_id_settings_store.dart';
+import '../../features/caller_id/data/platform/caller_id_platform_adapter.dart';
+import '../../features/caller_id/data/remote/caller_lookup_remote_data_source.dart';
+import '../../features/caller_id/data/repositories/caller_id_settings_repository_impl.dart';
+import '../../features/caller_id/data/repositories/caller_lookup_repository_impl.dart';
+import '../../features/caller_id/domain/repositories/caller_id_settings_repository.dart';
+import '../../features/caller_id/domain/repositories/caller_lookup_repository.dart';
 import '../../features/customers/application/contracts/customer_directory_capability.dart';
 import '../../features/customers/application/coordinators/customer_directory_coordinator.dart';
 import '../../features/customers/application/coordinators/customer_sync_coordinator.dart';
@@ -429,3 +439,57 @@ final Provider<CustomerDirectoryCapability> customerDirectoryProvider =
         sync: ref.watch(customerSyncProvider),
       );
     });
+
+// ---------------------------------------------------------------------------
+// Caller ID feature
+// ---------------------------------------------------------------------------
+
+final Provider<CallerIdPlatformPort> callerIdPlatformPortProvider =
+    Provider<CallerIdPlatformPort>((ref) {
+      if (ref.watch(platformInfoProvider).operatingSystem == 'android') {
+        return CallerIdPlatformAdapter();
+      }
+
+      return const NoopCallerIdPlatformAdapter();
+    });
+
+final Provider<CallerIdSettingsStore> callerIdSettingsStoreProvider =
+    Provider<CallerIdSettingsStore>(
+      (ref) => CallerIdSettingsStore(ref.watch(preferencesStorageProvider)),
+    );
+
+final Provider<CallerIdSettingsRepository> callerIdSettingsRepositoryProvider =
+    Provider<CallerIdSettingsRepository>(
+      (ref) => CallerIdSettingsRepositoryImpl(
+        ref.watch(callerIdSettingsStoreProvider),
+      ),
+    );
+
+final Provider<CallerLookupRemoteDataSource> callerLookupRemoteDataSourceProvider =
+    Provider<CallerLookupRemoteDataSource>(
+      (ref) => CallerLookupRemoteDataSource(ref.watch(httpClientProvider)),
+    );
+
+final Provider<CallerLookupRepository> callerLookupRepositoryProvider =
+    Provider<CallerLookupRepository>((ref) {
+      return CallerLookupRepositoryImpl(
+        cache: ref.watch(appDatabaseProvider).callerIdentityCacheDao,
+        directory: ref.watch(customerDirectoryProvider),
+        remote: ref.watch(callerLookupRemoteDataSourceProvider),
+      );
+    });
+
+final Provider<CallerLookupCoordinator> callerLookupCoordinatorProvider =
+    Provider<CallerLookupCoordinator>(
+      (ref) => CallerLookupCoordinator(
+        repository: ref.watch(callerLookupRepositoryProvider),
+      ),
+    );
+
+final Provider<CallerIdSettingsCoordinator> callerIdSettingsCoordinatorProvider =
+    Provider<CallerIdSettingsCoordinator>(
+      (ref) => CallerIdSettingsCoordinator(
+        settings: ref.watch(callerIdSettingsRepositoryProvider),
+        platform: ref.watch(callerIdPlatformPortProvider),
+      ),
+    );

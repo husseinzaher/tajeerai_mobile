@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -6,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../features/auth/application/events/auth_events.dart';
 import '../features/auth/presentation/controllers/auth_controller.dart';
+import '../infrastructure/database/drift_database_path.dart';
 import 'bootstrap/dependencies.dart';
 import 'localization/locale_manager.dart';
 import 'router/app_router.dart';
@@ -86,14 +88,34 @@ class _TajeerAppState extends ConsumerState<TajeerApp> {
             ..trackOutbox();
 
           await socket.start();
+          await _syncCallerIdRuntime();
 
         case SignedOut():
           await ref.read(socketManagerProvider).stop();
 
         case SessionRefreshed():
-          break;
+          await _syncCallerIdRuntime();
       }
     });
+  }
+
+  /// Pushes the database path, API root, and access token to native Android so
+  /// CallScreeningService can resolve callers without the Flutter isolate.
+  Future<void> _syncCallerIdRuntime() async {
+    if (!Platform.isAndroid) return;
+
+    final String databasePath = await resolveDriftDatabasePath();
+    final String? accessToken = await ref.read(authRepositoryProvider).accessToken();
+    final config = ref.read(appConfigProvider);
+
+    await ref.read(callerIdSettingsCoordinatorProvider).syncRuntimeConfig(
+      databasePath: databasePath,
+      apiBaseUrl: config.apiRoot,
+      accessToken: accessToken,
+    );
+
+    final settings = await ref.read(callerIdSettingsCoordinatorProvider).read();
+    await ref.read(callerIdSettingsCoordinatorProvider).save(settings);
   }
 
   @override

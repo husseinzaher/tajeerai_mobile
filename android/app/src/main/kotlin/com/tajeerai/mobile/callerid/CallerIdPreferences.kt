@@ -66,6 +66,8 @@ class CallerIdPreferences(context: Context) {
 
     fun dismissOnTap(): Boolean = prefs.getBoolean("dismissOnTap", true)
 
+    fun showOverOtherApps(): Boolean = prefs.getBoolean("showOverOtherApps", true)
+
     fun localLookupEnabled(): Boolean = prefs.getBoolean("localLookupEnabled", true)
 
     fun serverLookupEnabled(): Boolean = prefs.getBoolean("serverLookupEnabled", true)

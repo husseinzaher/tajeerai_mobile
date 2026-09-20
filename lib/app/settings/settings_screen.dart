@@ -79,17 +79,18 @@ class SettingsScreen extends ConsumerWidget {
           ],
         ),
       ],
-      AppListSection(
-        title: strings.callerIdTitle,
-        children: <Widget>[
-          AppListItem(
-            title: strings.callerIdTitle,
-            subtitle: strings.callerIdSubtitle,
-            leading: const Icon(LucideIcons.phoneIncoming),
-            onTap: () => context.push('${AppRoutes.settings}/caller-id'),
-          ),
-        ],
-      ),
+      if (platform.operatingSystem == 'android')
+        AppListSection(
+          title: strings.callerIdTitle,
+          children: <Widget>[
+            AppListItem(
+              title: Text(strings.callerIdTitle),
+              subtitle: Text(strings.callerIdSubtitle),
+              leading: const Icon(LucideIcons.phoneIncoming),
+              onTap: () => context.push(AppRoutes.callerIdSettingsPath()),
+            ),
+          ],
+        ),
       AppListSection(
         title: strings.appearance,
         children: <Widget>[

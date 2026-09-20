@@ -336,6 +336,120 @@ class AppStrings {
           'conversations stay safe on your account.',
       'ar': 'ستفقد الرسائل التي لم تُرسل بعد. تبقى محادثاتك محفوظة في حسابك.',
     },
+
+    // -- caller id ----------------------------------------------------------
+    'callerIdTitle': <String, String>{
+      'en': 'Caller ID',
+      'ar': 'معرف المتصل',
+    },
+    'callerIdSubtitle': <String, String>{
+      'en': 'Show a card for incoming and outgoing calls',
+      'ar': 'اعرض بطاقة للمكالمات الواردة والصادرة',
+    },
+    'callerIdRequirements': <String, String>{
+      'en': 'Requirements',
+      'ar': 'المتطلبات',
+    },
+    'callerIdEnabled': <String, String>{
+      'en': 'Caller ID enabled',
+      'ar': 'معرف المتصل مفعّل',
+    },
+    'callerIdCallScreening': <String, String>{
+      'en': 'Call screening role',
+      'ar': 'دور فحص المكالمات',
+    },
+    'callerIdOverlay': <String, String>{
+      'en': 'Display over other apps',
+      'ar': 'العرض فوق التطبيقات الأخرى',
+    },
+    'callerIdEnable': <String, String>{
+      'en': 'Enable Caller ID',
+      'ar': 'تفعيل معرف المتصل',
+    },
+    'callerIdEnableScreening': <String, String>{
+      'en': 'Enable call screening',
+      'ar': 'تفعيل فحص المكالمات',
+    },
+    'callerIdOpenOverlaySettings': <String, String>{
+      'en': 'Open overlay settings',
+      'ar': 'فتح إعدادات العرض فوق التطبيقات',
+    },
+    'callerIdGeneral': <String, String>{
+      'en': 'General',
+      'ar': 'عام',
+    },
+    'callerIdShowIncoming': <String, String>{
+      'en': 'Show for incoming calls',
+      'ar': 'عرض للمكالمات الواردة',
+    },
+    'callerIdShowOutgoing': <String, String>{
+      'en': 'Show for outgoing calls',
+      'ar': 'عرض للمكالمات الصادرة',
+    },
+    'callerIdUnknownOnly': <String, String>{
+      'en': 'Unknown numbers only',
+      'ar': 'الأرقام غير المعروفة فقط',
+    },
+    'callerIdShowContacts': <String, String>{
+      'en': 'Show for saved contacts',
+      'ar': 'عرض لجهات الاتصال المحفوظة',
+    },
+    'callerIdAppearance': <String, String>{
+      'en': 'Appearance',
+      'ar': 'المظهر',
+    },
+    'callerIdIncomingPreview': <String, String>{
+      'en': 'Incoming call',
+      'ar': 'مكالمة واردة',
+    },
+    'callerIdPreviewName': <String, String>{
+      'en': 'Sara Al-Qahtani',
+      'ar': 'سارة القحطاني',
+    },
+    'callerIdPreviewBusiness': <String, String>{
+      'en': 'Returning customer',
+      'ar': 'عميلة عائدة',
+    },
+    'callerIdPreviewTag': <String, String>{
+      'en': 'VIP',
+      'ar': 'عميلة مميزة',
+    },
+    'callerIdShowAvatar': <String, String>{
+      'en': 'Show avatar',
+      'ar': 'عرض الصورة',
+    },
+    'callerIdAnimation': <String, String>{
+      'en': 'Animation',
+      'ar': 'الحركة',
+    },
+    'callerIdBehavior': <String, String>{
+      'en': 'Behavior',
+      'ar': 'السلوك',
+    },
+    'callerIdAutoDismiss': <String, String>{
+      'en': 'Auto dismiss',
+      'ar': 'إخفاء تلقائي',
+    },
+    'callerIdDismissOnTap': <String, String>{
+      'en': 'Dismiss on tap',
+      'ar': 'إخفاء عند النقر',
+    },
+    'callerIdData': <String, String>{
+      'en': 'Data',
+      'ar': 'البيانات',
+    },
+    'callerIdLocalLookup': <String, String>{
+      'en': 'Local lookup',
+      'ar': 'بحث محلي',
+    },
+    'callerIdServerLookup': <String, String>{
+      'en': 'Server lookup',
+      'ar': 'بحث على الخادم',
+    },
+    'callerIdUseCache': <String, String>{
+      'en': 'Use cached caller data',
+      'ar': 'استخدام بيانات المتصل المخزّنة',
+    },
   };
 
   /// The table itself, for the test that checks every entry is translated.
@@ -453,6 +567,35 @@ class AppStrings {
   String get appVersion => call('appVersion');
   String get signOutConfirmTitle => call('signOutConfirmTitle');
   String get signOutConfirmMessage => call('signOutConfirmMessage');
+
+  String get callerIdTitle => call('callerIdTitle');
+  String get callerIdSubtitle => call('callerIdSubtitle');
+  String get callerIdRequirements => call('callerIdRequirements');
+  String get callerIdEnabled => call('callerIdEnabled');
+  String get callerIdCallScreening => call('callerIdCallScreening');
+  String get callerIdOverlay => call('callerIdOverlay');
+  String get callerIdEnable => call('callerIdEnable');
+  String get callerIdEnableScreening => call('callerIdEnableScreening');
+  String get callerIdOpenOverlaySettings => call('callerIdOpenOverlaySettings');
+  String get callerIdGeneral => call('callerIdGeneral');
+  String get callerIdShowIncoming => call('callerIdShowIncoming');
+  String get callerIdShowOutgoing => call('callerIdShowOutgoing');
+  String get callerIdUnknownOnly => call('callerIdUnknownOnly');
+  String get callerIdShowContacts => call('callerIdShowContacts');
+  String get callerIdAppearance => call('callerIdAppearance');
+  String get callerIdIncomingPreview => call('callerIdIncomingPreview');
+  String get callerIdPreviewName => call('callerIdPreviewName');
+  String get callerIdPreviewBusiness => call('callerIdPreviewBusiness');
+  String get callerIdPreviewTag => call('callerIdPreviewTag');
+  String get callerIdShowAvatar => call('callerIdShowAvatar');
+  String get callerIdAnimation => call('callerIdAnimation');
+  String get callerIdBehavior => call('callerIdBehavior');
+  String get callerIdAutoDismiss => call('callerIdAutoDismiss');
+  String get callerIdDismissOnTap => call('callerIdDismissOnTap');
+  String get callerIdData => call('callerIdData');
+  String get callerIdLocalLookup => call('callerIdLocalLookup');
+  String get callerIdServerLookup => call('callerIdServerLookup');
+  String get callerIdUseCache => call('callerIdUseCache');
 
   /// A member's role, named the way the web dashboard names it. A role this
   /// build does not know yet is shown as the server wrote it, not as nothing.

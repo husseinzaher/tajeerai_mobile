@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../../domain/entities/caller_identity.dart';
 import '../../domain/entities/caller_id_settings.dart';
 import '../../domain/repositories/caller_lookup_repository.dart';
@@ -54,9 +56,11 @@ class CallerLookupCoordinator {
     }
 
     if (settings.serverLookupEnabled && onUpdate != null) {
-      _lookupServerWithTimeout(
-        key,
-        onUpdate: onUpdate,
+      unawaited(
+        _lookupServerWithTimeout(
+          key,
+          onUpdate: onUpdate,
+        ),
       );
     } else if (settings.serverLookupEnabled) {
       identity = await _lookupServerWithTimeout(key);

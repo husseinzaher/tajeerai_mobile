@@ -1,10 +1,9 @@
+import '../../../../infrastructure/database/app_database.dart';
 import '../../../customers/application/contracts/customer_directory_capability.dart';
-import '../../../customers/domain/entities/customer.dart';
 import '../../domain/entities/caller_identity.dart';
 import '../../domain/repositories/caller_lookup_repository.dart';
 import '../../domain/value_objects/normalized_phone.dart';
 import '../local/caller_identity_cache_dao.dart';
-import '../local/caller_identity_cache_tables.dart';
 import '../remote/caller_lookup_remote_data_source.dart';
 
 class CallerLookupRepositoryImpl implements CallerLookupRepository {
@@ -43,18 +42,18 @@ class CallerLookupRepositoryImpl implements CallerLookupRepository {
 
     if (phone == null) return null;
 
-    final Customer? customer = await _directory.findByPhone(phone.raw);
+    final match = await _directory.findByPhone(phone.raw);
 
-    if (customer == null) return null;
+    if (match == null) return null;
 
     return CallerIdentity(
       phoneNumber: normalizedPhone,
-      displayName: customer.displayName,
-      businessName: customer.typeName,
-      avatarUrl: customer.photoUrl,
-      tags: customer.tags,
+      displayName: match.displayName,
+      businessName: match.typeName,
+      avatarUrl: match.photoUrl,
+      tags: match.tags,
       source: CallerIdentitySource.localCustomer,
-      customerId: customer.id,
+      customerId: match.id,
     );
   }
 

@@ -18,6 +18,7 @@ class CallerIdOverlayController(private val context: Context) {
     private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     private val mainHandler = Handler(Looper.getMainLooper())
     private var activeCallId: String? = null
+    private var activeDirection: CallerIdCallScreeningService.CallDirection? = null
     private var overlayView: View? = null
     private var dismissRunnable: Runnable? = null
 
@@ -29,11 +30,13 @@ class CallerIdOverlayController(private val context: Context) {
         settings: CallerIdPreferences,
     ) {
         mainHandler.post {
+            if (!settings.showOverOtherApps()) return@post
             if (!Settings.canDrawOverlays(context)) return@post
 
             dismissInternal()
 
             activeCallId = callId
+            activeDirection = direction
             val inflater = LayoutInflater.from(context)
             val view = inflater.inflate(R.layout.caller_id_overlay, null)
 
@@ -70,7 +73,7 @@ class CallerIdOverlayController(private val context: Context) {
             bind(
                 view,
                 identity.phoneNumber,
-                CallerIdCallScreeningService.CallDirection.INCOMING,
+                activeDirection ?: CallerIdCallScreeningService.CallDirection.INCOMING,
                 identity,
                 settings,
             )
@@ -89,6 +92,7 @@ class CallerIdOverlayController(private val context: Context) {
         }
         overlayView = null
         activeCallId = null
+        activeDirection = null
     }
 
     private fun scheduleDismiss(seconds: Int) {

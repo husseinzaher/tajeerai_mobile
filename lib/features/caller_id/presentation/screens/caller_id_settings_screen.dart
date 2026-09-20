@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../app/localization/translations/app_strings.dart';
+import '../../../../app/theme/theme.dart';
 import '../../../../design_system/design_system.dart';
 import '../../domain/entities/caller_id_settings.dart';
 import '../controllers/caller_id_settings_controller.dart';
@@ -115,6 +116,13 @@ class CallerIdSettingsScreen extends ConsumerWidget {
                       label: strings.callerIdUnknownOnly,
                       onChanged: (bool value) => controller.updateSettings(
                         state.settings.copyWith(showOnlyUnknown: value),
+                      ),
+                    ),
+                    AppSwitch(
+                      value: state.settings.showContacts,
+                      label: strings.callerIdShowContacts,
+                      onChanged: (bool value) => controller.updateSettings(
+                        state.settings.copyWith(showContacts: value),
                       ),
                     ),
                   ],
