@@ -141,12 +141,13 @@ test_breaking_and_feat_bumps_major() {
   cleanup_repo
 }
 
-test_invalid_commit_fails() {
+test_non_conventional_commit_bumps_patch() {
   setup_repo
   commit "chore: bootstrap"
   tag_version "1.0.0"
   commit "updated login screen"
-  assert_fail "invalid commit fails" run_resolver name
+  assert_eq "non-conventional next version" "1.0.1" "$(run_resolver name 2>/dev/null)"
+  assert_eq "non-conventional type" "PATCH" "$(run_resolver type 2>/dev/null)"
   cleanup_repo
 }
 
@@ -239,7 +240,7 @@ main() {
   test_breaking_change_bumps_major
   test_mixed_fix_and_feat_bumps_minor
   test_breaking_and_feat_bumps_major
-  test_invalid_commit_fails
+  test_non_conventional_commit_bumps_patch
   test_no_commits_since_latest_tag_reuses_version
   test_tag_exists_on_other_commit_is_detected
   test_dry_run_does_not_create_tag

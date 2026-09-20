@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Calculates the next Android release version from Git tags and Conventional
-# Commits.
+# Commits. Non-conventional commit subjects are treated as patch bumps so
+# legacy history does not block the release pipeline.
 #
 # Usage:
 #   resolve_release_version.sh name
@@ -80,7 +81,7 @@ commit_bump_level() {
   fi
 
   if [[ "$subject" != *:* ]]; then
-    printf 'invalid\n'
+    printf 'patch\n'
     return
   fi
 
@@ -100,7 +101,43 @@ commit_bump_level() {
   case "$commit_type" in
     feat) printf 'minor\n' ;;
     fix|perf|refactor|docs|chore|test|build|ci) printf 'patch\n' ;;
-    *) printf 'invalid\n' ;;
+    *) printf 'patch\n' ;;
+  esac
+}
+
+warn_non_conventional_commit() {
+  local subject="$1"
+  printf 'WARN: Treating non-conventional commit as patch bump: %s\n' "$subject" >&2
+}
+
+is_conventional_commit() {
+  local subject="$1"
+  local body="$2"
+  local type_part commit_type
+
+  if [[ "$body" == *"BREAKING CHANGE:"* || "$body" == *"BREAKING-CHANGE:"* ]]; then
+    return 0
+  fi
+
+  if [[ "$subject" != *:* ]]; then
+    return 1
+  fi
+
+  type_part="${subject%%:*}"
+
+  if [[ "$type_part" == *"!"* ]]; then
+    return 0
+  fi
+
+  if [[ "$type_part" == *"("* ]]; then
+    commit_type="${type_part%%(*}"
+  else
+    commit_type="$type_part"
+  fi
+
+  case "$commit_type" in
+    feat|fix|perf|refactor|docs|chore|test|build|ci) return 0 ;;
+    *) return 1 ;;
   esac
 }
 
@@ -161,13 +198,12 @@ resolve_release() {
     body="${bodies[$index]:-}"
     index=$((index + 1))
 
-    local level
-    level="$(commit_bump_level "$subject" "$body")"
-
-    if [[ "$level" == "invalid" ]]; then
-      fail "Commit is not a Conventional Commit: '$subject'. Expected prefixes such as feat:, fix:, chore:, refactor:, perf:, docs:, test:, build:, ci:, or breaking change syntax (feat!: or BREAKING CHANGE:)."
+    if ! is_conventional_commit "$subject" "$body"; then
+      warn_non_conventional_commit "$subject"
     fi
 
+    local level
+    level="$(commit_bump_level "$subject" "$body")"
     bump_level="$(merge_bump_levels "$bump_level" "$level")"
   done
 
