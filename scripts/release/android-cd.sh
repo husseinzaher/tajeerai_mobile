@@ -253,6 +253,13 @@ verify_artifact() {
     fail_after_tag "AAB exists but is empty: $AAB_REL."
   fi
 
+  require_command unzip
+
+  if ! unzip -t "$AAB_PATH" >/dev/null 2>&1; then
+    AAB_STATUS="FAILED"
+    fail_after_tag "AAB failed integrity check: $AAB_REL is not a valid ZIP archive."
+  fi
+
   AAB_SIZE="$(human_size "$(wc -c < "$AAB_PATH" | tr -d ' ')")"
   AAB_STATUS="PASSED"
 }
@@ -276,14 +283,14 @@ play_upload_configured() {
 }
 
 validate_upload_prerequisites() {
-  if [[ "$UPLOAD" != "1" || "$DRY_RUN" == "1" ]]; then
+  if [[ "$UPLOAD" != "1" ]]; then
     return
   fi
 
   require_command fastlane
 
   if ! play_upload_configured; then
-    fail "Google Play upload is required for this release but credentials are missing. Set GOOGLE_PLAY_SERVICE_ACCOUNT_JSON to a service-account JSON file path, or place the file at android/play-service-account.json (gitignored)."
+    fail_after_tag "Google Play upload is required for this release but credentials are missing. Set GOOGLE_PLAY_SERVICE_ACCOUNT_JSON to a service-account JSON file path, or place the file at android/play-service-account.json (gitignored)."
   fi
 }
 
@@ -402,10 +409,10 @@ main() {
     return
   fi
 
-  validate_upload_prerequisites
   run_verify
   run_build
   verify_artifact
+  validate_upload_prerequisites
   upload_to_play
   print_summary
 }

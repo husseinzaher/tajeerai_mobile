@@ -26,7 +26,8 @@ abstract final class SchemaMigrations {
   ///       restart.
   /// v4 -- `customers` and `customer_notes`, with the phone lookup indexes a
   ///       caller card answers from.
-  static const int version = 4;
+  /// v5 -- `caller_identity_cache` for fast CallScreeningService lookups.
+  static const int version = 5;
 
   static MigrationStrategy strategy(GeneratedDatabase database) {
     return MigrationStrategy(
@@ -57,6 +58,9 @@ abstract final class SchemaMigrations {
           // only fresh installs get them -- and the phone lookup is the one
           // read in this app with a deadline attached to it.
           await _createCustomerIndexes(database);
+        },
+        from4To5: (Migrator migrator, Schema5 schema) async {
+          await migrator.createTable(schema.callerIdentityCaches);
         },
       ),
       beforeOpen: (OpeningDetails details) async {

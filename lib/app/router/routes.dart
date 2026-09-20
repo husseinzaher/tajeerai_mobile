@@ -41,6 +41,8 @@ abstract final class AppRoutes {
 
   /// The member's own settings: account, appearance, language, the way out.
   static const String settings = '/settings';
+  static const String callerIdSettings = 'caller-id';
+  static String callerIdSettingsPath() => '$settings/$callerIdSettings';
 
   /// The design system's own documentation surface.
   ///
@@ -68,6 +70,7 @@ abstract final class AppRouteNames {
   static const String customerNew = 'customer-new';
   static const String customerNoteNew = 'customer-note-new';
   static const String settings = 'settings';
+  static const String callerIdSettings = 'caller-id-settings';
   static const String designSystem = 'design-system';
   static const String splash = 'splash';
 }

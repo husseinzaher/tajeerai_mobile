@@ -5,8 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../design_system/design_system.dart';
+import 'package:go_router/go_router.dart';
+
 import '../../features/auth/domain/entities/user.dart';
 import '../../features/auth/presentation/controllers/auth_controller.dart';
+import '../router/routes.dart';
 import '../../infrastructure/device/platform_info.dart';
 import '../bootstrap/dependencies.dart';
 import '../localization/locale_manager.dart';
@@ -76,6 +79,17 @@ class SettingsScreen extends ConsumerWidget {
           ],
         ),
       ],
+      AppListSection(
+        title: strings.callerIdTitle,
+        children: <Widget>[
+          AppListItem(
+            title: strings.callerIdTitle,
+            subtitle: strings.callerIdSubtitle,
+            leading: const Icon(LucideIcons.phoneIncoming),
+            onTap: () => context.push('${AppRoutes.settings}/caller-id'),
+          ),
+        ],
+      ),
       AppListSection(
         title: strings.appearance,
         children: <Widget>[

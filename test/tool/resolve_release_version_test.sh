@@ -188,6 +188,41 @@ test_dry_run_does_not_create_tag() {
   cleanup_repo
 }
 
+test_dry_run_reports_release_pipeline() {
+  setup_repo
+  commit "chore: bootstrap"
+  tag_version "1.0.0"
+  commit "fix: login"
+  local output
+  output="$(run_cd_dry)"
+
+  printf '%s' "$output" | grep -q "Verify:" || {
+    FAIL=$((FAIL + 1))
+    printf 'FAIL: dry run mentions verify\n' >&2
+  } && {
+    PASS=$((PASS + 1))
+    printf 'PASS: dry run mentions verify\n'
+  }
+
+  printf '%s' "$output" | grep -q "Build:" || {
+    FAIL=$((FAIL + 1))
+    printf 'FAIL: dry run mentions build\n' >&2
+  } && {
+    PASS=$((PASS + 1))
+    printf 'PASS: dry run mentions build\n'
+  }
+
+  printf '%s' "$output" | grep -q "Upload:" || {
+    FAIL=$((FAIL + 1))
+    printf 'FAIL: dry run mentions upload\n' >&2
+  } && {
+    PASS=$((PASS + 1))
+    printf 'PASS: dry run mentions upload\n'
+  }
+
+  cleanup_repo
+}
+
 test_version_code_encoding() {
   setup_repo
   commit "chore: bootstrap"
@@ -208,6 +243,7 @@ main() {
   test_no_commits_since_latest_tag_reuses_version
   test_tag_exists_on_other_commit_is_detected
   test_dry_run_does_not_create_tag
+  test_dry_run_reports_release_pipeline
   test_version_code_encoding
 
   printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"

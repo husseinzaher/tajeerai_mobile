@@ -195,6 +195,7 @@ MODE ?= local
 cd: ## Run the shared Android CD pipeline (MODE=local|github)
 	ALLOW_DIRTY="$(ALLOW_DIRTY)" SKIP_VERIFY="$(SKIP_VERIFY)" DRY_RUN="$(DRY_RUN)" \
 		PUSH_TAG="$(PUSH_TAG)" UPLOAD="$(UPLOAD)" GOOGLE_PLAY_TRACK="$(GOOGLE_PLAY_TRACK)" \
+		GOOGLE_PLAY_SERVICE_ACCOUNT_JSON="$(GOOGLE_PLAY_SERVICE_ACCOUNT_JSON)" \
 		bash scripts/release/android-cd.sh --mode "$(MODE)"
 
 cd-local: ## Full local release: verify, signed AAB, Google Play internal upload

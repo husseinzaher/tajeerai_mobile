@@ -14,6 +14,7 @@ import '../../features/customers/presentation/screens/customer_note_form_screen.
 import '../../features/customers/presentation/screens/customers_screen.dart';
 import '../../design_system/loaders/app_splash.dart';
 import '../../design_system/showcase/showcase_app.dart';
+import '../../features/caller_id/presentation/screens/caller_id_settings_screen.dart';
 import '../settings/settings_screen.dart';
 import '../shell/authenticated_shell.dart';
 import '../shell/shell_destination.dart';
@@ -171,6 +172,14 @@ List<RouteBase> _destinationRoutes(
         path: destination.path,
         name: AppRouteNames.settings,
         builder: (context, state) => const SettingsScreen(),
+        routes: <RouteBase>[
+          GoRoute(
+            path: AppRoutes.callerIdSettings,
+            name: AppRouteNames.callerIdSettings,
+            parentNavigatorKey: rootNavigatorKey,
+            builder: (context, state) => const CallerIdSettingsScreen(),
+          ),
+        ],
       ),
     ],
   };
