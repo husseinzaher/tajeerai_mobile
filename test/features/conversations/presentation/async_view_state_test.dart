@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:TajeerAi/design_system/feedback/async_view.dart';
 import 'package:TajeerAi/features/conversations/application/state/sync_state.dart';
 import 'package:TajeerAi/features/conversations/domain/entities/conversation.dart';
+import 'package:TajeerAi/features/conversations/presentation/widgets/conversation_view_data.dart';
 import 'package:TajeerAi/features/conversations/presentation/widgets/async_view_state.dart';
 
 import '../../../support/fixed_clock.dart';
@@ -113,6 +114,52 @@ void main() {
       ),
       isA<AppViewLoading<int>>(),
     );
+  });
+
+  /// The endless skeleton.
+  ///
+  /// A first sync that fails and is then overtaken by the connection dropping
+  /// lands in `stale`, not `failed` -- and reading the phase alone left the
+  /// rail claiming it was still waiting for its first pass. On a real device
+  /// that was an Inbox of placeholder rows that never resolved, with the
+  /// connection banner suppressed behind the same flag, so nothing on screen
+  /// said anything had gone wrong or offered a retry.
+  test(
+    'a first sync that failed is not still awaiting, whatever the phase',
+    () {
+      const AsyncData<List<Conversation>> empty = AsyncData<List<Conversation>>(
+        <Conversation>[],
+      );
+
+      final AppViewState<int> state = empty.toInboxViewState(
+        (List<Conversation> items) => items.length,
+        sync: const ConversationSyncState(
+          // Where `_markStale` leaves it after the failure.
+          phase: SyncPhase.stale,
+          hasFailedAttempt: true,
+        ),
+        searching: false,
+        failure: 'unused',
+      );
+
+      expect(state, isA<AppViewLoaded<int>>());
+    },
+  );
+
+  test('a failed first sync is still not awaiting once it goes stale', () {
+    const ConversationSyncState failedThenStale = ConversationSyncState(
+      phase: SyncPhase.stale,
+      hasFailedAttempt: true,
+    );
+
+    expect(failedThenStale.isAwaitingFirstInboxData, isFalse);
+
+    // And a pass that has simply not run yet still is.
+    const ConversationSyncState fresh = ConversationSyncState(
+      phase: SyncPhase.stale,
+    );
+
+    expect(fresh.isAwaitingFirstInboxData, isTrue);
   });
 
   test('an empty inbox after a confirmed sync is loaded', () {

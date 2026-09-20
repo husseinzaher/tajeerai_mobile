@@ -44,8 +44,15 @@ extension SyncStatePresentation on ConversationSyncState {
   /// The local database emits an empty list immediately, so "loaded and empty"
   /// is not the same as "there are no conversations" until a sync has
   /// succeeded at least once.
+  ///
+  /// [ConversationSyncState.hasFailedAttempt] and not just `phase == failed`:
+  /// a first pass that fails and is then followed by the connection dropping
+  /// ends up in `stale`, and reading the phase alone left the rail claiming it
+  /// was still waiting -- a skeleton that never resolved, with the connection
+  /// banner suppressed behind the same flag, so nothing on screen said
+  /// anything had gone wrong or offered a retry.
   bool get isAwaitingFirstInboxData =>
-      syncedAt == null && phase != SyncPhase.failed;
+      syncedAt == null && phase != SyncPhase.failed && !hasFailedAttempt;
 }
 
 String? _present(String? value) {

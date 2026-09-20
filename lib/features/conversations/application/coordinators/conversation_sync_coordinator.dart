@@ -145,6 +145,7 @@ class ConversationSyncCoordinator {
           phase: SyncPhase.synchronized,
           syncedAt: now,
           clearMessage: true,
+          hasFailedAttempt: false,
         ),
       );
 
@@ -199,6 +200,7 @@ class ConversationSyncCoordinator {
           phase: SyncPhase.synchronized,
           syncedAt: outcome.syncedAt,
           clearMessage: true,
+          hasFailedAttempt: false,
         ),
       );
 
@@ -256,14 +258,22 @@ class ConversationSyncCoordinator {
       data: <String, Object?>{'failure': failure.runtimeType.toString()},
     );
 
-    await _syncDao.markFailed(
-      inboxScope,
-      now: _clock().toUtc(),
-      error: failure.runtimeType.toString(),
-    );
+    // The code as well as the type. "SocketFailure" is every transport
+    // problem at once; "SocketFailure(DISCONNECTED)" is the difference between
+    // a socket that never opened and one that did not answer, which is the
+    // first question anybody asks of a stored failure.
+    final String code = failure is SocketFailure && failure.code != null
+        ? '${failure.runtimeType}(${failure.code})'
+        : failure.runtimeType.toString();
+
+    await _syncDao.markFailed(inboxScope, now: _clock().toUtc(), error: code);
 
     _publish(
-      _state.copyWith(phase: SyncPhase.failed, message: failure.message),
+      _state.copyWith(
+        phase: SyncPhase.failed,
+        message: failure.message,
+        hasFailedAttempt: true,
+      ),
     );
   }
 

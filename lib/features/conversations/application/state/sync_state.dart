@@ -33,6 +33,7 @@ final class ConversationSyncState {
     this.pendingMutations = 0,
     this.failedMutations = 0,
     this.message,
+    this.hasFailedAttempt = false,
   });
 
   final SyncPhase phase;
@@ -48,6 +49,15 @@ final class ConversationSyncState {
 
   /// A non-sensitive description of the last failure.
   final String? message;
+
+  /// Whether a pass has finished without catching up, at any point.
+  ///
+  /// Distinct from `phase == failed`, which does not survive the next thing
+  /// that happens: a failed first pass followed by the connection dropping
+  /// moves the phase to `stale`, and the rail read "still waiting for the
+  /// first pass" forever -- an endless skeleton with no error, no banner and
+  /// nothing to retry. This is the fact that does not get overwritten.
+  final bool hasFailedAttempt;
 
   bool get isSyncing => phase == SyncPhase.syncing;
 
@@ -80,6 +90,7 @@ final class ConversationSyncState {
     int? failedMutations,
     String? message,
     bool clearMessage = false,
+    bool? hasFailedAttempt,
   }) {
     return ConversationSyncState(
       phase: phase ?? this.phase,
@@ -87,6 +98,7 @@ final class ConversationSyncState {
       pendingMutations: pendingMutations ?? this.pendingMutations,
       failedMutations: failedMutations ?? this.failedMutations,
       message: clearMessage ? null : (message ?? this.message),
+      hasFailedAttempt: hasFailedAttempt ?? this.hasFailedAttempt,
     );
   }
 
@@ -97,9 +109,16 @@ final class ConversationSyncState {
       other.syncedAt == syncedAt &&
       other.pendingMutations == pendingMutations &&
       other.failedMutations == failedMutations &&
-      other.message == message;
+      other.message == message &&
+      other.hasFailedAttempt == hasFailedAttempt;
 
   @override
-  int get hashCode =>
-      Object.hash(phase, syncedAt, pendingMutations, failedMutations, message);
+  int get hashCode => Object.hash(
+    phase,
+    syncedAt,
+    pendingMutations,
+    failedMutations,
+    message,
+    hasFailedAttempt,
+  );
 }
