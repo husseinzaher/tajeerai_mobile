@@ -4,6 +4,7 @@ import org.gradle.api.GradleException
 
 plugins {
     id("com.android.application")
+    id("org.jetbrains.kotlin.android")
 
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
@@ -37,11 +38,14 @@ val keystoreProperties = Properties()
 val keystorePropertiesFile =
     sequenceOf(rootProject.file("key.properties"), file("key.properties")).firstOrNull { it.exists() }
 
-val releaseSigningConfigured = keystorePropertiesFile != null
+val releaseSigningConfigured =
+    keystorePropertiesFile?.let { propertiesFile ->
+        keystoreProperties.load(FileInputStream(propertiesFile))
 
-if (releaseSigningConfigured) {
-    keystoreProperties.load(FileInputStream(keystorePropertiesFile!!))
-}
+        listOf("keyAlias", "keyPassword", "storePassword", "storeFile").all { name ->
+            !keystoreProperties.getProperty(name).isNullOrBlank()
+        }
+    } == true
 
 android {
     namespace = "com.tajeerai.mobile"
@@ -102,17 +106,9 @@ android {
 
     buildTypes {
         release {
-            signingConfig =
-                if (releaseSigningConfigured) {
-                    signingConfigs.getByName("release")
-                } else {
-                    throw GradleException(
-                        "Release builds require android/key.properties with upload keystore settings. " +
-                            "Copy android/key.properties.example to android/key.properties, " +
-                            "place the .jks file at android/app/upload-keystore.jks, and fill in keyAlias, " +
-                            "storeFile, storePassword, and keyPassword.",
-                    )
-                }
+            if (releaseSigningConfigured) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
 }
