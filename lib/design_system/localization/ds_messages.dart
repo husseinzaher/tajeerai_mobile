@@ -71,6 +71,7 @@ class AppMessages {
     required this.readReceipt,
     required this.removed,
     required this.unreadCount,
+    required this.failedCount,
     required this.pinned,
     required this.muted,
     required this.sendingCount,
@@ -167,6 +168,9 @@ class AppMessages {
 
   /// Takes `{count}`.
   final String unreadCount;
+
+  /// How many messages in a thread did not go out. `{count}`.
+  final String failedCount;
 
   /// A row kept at the top, and a row whose notifications are off.
   final String pinned;

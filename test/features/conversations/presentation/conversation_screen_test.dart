@@ -11,6 +11,8 @@ import 'package:TajeerAi/app/theme/theme.dart';
 import 'package:TajeerAi/design_system/localization/ds_messages_en.dart';
 import 'package:TajeerAi/design_system/messaging/composer.dart';
 import 'package:TajeerAi/design_system/messaging/message_bubble.dart';
+import 'package:TajeerAi/design_system/feedback/status_banner.dart';
+import 'package:TajeerAi/design_system/messaging/typing_indicator.dart';
 import 'package:TajeerAi/design_system/shell/toolbar.dart';
 import 'package:TajeerAi/failures/app_failure.dart';
 import 'package:TajeerAi/features/conversations/domain/entities/conversation.dart';
@@ -31,7 +33,20 @@ import '../../../support/fixed_clock.dart';
 const String _id = 'c1';
 
 /// The thread's actions, recorded rather than sent.
+/// The customer's typing bubble, driven by the test rather than the socket.
+///
+/// Overridden rather than left to the real one, which subscribes to the
+/// realtime handler -- and a screen test has no socket behind it.
+class _Typing extends ThreadTyping {
+  @override
+  bool build(String conversationId) => false;
+
+  void set(bool value) => state = value;
+}
+
 class _Thread extends ConversationThreadController {
+  final List<String> typingReports = <String>[];
+
   final List<String> sent = <String>[];
   final List<String> retried = <String>[];
   final List<String> discarded = <String>[];
@@ -47,6 +62,9 @@ class _Thread extends ConversationThreadController {
     sent.add(body);
     return accept;
   }
+
+  @override
+  void notifyTyping(bool isTyping) => typingReports.add('$isTyping');
 
   @override
   Future<bool> sendDraft(AppComposerDraft draft) async {
@@ -107,13 +125,15 @@ List<Message> _longThread(int count) => List<Message>.generate(
   ),
 );
 
-Conversation _conversation({bool archived = false}) => Conversation(
-  id: _id,
-  state: ConversationState.open,
-  customerName: 'Sara Ahmed',
-  isArchived: archived,
-  createdAt: testEpoch,
-);
+Conversation _conversation({bool archived = false, int failed = 0}) =>
+    Conversation(
+      id: _id,
+      state: ConversationState.open,
+      customerName: 'Sara Ahmed',
+      isArchived: archived,
+      failedMessageCount: failed,
+      createdAt: testEpoch,
+    );
 
 void main() {
   late PreferencesStorage preferences;
@@ -121,6 +141,7 @@ void main() {
   late StreamController<Conversation?> conversation;
   late FakeMessageRepository messageRepository;
   _Thread? thread;
+  _Typing? typing;
 
   Future<void> storeLocale(String code) async {
     SharedPreferences.setMockInitialValues(<String, Object>{
@@ -135,6 +156,7 @@ void main() {
     conversation = StreamController<Conversation?>.broadcast();
     messageRepository = FakeMessageRepository();
     thread = null;
+    typing = null;
   });
 
   tearDown(() async {
@@ -150,6 +172,7 @@ void main() {
           .overrideWith((Ref ref) => conversation.stream),
       conversationThreadControllerProvider(_id)
           .overrideWith(() => thread = _Thread()),
+      threadTypingProvider(_id).overrideWith(() => typing = _Typing()),
       messageRepositoryProvider.overrideWithValue(messageRepository),
       messageMediaCoordinatorProvider.overrideWithValue(
         MessageMediaCoordinator(
@@ -261,6 +284,74 @@ void main() {
         tester.getCenter(find.text('Is it ready?')).dy,
         lessThan(tester.getCenter(find.text('Yes, today')).dy),
       );
+    });
+
+    testWidgets('a thread with sends that did not go out says how many', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(subject());
+      await tester.pump();
+      conversation.add(_conversation());
+      messages.add(<Message>[]);
+      await settle(tester);
+
+      expect(find.byType(AppStatusBanner), findsNothing);
+
+      conversation.add(_conversation(failed: 3));
+      await settle(tester);
+
+      // The same words the rail's badge uses. Two phrasings for one problem
+      // read as two problems.
+      expect(find.byType(AppStatusBanner), findsOneWidget);
+      expect(find.text('3 not sent'), findsOneWidget);
+    });
+
+    testWidgets('the customer typing shows a bubble, and losing it hides one', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(subject());
+      await tester.pump();
+      conversation.add(_conversation());
+      messages.add(<Message>[]);
+      await settle(tester);
+
+      expect(find.byType(AppTypingIndicator), findsNothing);
+
+      typing!.set(true);
+      await settle(tester);
+
+      expect(find.byType(AppTypingIndicator), findsOneWidget);
+
+      // It expires rather than waiting to be told, because the frame that
+      // clears it is the one most likely to be lost.
+      typing!.set(false);
+      await settle(tester);
+
+      expect(find.byType(AppTypingIndicator), findsNothing);
+    });
+
+    testWidgets('writing tells the controller, emptying tells it again', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(subject());
+      await tester.pump();
+      conversation.add(_conversation());
+      messages.add(<Message>[]);
+      await settle(tester);
+
+      await tester.enterText(find.byType(EditableText), 'On its w');
+      await tester.pump();
+      await tester.enterText(find.byType(EditableText), 'On its way');
+      await tester.pump();
+
+      // The field stopping being empty, not each keystroke -- the customer's
+      // bubble is refreshed by the controller, not by the keyboard.
+      expect(thread!.typingReports, <String>['true']);
+
+      await tester.enterText(find.byType(EditableText), '');
+      await tester.pump();
+
+      expect(thread!.typingReports, <String>['true', 'false']);
     });
 
     testWidgets('sending goes to the controller; a refusal keeps the text', (

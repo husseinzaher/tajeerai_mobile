@@ -120,6 +120,12 @@ class FakeConversationRepository implements ConversationRepository {
     }
   }
 
+  /// Every typing ping, in call order.
+  final List<String> typingPings = <String>[];
+
+  @override
+  void notifyTyping(String conversationId) => typingPings.add(conversationId);
+
   @override
   Future<void> clear() async {
     _conversations.clear();

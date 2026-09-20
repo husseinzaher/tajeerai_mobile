@@ -56,6 +56,7 @@ const AppMessages appMessagesEn = AppMessages(
   readReceipt: 'Read',
   removed: 'Message removed',
   unreadCount: '{count} unread',
+  failedCount: '{count} not sent',
   pinned: 'Pinned',
   muted: 'Muted',
   sendingCount: 'Sending {count}…',

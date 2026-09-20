@@ -134,10 +134,34 @@ class FakeConversationRemote extends ConversationRemoteDataSource {
   }
 
   @override
-  void sendTypingIndicator({
-    required String conversationId,
-    required bool isTyping,
-  }) {}
+  void sendTypingIndicator({required String conversationId}) {
+    typingPings.add(conversationId);
+  }
+
+  /// Every `conversation:typing-indicator` sent, in call order.
+  final List<String> typingPings = <String>[];
+
+  /// Seats taken and given up, in call order.
+  final List<String> joined = <String>[];
+  final List<String> left = <String>[];
+
+  @override
+  Future<void> joinConversation(String conversationId) async {
+    joined.add(conversationId);
+
+    final failure = failureToThrow;
+
+    if (failure != null) throw failure;
+  }
+
+  @override
+  Future<void> leaveConversation(String conversationId) async {
+    left.add(conversationId);
+
+    final failure = failureToThrow;
+
+    if (failure != null) throw failure;
+  }
 }
 
 /// Stands in for the socket the fake never uses.

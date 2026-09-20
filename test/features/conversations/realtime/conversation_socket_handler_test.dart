@@ -394,6 +394,82 @@ void main() {
       // Two identical frames a second apart both mean "still typing".
       expect(received, hasLength(2));
     });
+
+    test('decodes the customer frame, which spells the field differently', () async {
+      final received = <MessageRealtimeEvent>[];
+      final subscription = handler.transientEvents.listen(received.add);
+
+      // The provider reports the customer as `typing` with an `actor` and an
+      // expiry; the gateway relays a colleague as `isTyping`. Reading only the
+      // second decoded every customer bubble as "stopped typing".
+      await handler.handle(
+        SocketEvent.fromWire(
+          ConversationRealtimeEvents.typing,
+          <String, Object?>{
+            'conversationId': 'c1',
+            'actor': 'customer',
+            'typing': true,
+            'expiresAt': '2024-01-01T00:00:25.000Z',
+          },
+        ),
+      );
+
+      await pumpEventQueue();
+      await subscription.cancel();
+
+      final typing = received.single as TypingChanged;
+
+      expect(typing.isTyping, isTrue);
+      expect(typing.isCustomer, isTrue);
+      expect(typing.expiresAt, DateTime.utc(2024, 1, 1, 0, 0, 25));
+    });
+
+    test('a colleague is not the customer', () async {
+      final received = <MessageRealtimeEvent>[];
+      final subscription = handler.transientEvents.listen(received.add);
+
+      await handler.handle(
+        SocketEvent.fromWire(
+          ConversationRealtimeEvents.typing,
+          <String, Object?>{
+            'conversationId': 'c1',
+            'userId': 'u2',
+            'isTyping': true,
+          },
+        ),
+      );
+
+      await pumpEventQueue();
+      await subscription.cancel();
+
+      final typing = received.single as TypingChanged;
+
+      expect(typing.isTyping, isTrue);
+      expect(typing.isCustomer, isFalse);
+      expect(typing.userId, 'u2');
+      expect(typing.expiresAt, isNull);
+    });
+
+    test('the customer stopping is decoded as stopped', () async {
+      final received = <MessageRealtimeEvent>[];
+      final subscription = handler.transientEvents.listen(received.add);
+
+      await handler.handle(
+        SocketEvent.fromWire(
+          ConversationRealtimeEvents.typing,
+          <String, Object?>{
+            'conversationId': 'c1',
+            'actor': 'customer',
+            'typing': false,
+          },
+        ),
+      );
+
+      await pumpEventQueue();
+      await subscription.cancel();
+
+      expect((received.single as TypingChanged).isTyping, isFalse);
+    });
   });
 
   group('attach', () {

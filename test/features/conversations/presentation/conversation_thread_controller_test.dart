@@ -4,13 +4,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:TajeerAi/app/bootstrap/dependencies.dart';
 import 'package:TajeerAi/failures/app_failure.dart';
+import 'package:TajeerAi/features/conversations/domain/entities/conversation.dart';
 import 'package:TajeerAi/features/conversations/domain/entities/message.dart';
+import 'package:TajeerAi/features/conversations/application/coordinators/conversation_presence_coordinator.dart';
 import 'package:TajeerAi/features/conversations/presentation/controllers/conversation_thread_controller.dart';
+import 'package:TajeerAi/infrastructure/logging/logger.dart';
 
 import '../../../support/fixed_clock.dart';
+import '../application/fakes/fake_conversation_remote.dart';
+import '../domain/fakes/fake_conversation_repository.dart';
 import '../domain/fakes/fake_message_repository.dart';
 
 const String _id = 'c1';
+
+Conversation _conversation({int unreadCount = 0}) => Conversation(
+  id: _id,
+  state: ConversationState.open,
+  unreadCount: unreadCount,
+  createdAt: testEpoch,
+);
 
 Message _message(int index) => Message(
   id: 'm$index',
@@ -31,16 +43,30 @@ List<Message> _thread(int count) => List<Message>.generate(count, _message);
 /// when to stop, and how wide the local read is allowed to be.
 void main() {
   late FakeMessageRepository repository;
+  late FakeConversationRepository conversations;
+  late FakeConversationRemote remote;
   late StreamController<List<Message>> messages;
   late ProviderContainer container;
 
   setUp(() {
     repository = FakeMessageRepository();
+    conversations = FakeConversationRepository();
+    remote = FakeConversationRemote();
     messages = StreamController<List<Message>>.broadcast();
 
     container = ProviderContainer(
       overrides: [
         messageRepositoryProvider.overrideWithValue(repository),
+        conversationRepositoryProvider.overrideWithValue(conversations),
+        // The seat in the conversation's room. Faked rather than left out:
+        // the controller takes it in `build`, so a container without it is a
+        // controller that cannot be created at all.
+        conversationPresenceProvider.overrideWithValue(
+          ConversationPresenceCoordinator(
+            remote: remote,
+            logger: Logger('test', verbose: false),
+          ),
+        ),
         threadMessagesProvider(_id).overrideWith((Ref ref) => messages.stream),
       ],
     );
@@ -200,5 +226,103 @@ void main() {
         expect(controller().isLoadingOlder, isFalse);
       },
     );
+  });
+
+  group('the seat in the conversation room', () {
+    test('is taken as soon as the controller exists', () async {
+      // Not on `loadInitial`: delivery ticks, attachments, withdrawals and
+      // typing are broadcast to the room and nowhere else, so a thread that
+      // never joins is half-live from the moment it opens.
+      controller();
+
+      await pumpEventQueue();
+
+      expect(remote.joined, <String>[_id]);
+    });
+
+    test('is given up when the screen watching it goes away', () async {
+      controller();
+      await pumpEventQueue();
+
+      container.dispose();
+      await pumpEventQueue();
+
+      expect(remote.left, <String>[_id]);
+    });
+  });
+
+  group('read receipts', () {
+    test('the newest page being in is what marks the thread read', () async {
+      conversations.seed(<Conversation>[_conversation(unreadCount: 3)]);
+
+      await controller().loadInitial();
+
+      expect(conversations.markedRead, <String>[_id]);
+    });
+
+    test('a thread with nothing unread is not reported', () async {
+      conversations.seed(<Conversation>[_conversation()]);
+
+      await controller().loadInitial();
+
+      expect(conversations.markedRead, isEmpty);
+    });
+
+    test(
+      'a failed history read still does not report a phantom read',
+      () async {
+        conversations.seed(<Conversation>[_conversation(unreadCount: 3)]);
+        repository.failureToThrow = const UnknownFailure();
+
+        await controller().loadInitial();
+
+        // The member is looking at the thread either way -- what failed was the
+        // catch-up, not the screen.
+        expect(conversations.markedRead, <String>[_id]);
+      },
+    );
+
+    test('a message arriving in an open thread is read', () async {
+      conversations.seed(<Conversation>[_conversation(unreadCount: 1)]);
+      controller();
+
+      await show(_thread(2));
+      conversations.seed(<Conversation>[_conversation(unreadCount: 1)]);
+      await show(_thread(3));
+      await pumpEventQueue();
+
+      // The first emission is the thread being restored from cache and is not
+      // a receipt; the second is a message landing in front of the member.
+      expect(conversations.markedRead, <String>[_id]);
+    });
+
+    test('a read receipt that fails is never shown to the member', () async {
+      conversations.seed(<Conversation>[_conversation(unreadCount: 3)]);
+      conversations.failureToThrow = const UnknownFailure();
+
+      await controller().loadInitial();
+
+      expect(state().error, isNull);
+    });
+  });
+
+  group('telling the customer somebody is typing', () {
+    test('writing sends one ping, and writing more does not', () async {
+      controller()
+        ..notifyTyping(true)
+        ..notifyTyping(true);
+
+      // The provider's bubble lasts around twenty-five seconds; a frame per
+      // report would be a frame per burst of keystrokes, and the server rate
+      // limits the command.
+      expect(conversations.typingPings, <String>[_id]);
+    });
+
+    test('emptying the field sends nothing at all', () async {
+      controller().notifyTyping(false);
+
+      // There is no "stopped typing" to send -- the bubble expires by itself.
+      expect(conversations.typingPings, isEmpty);
+    });
   });
 }

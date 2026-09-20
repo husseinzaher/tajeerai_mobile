@@ -86,12 +86,25 @@ class AppConversationListItem extends StatelessWidget {
       subtitle: summary.preview == null
           ? null
           : AppBidiText(summary.preview!, alignToAmbient: true),
-      trailing: summary.hasUnread || summary.isMuted
+      trailing: summary.hasUnread || summary.hasFailed || summary.isMuted
           ? Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.end,
               spacing: TajeerSpacing.xs2,
               children: <Widget>[
+                // Above the unread count, and in the destructive colour with
+                // its own glyph: the two numbers mean opposite things, and a
+                // member scanning the rail has to tell them apart without
+                // stopping to read either.
+                if (summary.hasFailed)
+                  AppBadge(
+                    label: summary.failedCount > 99
+                        ? '99+'
+                        : '${summary.failedCount}',
+                    variant: AppBadgeVariant.destructive,
+                    size: AppBadgeSize.small,
+                    leading: const Icon(LucideIcons.triangleAlert, size: 10),
+                  ),
                 if (summary.hasUnread) AppBadge.count(summary.unreadCount),
                 if (summary.isMuted)
                   Icon(LucideIcons.bellOff, size: 14, color: colors.textMuted),
@@ -113,6 +126,10 @@ class AppConversationListItem extends StatelessWidget {
     return <String?>[
       summary.title,
       summary.channel?.title,
+      if (summary.hasFailed)
+        AppMessages.interpolate(strings.failedCount, <String, Object?>{
+          'count': summary.failedCount,
+        }),
       if (summary.hasUnread)
         AppMessages.interpolate(strings.unreadCount, <String, Object?>{
           'count': summary.unreadCount,

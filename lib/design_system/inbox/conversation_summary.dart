@@ -18,6 +18,7 @@ class AppConversationSummary {
     this.preview,
     this.lastActivityAt,
     this.unreadCount = 0,
+    this.failedCount = 0,
     this.avatarUrl,
     this.presence = AppPresence.unknown,
     this.channel,
@@ -37,6 +38,14 @@ class AppConversationSummary {
 
   final DateTime? lastActivityAt;
   final int unreadCount;
+
+  /// Messages in this thread that did not go out.
+  ///
+  /// Drawn apart from [unreadCount] and in the destructive colour, because
+  /// they say opposite things: unread is work waiting, failed is work that was
+  /// done and did not land. A member scanning the rail has to be able to tell
+  /// which of the two a number is without reading it.
+  final int failedCount;
   final String? avatarUrl;
   final AppPresence presence;
 
@@ -49,6 +58,8 @@ class AppConversationSummary {
 
   bool get hasUnread => unreadCount > 0;
 
+  bool get hasFailed => failedCount > 0;
+
   @override
   bool operator ==(Object other) =>
       other is AppConversationSummary &&
@@ -57,6 +68,7 @@ class AppConversationSummary {
       other.preview == preview &&
       other.lastActivityAt == lastActivityAt &&
       other.unreadCount == unreadCount &&
+      other.failedCount == failedCount &&
       other.avatarUrl == avatarUrl &&
       other.presence == presence &&
       other.channel == channel &&
@@ -70,6 +82,7 @@ class AppConversationSummary {
     preview,
     lastActivityAt,
     unreadCount,
+    failedCount,
     avatarUrl,
     presence,
     channel,

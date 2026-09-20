@@ -27,6 +27,7 @@ AppConversationSummary _summary({
   String title = 'Ada Lovelace',
   String? preview = 'See you then',
   int unread = 0,
+  int failed = 0,
   bool pinned = false,
   bool muted = false,
   AppChannelDescriptor? channel,
@@ -37,6 +38,7 @@ AppConversationSummary _summary({
   preview: preview,
   lastActivityAt: at ?? DateTime(2026, 3, 12, 10, 24),
   unreadCount: unread,
+  failedCount: failed,
   isPinned: pinned,
   isMuted: muted,
   channel: channel,
@@ -50,6 +52,9 @@ void main() {
       expect(_summary(unread: 1), isNot(_summary()));
       expect(_summary(unread: 1).hasUnread, isTrue);
       expect(_summary().hasUnread, isFalse);
+      expect(_summary(failed: 1), isNot(_summary()));
+      expect(_summary(failed: 1).hasFailed, isTrue);
+      expect(_summary().hasFailed, isFalse);
     });
   });
 
@@ -117,6 +122,31 @@ void main() {
       // The row this replaced drew the time in the brand yellow: 1.53:1.
       expect(time.color, context.colors.textSecondary);
       expect(time.color, isNot(context.colors.primary));
+    });
+
+    testWidgets('a thread with a send that did not go out is marked', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(wrapWidget(row(_summary(failed: 2, unread: 3))));
+
+      // Two numbers that mean opposite things - work waiting, and work that
+      // was done and did not land - so they are told apart by colour and a
+      // glyph rather than by being read.
+      expect(find.byType(AppBadge), findsNWidgets(2));
+      expect(find.text('2'), findsOneWidget);
+      expect(find.text('3'), findsOneWidget);
+      expect(find.byIcon(LucideIcons.triangleAlert), findsOneWidget);
+
+      final Semantics semantics = tester.widget<Semantics>(
+        find
+            .descendant(
+              of: find.byType(AppConversationListItem),
+              matching: find.byType(Semantics),
+            )
+            .first,
+      );
+
+      expect(semantics.properties.label, contains('2 not sent'));
     });
 
     testWidgets('a read row has no badge', (WidgetTester tester) async {

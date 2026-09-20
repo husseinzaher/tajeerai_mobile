@@ -1,11 +1,15 @@
+import 'dart:async';
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../app/bootstrap/dependencies.dart';
 import '../../../../design_system/design_system.dart';
 import '../../../../failures/app_failure.dart';
+import '../../application/coordinators/conversation_presence_coordinator.dart';
 import '../../domain/entities/conversation.dart';
 import '../../domain/entities/message.dart';
 import '../../domain/value_objects/outbound_media.dart';
+import '../../realtime/message_events.dart';
 
 part 'conversation_thread_controller.g.dart';
 
@@ -51,6 +55,77 @@ Stream<Conversation?> threadConversation(Ref ref, String conversationId) {
   return ref
       .watch(conversationRepositoryProvider)
       .watchConversation(conversationId);
+}
+
+/// How long a typing bubble lives when the server named no expiry, and the
+/// range any expiry it *did* name is held to.
+///
+/// The frame that clears a bubble is the one most likely to be lost -- a
+/// locked phone, a dropped provider session -- so the reader expires it rather
+/// than waiting to be told. A bubble that never goes away is worse than no
+/// bubble: it says somebody is still there ten minutes after they left.
+const Duration typingFallbackLife = Duration(seconds: 8);
+const Duration typingShortestLife = Duration(seconds: 1);
+const Duration typingLongestLife = Duration(seconds: 30);
+
+/// Whether the customer is typing in this thread.
+///
+/// The one piece of thread state that does not come from the database, and
+/// deliberately: it is true for a few seconds and then it is not, so storing
+/// it would be a write per keystroke for something nothing may read again.
+/// The realtime handler publishes it instead, and this expires it.
+///
+/// **The customer only**, which is what the web Inbox shows. A colleague
+/// typing arrives on the same event under a different shape -- see
+/// [TypingChanged] -- and is ignored here rather than silently rendered as
+/// the customer.
+@riverpod
+class ThreadTyping extends _$ThreadTyping {
+  Timer? _expiry;
+
+  @override
+  bool build(String conversationId) {
+    final StreamSubscription<MessageRealtimeEvent> subscription = ref
+        .watch(conversationSocketHandlerProvider)
+        .transientEvents
+        .listen((MessageRealtimeEvent event) => _apply(event, conversationId));
+
+    ref.onDispose(() {
+      _expiry?.cancel();
+      _expiry = null;
+      unawaited(subscription.cancel());
+    });
+
+    return false;
+  }
+
+  void _apply(MessageRealtimeEvent event, String conversationId) {
+    if (event is! TypingChanged) return;
+    if (event.conversationId != conversationId || !event.isCustomer) return;
+
+    _expiry?.cancel();
+    _expiry = null;
+
+    if (!event.isTyping) {
+      state = false;
+
+      return;
+    }
+
+    state = true;
+    _expiry = Timer(_lifeOf(event.expiresAt), () => state = false);
+  }
+
+  static Duration _lifeOf(DateTime? expiresAt) {
+    if (expiresAt == null) return typingFallbackLife;
+
+    final Duration remaining = expiresAt.difference(DateTime.now().toUtc());
+
+    if (remaining < typingShortestLife) return typingShortestLife;
+    if (remaining > typingLongestLife) return typingLongestLife;
+
+    return remaining;
+  }
 }
 
 /// Why the composer's last action did not go through.
@@ -119,10 +194,133 @@ final class ComposerState {
 /// an optimistic message and its acknowledged twin end up on screen together.
 @riverpod
 class ConversationThreadController extends _$ConversationThreadController {
+  /// How often the customer is told somebody is typing, at most.
+  ///
+  /// The same twelve seconds the web Inbox uses. The provider's own bubble
+  /// lasts around twenty-five, so this refreshes it comfortably inside its
+  /// life without putting a frame on the wire per keystroke.
+  static const Duration typingThrottle = Duration(seconds: 12);
+
+  /// How long a single spell of typing keeps refreshing the bubble.
+  ///
+  /// The composer reports typing when the field stops being empty and again
+  /// when it becomes empty, not on every keystroke -- so without a refresh a
+  /// long reply loses its bubble a third of the way through. Bounded rather
+  /// than endless: if the "stopped" report is ever missed, the customer sees
+  /// a bubble for two minutes, not for the rest of the day.
+  static const Duration typingMaximumSpell = Duration(minutes: 2);
+
+  Timer? _typingRefresh;
+  DateTime? _typingSentAt;
+
+  /// The newest message this thread has already reported as read.
+  String? _readThrough;
+
   /// The generated base exposes `conversationId` from this parameter, so the
   /// argument is available to every method below without being stored again.
   @override
-  ComposerState build(String conversationId) => const ComposerState();
+  ComposerState build(String conversationId) {
+    // Taking the seat in the thread's room, which is what makes delivery
+    // ticks, attachments, withdrawals and typing arrive at all. Released when
+    // the screen that is watching this controller goes away.
+    final ConversationPresenceCoordinator presence = ref.read(
+      conversationPresenceProvider,
+    );
+
+    unawaited(presence.enter(conversationId));
+
+    // A message landing in a thread the member is looking at has been read, in
+    // the only sense the word has here. The web Inbox does the same on the
+    // newest message changing.
+    ref.listen(threadMessagesProvider(conversationId), (
+      AsyncValue<List<Message>>? previous,
+      AsyncValue<List<Message>> next,
+    ) {
+      final String? newest = next.value?.lastOrNull?.id;
+
+      if (newest == null || newest == _readThrough) return;
+
+      final bool wasShowing = _readThrough != null;
+      _readThrough = newest;
+
+      // Not on the first load: `loadInitial` reports that one, and reporting
+      // it twice would send a receipt for a thread that was merely restored
+      // from cache behind a lock screen.
+      if (wasShowing) unawaited(_markRead());
+    });
+
+    ref.onDispose(() {
+      _typingRefresh?.cancel();
+      _typingRefresh = null;
+      unawaited(presence.leave(conversationId));
+    });
+
+    return const ComposerState();
+  }
+
+  /// Tells the customer somebody is typing.
+  ///
+  /// Called by the composer when the field stops being empty and again when it
+  /// empties. Throttled, because the command exists to refresh a bubble the
+  /// provider expires on its own -- there is nothing to send for "stopped".
+  void notifyTyping(bool isTyping) {
+    if (!isTyping) {
+      _typingRefresh?.cancel();
+      _typingRefresh = null;
+      _typingSentAt = null;
+
+      return;
+    }
+
+    _emitTyping();
+
+    _typingRefresh ??= Timer.periodic(typingThrottle, (Timer timer) {
+      if (timer.tick * typingThrottle.inMilliseconds >=
+          typingMaximumSpell.inMilliseconds) {
+        timer.cancel();
+        _typingRefresh = null;
+
+        return;
+      }
+
+      _emitTyping();
+    });
+  }
+
+  /// Sends the ping unless one went recently.
+  ///
+  /// The refresh timer and a fresh spell of typing can both ask within the
+  /// same second -- the member sends a reply and immediately starts the next
+  /// one -- and the server rate-limits this command.
+  void _emitTyping() {
+    final DateTime now = DateTime.now();
+    final DateTime? last = _typingSentAt;
+
+    if (last != null && now.difference(last) < typingThrottle) return;
+
+    _typingSentAt = now;
+
+    ref.read(conversationRepositoryProvider).notifyTyping(conversationId);
+  }
+
+  /// Reports the thread as read, and never complains.
+  ///
+  /// The thread is open in front of the member: an error about a read receipt
+  /// tells them something they can do nothing with, and the next sync
+  /// reconciles the count from the server, which is authoritative for it.
+  Future<void> _markRead() async {
+    try {
+      final Conversation? conversation = await ref
+          .read(conversationRepositoryProvider)
+          .findConversation(conversationId);
+
+      if (conversation == null) return;
+
+      await ref.read(conversationServiceProvider).markRead(conversation);
+    } on AppFailure {
+      // Deliberately silent -- see above.
+    }
+  }
 
   /// Sends a message.
   ///
@@ -354,6 +552,12 @@ class ConversationThreadController extends _$ConversationThreadController {
     } on AppFailure catch (failure) {
       _reportHistoryFailure(failure);
     }
+
+    // After the page, not before: opening a thread whose newest messages have
+    // not arrived yet and declaring it read is how an unread message is
+    // cleared without ever being shown. Outside the `try` because a history
+    // read that failed does not change what the member is looking at.
+    await _markRead();
   }
 
   /// Offline is not a failure of a history read: what the device holds is

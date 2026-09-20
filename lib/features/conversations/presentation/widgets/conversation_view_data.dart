@@ -23,6 +23,7 @@ extension ConversationPresentation on Conversation {
         // A thread with no messages yet still has a moment it began.
         lastActivityAt: lastMessageAt ?? createdAt,
         unreadCount: unreadCount,
+        failedCount: failedMessageCount,
         avatarUrl: _present(customerAvatarUrl),
         isPinned: isPinned,
         isMuted: isMuted,

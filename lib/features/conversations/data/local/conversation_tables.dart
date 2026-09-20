@@ -62,6 +62,15 @@ class Conversations extends Table {
   /// element, so a join table would buy nothing.
   TextColumn get tags => text().withDefault(const Constant('[]'))();
 
+  /// How many of this thread's messages the server has in `failed`.
+  ///
+  /// Denormalised on the server for the rail's sake and carried through
+  /// verbatim, like [unreadCount]: the count is the server's answer, never
+  /// this device's. A phone that counted its own would report the outbox
+  /// rows it has not managed to send yet, which is a different thing.
+  IntColumn get failedMessageCount =>
+      integer().withDefault(const Constant(0))();
+
   /// A preview of the newest message, so the rail needs no message lookup.
   TextColumn get lastMessagePreview => text().nullable()();
 

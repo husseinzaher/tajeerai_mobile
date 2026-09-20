@@ -87,6 +87,13 @@ class _TajeerAppState extends ConsumerState<TajeerApp> {
             )
             ..trackOutbox();
 
+          // A reconnection comes back with the rooms the member's grants
+          // allow, which never includes the thread they happen to be reading.
+          // Without this replay, every thread that outlived a tunnel keeps
+          // receiving new messages and silently stops receiving delivery
+          // ticks, attachments and typing.
+          ref.read(conversationPresenceProvider).bindTo(socket.connections);
+
           await socket.start();
           await _syncCallerIdRuntime();
 

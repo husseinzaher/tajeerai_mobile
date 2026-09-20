@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:open_filex/open_filex.dart';
 
 import '../../../../app/bootstrap/dependencies.dart';
@@ -113,6 +114,9 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     final ComposerState composer = ref.watch(
       conversationThreadControllerProvider(widget.conversationId),
     );
+    // Transient, and the one thing on this screen that is not read from the
+    // database: a bubble that is true for a few seconds and then is not.
+    final bool typing = ref.watch(threadTypingProvider(widget.conversationId));
 
     // A downloaded attachment reaches the bubble through the database -- the
     // coordinator writes the path back and the query re-emits. The rebuild
@@ -147,6 +151,17 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     });
 
     return AppConversationShell(
+      // Says how many did not go out, in the same words the rail's badge
+      // uses. Two phrasings for one problem read as two problems.
+      banner: thread != null && thread.hasFailedMessages
+          ? AppStatusBanner(
+              message: AppMessages.interpolate(
+                context.strings.failedCount,
+                <String, Object?>{'count': thread.failedMessageCount},
+              ),
+              icon: LucideIcons.triangleAlert,
+            )
+          : null,
       toolbar: thread == null
           ? AppToolbar(showBack: true, onBack: () => context.pop())
           : AppToolbar.conversation(
@@ -155,6 +170,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
               onBack: () => context.pop(),
             ),
       timeline: AppMessageTimeline(
+        typing: typing,
         state: messages.toViewState(
           (List<Message> items) => <AppMessageData>[
             for (final Message item in items) item.toMessageData(),
@@ -188,6 +204,10 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
         sending: composer.isSending,
         hintText: strings.writeMessage,
         onSend: _thread.sendDraft,
+        // Reported when the field stops being empty and again when it empties,
+        // never per keystroke -- the controller turns that into the customer's
+        // bubble and keeps it alive while the reply is written.
+        onTypingChanged: _thread.notifyTyping,
         onAttach: _attach,
         recording: _recording,
         recordingElapsed: _recordingElapsed,

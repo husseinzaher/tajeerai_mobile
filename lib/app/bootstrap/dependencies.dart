@@ -12,6 +12,7 @@ import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/domain/services/auth_service.dart';
 import '../../features/auth/realtime/auth_socket_credentials.dart';
+import '../../features/conversations/application/coordinators/conversation_presence_coordinator.dart';
 import '../../features/conversations/application/coordinators/conversation_sync_coordinator.dart';
 import '../../features/conversations/application/coordinators/message_media_coordinator.dart';
 import '../../features/conversations/application/coordinators/outbox_coordinator.dart';
@@ -365,6 +366,23 @@ final Provider<OutboxCoordinator> outboxCoordinatorProvider =
         remote: ref.watch(conversationRemoteDataSourceProvider),
         media: ref.watch(conversationMediaRemoteDataSourceProvider),
         logger: ref.watch(syncLoggerProvider),
+      );
+
+      ref.onDispose(coordinator.dispose);
+
+      return coordinator;
+    });
+
+/// Holds the member's seat in whatever threads are open.
+///
+/// A `Provider` rather than something the screen owns, because the seat has to
+/// outlive a single build and be replayed on every reconnection -- see the
+/// coordinator's own note on why joining once is not enough.
+final Provider<ConversationPresenceCoordinator> conversationPresenceProvider =
+    Provider<ConversationPresenceCoordinator>((ref) {
+      final coordinator = ConversationPresenceCoordinator(
+        remote: ref.watch(conversationRemoteDataSourceProvider),
+        logger: ref.watch(socketLoggerProvider),
       );
 
       ref.onDispose(coordinator.dispose);

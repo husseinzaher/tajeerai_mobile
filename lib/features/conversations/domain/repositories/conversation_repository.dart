@@ -45,6 +45,14 @@ abstract interface class ConversationRepository {
   /// Marks a thread read locally and tells the server.
   Future<void> markRead(String conversationId);
 
+  /// Asks the provider to show the customer a typing bubble.
+  ///
+  /// Nothing is stored and nothing is returned: the bubble lives on the
+  /// customer's screen for a few seconds and expires there. Here beside
+  /// [markRead] because it is the same kind of thing -- a transient signal the
+  /// member's presence in the thread produces, not a read or a write.
+  void notifyTyping(String conversationId);
+
   /// Clears everything. Used on sign-out.
   Future<void> clear();
 }

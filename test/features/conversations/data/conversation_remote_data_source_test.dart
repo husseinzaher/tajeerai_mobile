@@ -317,7 +317,7 @@ void main() {
 
   group('typing indicator', () {
     test('is fire-and-forget', () async {
-      remote.sendTypingIndicator(conversationId: 'c1', isTyping: true);
+      remote.sendTypingIndicator(conversationId: 'c1');
 
       // Waiting on an acknowledgement per keystroke would be absurd.
       expect(
@@ -325,6 +325,59 @@ void main() {
         ConversationCommands.typingIndicator,
       );
       expect(client.sentCommands, isEmpty);
+    });
+
+    test('carries the conversation and nothing else', () async {
+      remote.sendTypingIndicator(conversationId: 'c1');
+
+      // The server's schema takes an id alone. An `isTyping: false` alongside
+      // it was stripped on the way in, so it did not stop a bubble -- it asked
+      // for one.
+      expect(client.emittedCommands.single.payload, <String, Object?>{
+        'conversationId': 'c1',
+      });
+    });
+  });
+
+  group('the conversation room', () {
+    test(
+      'conversation.join names the thread, and waits to be let in',
+      () async {
+        client.nextAck = const SocketAckSuccess(<String, Object?>{
+          'joined': 'conversation:c1',
+        });
+
+        await remote.joinConversation('c1');
+
+        // Acknowledged rather than emitted: the server authorises the thread
+        // before it joins, and a refusal is worth knowing about.
+        expect(lastCommand().name, ConversationCommands.join);
+        expect(lastCommand().payload['conversationId'], 'c1');
+        expect(client.emittedCommands, isEmpty);
+      },
+    );
+
+    test('conversation.leave gives the seat up', () async {
+      client.nextAck = const SocketAckSuccess(<String, Object?>{
+        'left': 'conversation:c1',
+      });
+
+      await remote.leaveConversation('c1');
+
+      expect(lastCommand().name, ConversationCommands.leave);
+      expect(lastCommand().payload['conversationId'], 'c1');
+    });
+
+    test('a refused join surfaces as an AppFailure', () async {
+      client.sendFailure = const SocketException(
+        message: 'Not your conversation.',
+        code: 'FORBIDDEN',
+      );
+
+      await expectLater(
+        remote.joinConversation('c1'),
+        throwsA(isA<AppFailure>()),
+      );
     });
   });
 

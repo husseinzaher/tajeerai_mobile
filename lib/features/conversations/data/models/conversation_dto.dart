@@ -29,6 +29,7 @@ abstract final class ConversationDto {
       assigneeId: json['assigneeId']?.toString(),
       subject: json['subject']?.toString(),
       unreadCount: _int(json['unreadCount']) ?? 0,
+      failedMessageCount: _int(json['failedMessageCount']) ?? 0,
       tags: _tags(json['tags']),
       lastMessagePreview: _preview(json),
       lastMessageAt: parseTime(json['lastMessageAt']),

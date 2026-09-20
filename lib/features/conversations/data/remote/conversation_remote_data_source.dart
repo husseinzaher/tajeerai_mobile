@@ -190,6 +190,36 @@ class ConversationRemoteDataSource {
     );
   }
 
+  /// `conversation.join`. Takes a seat in the thread's room.
+  ///
+  /// **Without this the thread is only half live.** Delivery ticks, media
+  /// URLs, withdrawals and typing are broadcast to the conversation room and
+  /// nowhere else, so a client that never joins keeps receiving new messages
+  /// -- those go to the inbox audience -- while quietly missing every change
+  /// to the ones it already has. The seat is also what tells the server the
+  /// member is looking, so it does not push them a notification for it.
+  ///
+  /// Acknowledged rather than fired and forgotten: the server authorises the
+  /// conversation before joining, and a refusal is worth knowing about.
+  Future<void> joinConversation(String conversationId) async {
+    await _send(
+      SocketCommand(
+        name: ConversationCommands.join,
+        payload: <String, Object?>{'conversationId': conversationId},
+      ),
+    );
+  }
+
+  /// `conversation.leave`. Gives the seat up again.
+  Future<void> leaveConversation(String conversationId) async {
+    await _send(
+      SocketCommand(
+        name: ConversationCommands.leave,
+        payload: <String, Object?>{'conversationId': conversationId},
+      ),
+    );
+  }
+
   /// `conversation:sync`. Everything that changed since [since].
   ///
   /// The reconnect path. The server returns the *current state* of affected
@@ -225,17 +255,17 @@ class ConversationRemoteDataSource {
   ///
   /// Fire-and-forget: a lost typing frame is invisible, and waiting on an
   /// acknowledgement per keystroke would be absurd.
-  void sendTypingIndicator({
-    required String conversationId,
-    required bool isTyping,
-  }) {
+  ///
+  /// **The conversation and nothing else** -- that is the whole command. There
+  /// is no "stopped typing" to send, because the bubble the provider shows
+  /// expires by itself. The `isTyping` this used to carry was stripped by the
+  /// server's schema on the way in, so `isTyping: false` did not stop a
+  /// bubble: it asked for one.
+  void sendTypingIndicator({required String conversationId}) {
     _socket.emit(
       SocketCommand(
         name: ConversationCommands.typingIndicator,
-        payload: <String, Object?>{
-          'conversationId': conversationId,
-          'isTyping': isTyping,
-        },
+        payload: <String, Object?>{'conversationId': conversationId},
       ),
     );
   }

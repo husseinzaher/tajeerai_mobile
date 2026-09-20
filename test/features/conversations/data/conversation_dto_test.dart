@@ -14,6 +14,7 @@ void main() {
         'customerId': 'cu1',
         'assigneeId': 'u1',
         'unreadCount': 3,
+        'failedMessageCount': 2,
         'subject': 'Order #42',
         'isBotEnabled': true,
         'tags': <Object?>['vip'],
@@ -24,6 +25,8 @@ void main() {
       expect(conversation.id, 'c1');
       expect(conversation.state, ConversationState.open);
       expect(conversation.unreadCount, 3);
+      expect(conversation.failedMessageCount, 2);
+      expect(conversation.hasFailedMessages, isTrue);
       expect(conversation.tags, <String>['vip']);
       expect(conversation.isBotEnabled, isTrue);
       expect(conversation.lastMessageAt, DateTime.utc(2026, 3, 1, 12));
@@ -117,6 +120,10 @@ void main() {
       // A field the server adds must not break decoding, and a missing
       // optional must not throw.
       expect(conversation.unreadCount, 0);
+      // A server that has not been upgraded yet simply reports no failures,
+      // which is also what a healthy thread reports.
+      expect(conversation.failedMessageCount, 0);
+      expect(conversation.hasFailedMessages, isFalse);
       expect(conversation.tags, isEmpty);
       expect(conversation.customerName, isNull);
       expect(conversation.displayName, 'Unknown customer');

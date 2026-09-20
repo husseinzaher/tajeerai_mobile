@@ -19,6 +19,7 @@ final class Conversation {
     this.assigneeId,
     this.subject,
     this.unreadCount = 0,
+    this.failedMessageCount = 0,
     this.tags = const <String>[],
     this.lastMessagePreview,
     this.lastMessageAt,
@@ -39,6 +40,14 @@ final class Conversation {
   final String? assigneeId;
   final String? subject;
   final int unreadCount;
+
+  /// Messages the server could not send, as the server counts them.
+  ///
+  /// A failed send used to be invisible from the rail: the alert said a
+  /// message had failed and nothing said which thread. On WhatsApp the usual
+  /// cause is the 24-hour window closing, which is exactly when the answer is
+  /// worth having quickly.
+  final int failedMessageCount;
   final List<String> tags;
   final String? lastMessagePreview;
   final DateTime? lastMessageAt;
@@ -51,6 +60,8 @@ final class Conversation {
   final DateTime? updatedAt;
 
   bool get hasUnread => unreadCount > 0;
+
+  bool get hasFailedMessages => failedMessageCount > 0;
 
   /// What the rail shows as the thread's name.
   ///
@@ -82,6 +93,7 @@ final class Conversation {
   Conversation copyWith({
     ConversationState? state,
     int? unreadCount,
+    int? failedMessageCount,
     String? lastMessagePreview,
     DateTime? lastMessageAt,
     bool? isArchived,
@@ -98,6 +110,7 @@ final class Conversation {
       assigneeId: assigneeId,
       subject: subject,
       unreadCount: unreadCount ?? this.unreadCount,
+      failedMessageCount: failedMessageCount ?? this.failedMessageCount,
       tags: tags,
       lastMessagePreview: lastMessagePreview ?? this.lastMessagePreview,
       lastMessageAt: lastMessageAt ?? this.lastMessageAt,
@@ -117,11 +130,19 @@ final class Conversation {
       other.id == id &&
       other.state == state &&
       other.unreadCount == unreadCount &&
+      other.failedMessageCount == failedMessageCount &&
       other.lastMessageAt == lastMessageAt &&
       other.isArchived == isArchived &&
       other.isPinned == isPinned;
 
   @override
-  int get hashCode =>
-      Object.hash(id, state, unreadCount, lastMessageAt, isArchived, isPinned);
+  int get hashCode => Object.hash(
+    id,
+    state,
+    unreadCount,
+    failedMessageCount,
+    lastMessageAt,
+    isArchived,
+    isPinned,
+  );
 }

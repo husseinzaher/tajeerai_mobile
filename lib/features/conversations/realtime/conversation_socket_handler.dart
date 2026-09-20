@@ -236,17 +236,30 @@ class ConversationSocketHandler {
     return true;
   }
 
+  /// Decodes `conversation.typing`, in either of the two shapes it arrives in.
+  ///
+  /// A member's own typing is relayed by the gateway as `isTyping`; the
+  /// customer's is reported by the provider as `typing`, with an `actor` and an
+  /// expiry. Reading only the first is how a customer's bubble decoded as
+  /// "stopped typing" and never appeared.
   bool _handleTyping(SocketEvent event) {
     final conversationId = event.payload['conversationId']?.toString();
 
     if (conversationId == null) return false;
 
+    final Object? agentTyping = event.payload['isTyping'];
+    final Object? customerTyping = event.payload['typing'];
+
     if (!_typing.isClosed) {
       _typing.add(
         TypingChanged(
           conversationId: conversationId,
-          isTyping: event.payload['isTyping'] == true,
+          isTyping: agentTyping == true || customerTyping == true,
           userId: event.payload['userId']?.toString(),
+          actor: event.payload['actor']?.toString(),
+          expiresAt: DateTime.tryParse(
+            event.payload['expiresAt']?.toString() ?? '',
+          )?.toUtc(),
         ),
       );
     }

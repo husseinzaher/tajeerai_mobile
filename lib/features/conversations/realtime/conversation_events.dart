@@ -59,4 +59,18 @@ abstract final class ConversationCommands {
   /// Asks the provider to show the customer a typing bubble. Distinct from the
   /// agent-to-agent `conversation.typing` broadcast.
   static const String typingIndicator = 'conversation:typing-indicator';
+
+  /// Takes a seat in the thread, and gives it up again.
+  ///
+  /// Dot-separated rather than colon-separated, unlike every command above it:
+  /// that is the backend's spelling for these two, not a slip here.
+  ///
+  /// **These are not optional.** The server sends delivery ticks, media URLs,
+  /// withdrawals and typing to the conversation room *only* -- a client that
+  /// never joins receives a thread that looks live because new messages still
+  /// arrive on the inbox audience, and is silently missing everything else.
+  /// The seat also tells the server not to push a notification for a thread
+  /// the member is already looking at.
+  static const String join = 'conversation.join';
+  static const String leave = 'conversation.leave';
 }

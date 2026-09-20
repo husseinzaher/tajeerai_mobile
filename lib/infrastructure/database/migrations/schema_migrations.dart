@@ -27,7 +27,9 @@ abstract final class SchemaMigrations {
   /// v4 -- `customers` and `customer_notes`, with the phone lookup indexes a
   ///       caller card answers from.
   /// v5 -- `caller_identity_cache` for fast CallScreeningService lookups.
-  static const int version = 5;
+  /// v6 -- `conversations.failed_message_count`, so the rail can say which
+  ///       thread has a send that did not go out.
+  static const int version = 6;
 
   static MigrationStrategy strategy(GeneratedDatabase database) {
     return MigrationStrategy(
@@ -61,6 +63,15 @@ abstract final class SchemaMigrations {
         },
         from4To5: (Migrator migrator, Schema5 schema) async {
           await migrator.createTable(schema.callerIdentityCaches);
+        },
+        from5To6: (Migrator migrator, Schema6 schema) async {
+          // The column's default of zero is the right answer for an upgraded
+          // device until the next sync: the count is the server's, and every
+          // conversation the rail reloads brings its own.
+          await migrator.addColumn(
+            schema.conversations,
+            schema.conversations.failedMessageCount,
+          );
         },
       ),
       beforeOpen: (OpeningDetails details) async {

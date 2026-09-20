@@ -154,6 +154,17 @@ class ConversationRepositoryImpl implements ConversationRepository {
     }
   }
 
+  /// Fire-and-forget, and deliberately not awaited by anyone.
+  ///
+  /// A typing ping that did not arrive is invisible -- the customer simply
+  /// does not see a bubble -- so there is nothing to report and nothing to
+  /// retry. Waiting on an acknowledgement would make the composer wait on the
+  /// network to render a keystroke.
+  @override
+  void notifyTyping(String conversationId) {
+    _remote.sendTypingIndicator(conversationId: conversationId);
+  }
+
   @override
   Future<void> clear() => _dao.clear();
 
@@ -173,6 +184,7 @@ class ConversationRepositoryImpl implements ConversationRepository {
       assigneeId: row.assigneeId,
       subject: row.subject,
       unreadCount: row.unreadCount,
+      failedMessageCount: row.failedMessageCount,
       tags: _decodeTags(row.tags),
       lastMessagePreview: row.lastMessagePreview,
       lastMessageAt: row.lastMessageAt,
@@ -202,6 +214,7 @@ class ConversationRepositoryImpl implements ConversationRepository {
       assigneeId: Value<String?>(conversation.assigneeId),
       subject: Value<String?>(conversation.subject),
       unreadCount: Value<int>(conversation.unreadCount),
+      failedMessageCount: Value<int>(conversation.failedMessageCount),
       isBotEnabled: Value<bool>(conversation.isBotEnabled),
       tags: Value<String>(jsonEncode(conversation.tags)),
       lastMessagePreview: Value<String?>(conversation.lastMessagePreview),

@@ -61,6 +61,7 @@ const AppMessages appMessagesAr = AppMessages(
   readReceipt: 'تمت القراءة',
   removed: 'تم حذف الرسالة',
   unreadCount: '{count} غير مقروءة',
+  failedCount: '{count} لم تُرسل',
   pinned: 'مثبّت',
   muted: 'مكتوم',
   sendingCount: 'جارٍ إرسال {count}…',
