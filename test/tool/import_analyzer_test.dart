@@ -15,10 +15,7 @@ void main() {
   setUp(() {
     root = Directory.systemTemp.createTempSync('arch_analyzer_test');
 
-    analyzer = ImportAnalyzer(
-      packageRoot: root.path,
-      packageName: 'tajeerai_mobile',
-    );
+    analyzer = ImportAnalyzer(packageRoot: root.path, packageName: 'TajeerAi');
   });
 
   tearDown(() => root.deleteSync(recursive: true));
@@ -44,7 +41,7 @@ void main() {
     test('resolves this project\'s own package imports to project paths', () {
       // Rule 29: a boundary must not be evadable by switching import style.
       final imports = analyze(
-        "import 'package:tajeerai_mobile/features/auth/data/x.dart';\n",
+        "import 'package:TajeerAi/features/auth/data/x.dart';\n",
       );
 
       expect(imports.single.packageName, isNull);

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/failures/app_failure.dart';
-import 'package:tajeerai_mobile/infrastructure/network/http_exception.dart';
+import 'package:TajeerAi/failures/app_failure.dart';
+import 'package:TajeerAi/infrastructure/network/http_exception.dart';
 
 void main() {
   group('status mapping', () {

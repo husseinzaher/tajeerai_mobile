@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/design_system/messaging/message_data.dart';
-import 'package:tajeerai_mobile/design_system/messaging/timeline_builder.dart';
+import 'package:TajeerAi/design_system/messaging/message_data.dart';
+import 'package:TajeerAi/design_system/messaging/timeline_builder.dart';
 
 AppMessageData _message(
   String id,

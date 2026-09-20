@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:tajeerai_mobile/app/theme/theme.dart';
-import 'package:tajeerai_mobile/design_system/feedback/empty_state.dart';
-import 'package:tajeerai_mobile/design_system/feedback/error_state.dart';
-import 'package:tajeerai_mobile/design_system/feedback/inline_error.dart';
-import 'package:tajeerai_mobile/design_system/feedback/status_banner.dart';
-import 'package:tajeerai_mobile/design_system/loaders/skeleton.dart';
-import 'package:tajeerai_mobile/design_system/loaders/spinner.dart';
+import 'package:TajeerAi/app/theme/theme.dart';
+import 'package:TajeerAi/design_system/feedback/empty_state.dart';
+import 'package:TajeerAi/design_system/feedback/error_state.dart';
+import 'package:TajeerAi/design_system/feedback/inline_error.dart';
+import 'package:TajeerAi/design_system/feedback/status_banner.dart';
+import 'package:TajeerAi/design_system/loaders/skeleton.dart';
+import 'package:TajeerAi/design_system/loaders/spinner.dart';
 
 import '../support/widget_harness.dart';
 

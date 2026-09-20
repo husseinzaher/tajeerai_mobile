@@ -2,10 +2,10 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
-import 'package:tajeerai_mobile/design_system/messaging/message_data.dart';
-import 'package:tajeerai_mobile/features/conversations/domain/entities/message.dart';
-import 'package:tajeerai_mobile/features/conversations/presentation/widgets/message_view_data.dart';
-import 'package:tajeerai_mobile/infrastructure/storage/file_storage.dart';
+import 'package:TajeerAi/design_system/messaging/message_data.dart';
+import 'package:TajeerAi/features/conversations/domain/entities/message.dart';
+import 'package:TajeerAi/features/conversations/presentation/widgets/message_view_data.dart';
+import 'package:TajeerAi/infrastructure/storage/file_storage.dart';
 
 import '../../../support/fixed_clock.dart';
 

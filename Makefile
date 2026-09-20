@@ -5,7 +5,7 @@
 .PHONY: help setup tokens tokens-check generate watch migrations arch format format-check analyze \
         test golden golden-update coverage verify clean run run-staging run-prod run-prod-dev \
         showcase showcase-build google-sign-in-setup google-sign-in-check \
-        build-prod build-staging android-build cd cd-local
+        build-prod build-staging android-build android-apk cd cd-local
 
 # Build configuration comes from a .env file, read natively by Flutter's
 # --dart-define-from-file. A local `.env` (gitignored) wins when present, so a
@@ -25,10 +25,11 @@ help:
 	@echo "run-staging   Run against .env.staging"
 	@echo "run-prod      Run against .env.production"
 	@echo "run-prod-dev  Production backend, debug build (hot reload)"
-	@echo "build-prod    Release APK against .env.production"
+	@echo "build-prod    Release APK against .env.production (legacy alias)"
 	@echo "android-build Release App Bundle for Google Play (.aab)"
+	@echo "android-apk   Release APK for local device testing (not used in CD)"
 	@echo "cd            Android CD pipeline (MODE=local|github)"
-	@echo "cd-local      Local Android CD: conventional commits, tag, build signed AAB"
+	@echo "cd-local      Full release: verify, signed AAB, Google Play internal upload"
 	@echo "arch          Run the architecture guard"
 	@echo "format        Format lib, test and tool"
 	@echo "analyze       Static analysis (infos and warnings fatal)"
@@ -175,6 +176,20 @@ android-build: ## Build a signed release App Bundle for Google Play
 	@echo "  build/app/outputs/bundle/release/app-release.aab"
 	@echo "  versionName=$(ANDROID_BUILD_NAME)  versionCode=$(ANDROID_BUILD_NUMBER)"
 
+# Optional developer build — never part of the release CD pipeline.
+android-apk: ## Build a signed release APK for local device testing
+	@test -f android/key.properties || test -f android/app/key.properties || \
+		(echo "Missing android/key.properties. Copy android/key.properties.example and configure the upload keystore." >&2; exit 1)
+	flutter build apk --release \
+		--build-name="$(ANDROID_BUILD_NAME)" \
+		--build-number="$(ANDROID_BUILD_NUMBER)" \
+		--dart-define-from-file=.env.production
+	@test -f build/app/outputs/flutter-apk/app-release.apk
+	@echo ""
+	@echo "Android APK generated:"
+	@echo "  build/app/outputs/flutter-apk/app-release.apk"
+	@echo "  versionName=$(ANDROID_BUILD_NAME)  versionCode=$(ANDROID_BUILD_NUMBER)"
+
 MODE ?= local
 
 cd: ## Run the shared Android CD pipeline (MODE=local|github)
@@ -182,5 +197,5 @@ cd: ## Run the shared Android CD pipeline (MODE=local|github)
 		PUSH_TAG="$(PUSH_TAG)" UPLOAD="$(UPLOAD)" GOOGLE_PLAY_TRACK="$(GOOGLE_PLAY_TRACK)" \
 		bash scripts/release/android-cd.sh --mode "$(MODE)"
 
-cd-local: ## Run the local Android CD pipeline
-	$(MAKE) cd MODE=local
+cd-local: ## Full local release: verify, signed AAB, Google Play internal upload
+	$(MAKE) cd MODE=local UPLOAD=1 GOOGLE_PLAY_TRACK=internal

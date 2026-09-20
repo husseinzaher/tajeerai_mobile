@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/features/conversations/data/models/conversation_dto.dart';
-import 'package:tajeerai_mobile/features/conversations/data/models/message_dto.dart';
-import 'package:tajeerai_mobile/features/conversations/domain/entities/conversation.dart';
-import 'package:tajeerai_mobile/features/conversations/domain/entities/message.dart';
+import 'package:TajeerAi/features/conversations/data/models/conversation_dto.dart';
+import 'package:TajeerAi/features/conversations/data/models/message_dto.dart';
+import 'package:TajeerAi/features/conversations/domain/entities/conversation.dart';
+import 'package:TajeerAi/features/conversations/domain/entities/message.dart';
 
 void main() {
   group('ConversationDto', () {

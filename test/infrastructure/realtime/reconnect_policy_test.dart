@@ -1,8 +1,8 @@
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/infrastructure/realtime/connection/connection_state.dart';
-import 'package:tajeerai_mobile/infrastructure/realtime/connection/reconnect_policy.dart';
+import 'package:TajeerAi/infrastructure/realtime/connection/connection_state.dart';
+import 'package:TajeerAi/infrastructure/realtime/connection/reconnect_policy.dart';
 
 void main() {
   group('ReconnectPolicy', () {

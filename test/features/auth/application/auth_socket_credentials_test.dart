@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/features/auth/realtime/auth_socket_credentials.dart';
-import 'package:tajeerai_mobile/infrastructure/network/token_refresher.dart';
+import 'package:TajeerAi/features/auth/realtime/auth_socket_credentials.dart';
+import 'package:TajeerAi/infrastructure/network/token_refresher.dart';
 
 import '../domain/fakes/fake_auth_repository.dart';
 

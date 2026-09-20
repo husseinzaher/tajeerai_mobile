@@ -1,15 +1,15 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/failures/app_failure.dart';
-import 'package:tajeerai_mobile/features/customers/data/local/customer_dao.dart';
-import 'package:tajeerai_mobile/features/customers/data/models/customer_dto.dart';
-import 'package:tajeerai_mobile/features/customers/data/remote/customer_remote_data_source.dart';
-import 'package:tajeerai_mobile/features/customers/data/repositories/customer_repository_impl.dart';
-import 'package:tajeerai_mobile/features/customers/domain/entities/customer.dart';
-import 'package:tajeerai_mobile/features/customers/domain/entities/customer_note.dart';
-import 'package:tajeerai_mobile/features/customers/domain/repositories/customer_repository.dart';
-import 'package:tajeerai_mobile/infrastructure/database/app_database.dart';
-import 'package:tajeerai_mobile/infrastructure/network/http_client.dart';
-import 'package:tajeerai_mobile/infrastructure/network/http_exception.dart';
+import 'package:TajeerAi/failures/app_failure.dart';
+import 'package:TajeerAi/features/customers/data/local/customer_dao.dart';
+import 'package:TajeerAi/features/customers/data/models/customer_dto.dart';
+import 'package:TajeerAi/features/customers/data/remote/customer_remote_data_source.dart';
+import 'package:TajeerAi/features/customers/data/repositories/customer_repository_impl.dart';
+import 'package:TajeerAi/features/customers/domain/entities/customer.dart';
+import 'package:TajeerAi/features/customers/domain/entities/customer_note.dart';
+import 'package:TajeerAi/features/customers/domain/repositories/customer_repository.dart';
+import 'package:TajeerAi/infrastructure/database/app_database.dart';
+import 'package:TajeerAi/infrastructure/network/http_client.dart';
+import 'package:TajeerAi/infrastructure/network/http_exception.dart';
 
 import '../../../support/fixed_clock.dart';
 import '../../../support/test_database.dart';

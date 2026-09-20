@@ -1,13 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/failures/app_failure.dart';
-import 'package:tajeerai_mobile/features/auth/application/coordinators/session_coordinator.dart';
-import 'package:tajeerai_mobile/features/auth/application/events/auth_events.dart';
-import 'package:tajeerai_mobile/features/auth/application/state/auth_state.dart';
-import 'package:tajeerai_mobile/features/auth/domain/entities/user.dart';
-import 'package:tajeerai_mobile/features/auth/domain/services/auth_service.dart';
-import 'package:tajeerai_mobile/features/auth/domain/value_objects/session_renewal.dart';
-import 'package:tajeerai_mobile/infrastructure/logging/logger.dart';
-import 'package:tajeerai_mobile/infrastructure/network/token_refresher.dart';
+import 'package:TajeerAi/failures/app_failure.dart';
+import 'package:TajeerAi/features/auth/application/coordinators/session_coordinator.dart';
+import 'package:TajeerAi/features/auth/application/events/auth_events.dart';
+import 'package:TajeerAi/features/auth/application/state/auth_state.dart';
+import 'package:TajeerAi/features/auth/domain/entities/user.dart';
+import 'package:TajeerAi/features/auth/domain/services/auth_service.dart';
+import 'package:TajeerAi/features/auth/domain/value_objects/session_renewal.dart';
+import 'package:TajeerAi/infrastructure/logging/logger.dart';
+import 'package:TajeerAi/infrastructure/network/token_refresher.dart';
 
 import '../domain/fakes/fake_auth_repository.dart';
 

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:tajeerai_mobile/design_system/display/avatar.dart';
-import 'package:tajeerai_mobile/design_system/display/badge.dart';
-import 'package:tajeerai_mobile/design_system/display/profile_header.dart';
-import 'package:tajeerai_mobile/design_system/loaders/skeleton.dart';
+import 'package:TajeerAi/design_system/display/avatar.dart';
+import 'package:TajeerAi/design_system/display/badge.dart';
+import 'package:TajeerAi/design_system/display/profile_header.dart';
+import 'package:TajeerAi/design_system/loaders/skeleton.dart';
 
 import '../../support/widget_harness.dart';
 

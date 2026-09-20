@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/failures/app_failure.dart';
-import 'package:tajeerai_mobile/features/conversations/domain/entities/conversation.dart';
-import 'package:tajeerai_mobile/features/conversations/domain/entities/message.dart';
-import 'package:tajeerai_mobile/features/conversations/domain/services/conversation_service.dart';
-import 'package:tajeerai_mobile/features/conversations/domain/services/message_service.dart';
-import 'package:tajeerai_mobile/features/conversations/domain/value_objects/message_content.dart';
+import 'package:TajeerAi/failures/app_failure.dart';
+import 'package:TajeerAi/features/conversations/domain/entities/conversation.dart';
+import 'package:TajeerAi/features/conversations/domain/entities/message.dart';
+import 'package:TajeerAi/features/conversations/domain/services/conversation_service.dart';
+import 'package:TajeerAi/features/conversations/domain/services/message_service.dart';
+import 'package:TajeerAi/features/conversations/domain/value_objects/message_content.dart';
 
 import '../../../support/fixed_clock.dart';
 import 'fakes/fake_conversation_repository.dart';

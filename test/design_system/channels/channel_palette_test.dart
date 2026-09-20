@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/design_system/channels/channel_palette.dart';
+import 'package:TajeerAi/design_system/channels/channel_palette.dart';
 
 /// The mirror of `backend/src/modules/channel/contracts/channel-color.ts`.
 ///

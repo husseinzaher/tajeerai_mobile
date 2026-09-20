@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/app/router/guards/auth_guard.dart';
-import 'package:tajeerai_mobile/app/router/routes.dart';
-import 'package:tajeerai_mobile/features/auth/application/state/auth_state.dart';
-import 'package:tajeerai_mobile/features/auth/domain/entities/user.dart';
+import 'package:TajeerAi/app/router/guards/auth_guard.dart';
+import 'package:TajeerAi/app/router/routes.dart';
+import 'package:TajeerAi/features/auth/application/state/auth_state.dart';
+import 'package:TajeerAi/features/auth/domain/entities/user.dart';
 
 const _session = Session(
   user: AuthenticatedUser(

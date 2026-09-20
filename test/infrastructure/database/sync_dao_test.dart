@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/infrastructure/database/app_database.dart';
-import 'package:tajeerai_mobile/infrastructure/database/tables/sync_state_table.dart';
+import 'package:TajeerAi/infrastructure/database/app_database.dart';
+import 'package:TajeerAi/infrastructure/database/tables/sync_state_table.dart';
 
 import '../../support/fixed_clock.dart';
 import '../../support/test_database.dart';

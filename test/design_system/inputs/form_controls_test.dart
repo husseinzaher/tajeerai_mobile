@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/app/theme/theme.dart';
-import 'package:tajeerai_mobile/design_system/inputs/app_checkbox.dart';
-import 'package:tajeerai_mobile/design_system/inputs/app_radio.dart';
-import 'package:tajeerai_mobile/design_system/inputs/app_select.dart';
-import 'package:tajeerai_mobile/design_system/inputs/search_field.dart';
-import 'package:tajeerai_mobile/design_system/inputs/app_switch.dart';
-import 'package:tajeerai_mobile/design_system/inputs/app_text_field.dart';
-import 'package:tajeerai_mobile/design_system/inputs/otp_field.dart';
-import 'package:tajeerai_mobile/design_system/inputs/password_field.dart';
+import 'package:TajeerAi/app/theme/theme.dart';
+import 'package:TajeerAi/design_system/inputs/app_checkbox.dart';
+import 'package:TajeerAi/design_system/inputs/app_radio.dart';
+import 'package:TajeerAi/design_system/inputs/app_select.dart';
+import 'package:TajeerAi/design_system/inputs/search_field.dart';
+import 'package:TajeerAi/design_system/inputs/app_switch.dart';
+import 'package:TajeerAi/design_system/inputs/app_text_field.dart';
+import 'package:TajeerAi/design_system/inputs/otp_field.dart';
+import 'package:TajeerAi/design_system/inputs/password_field.dart';
 
 import '../../support/widget_harness.dart';
 

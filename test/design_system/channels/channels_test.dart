@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/app/theme/theme.dart';
-import 'package:tajeerai_mobile/design_system/channels/channel_badge.dart';
-import 'package:tajeerai_mobile/design_system/channels/channel_capabilities.dart';
-import 'package:tajeerai_mobile/design_system/channels/channel_descriptor.dart';
-import 'package:tajeerai_mobile/design_system/channels/channel_glyph.dart';
-import 'package:tajeerai_mobile/design_system/channels/channel_palette.dart';
-import 'package:tajeerai_mobile/design_system/display/status_dot.dart';
+import 'package:TajeerAi/app/theme/theme.dart';
+import 'package:TajeerAi/design_system/channels/channel_badge.dart';
+import 'package:TajeerAi/design_system/channels/channel_capabilities.dart';
+import 'package:TajeerAi/design_system/channels/channel_descriptor.dart';
+import 'package:TajeerAi/design_system/channels/channel_glyph.dart';
+import 'package:TajeerAi/design_system/channels/channel_palette.dart';
+import 'package:TajeerAi/design_system/display/status_dot.dart';
 
 import '../../../tool/tokens/token_manifest.dart';
 import '../../support/widget_harness.dart';

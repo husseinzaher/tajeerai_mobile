@@ -1,12 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/failures/app_failure.dart';
-import 'package:tajeerai_mobile/features/conversations/data/remote/conversation_remote_data_source.dart';
-import 'package:tajeerai_mobile/features/conversations/realtime/conversation_events.dart';
-import 'package:tajeerai_mobile/infrastructure/logging/logger.dart';
-import 'package:tajeerai_mobile/infrastructure/realtime/connection/reconnect_policy.dart';
-import 'package:tajeerai_mobile/infrastructure/realtime/socket_command.dart';
-import 'package:tajeerai_mobile/infrastructure/realtime/socket_exception.dart';
-import 'package:tajeerai_mobile/infrastructure/realtime/socket_manager.dart';
+import 'package:TajeerAi/failures/app_failure.dart';
+import 'package:TajeerAi/features/conversations/data/remote/conversation_remote_data_source.dart';
+import 'package:TajeerAi/features/conversations/realtime/conversation_events.dart';
+import 'package:TajeerAi/infrastructure/logging/logger.dart';
+import 'package:TajeerAi/infrastructure/realtime/connection/reconnect_policy.dart';
+import 'package:TajeerAi/infrastructure/realtime/socket_command.dart';
+import 'package:TajeerAi/infrastructure/realtime/socket_exception.dart';
+import 'package:TajeerAi/infrastructure/realtime/socket_manager.dart';
 
 import '../../../infrastructure/realtime/fakes/fake_socket_client.dart';
 import '../../../support/fixed_clock.dart';

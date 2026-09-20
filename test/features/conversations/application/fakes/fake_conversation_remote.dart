@@ -1,9 +1,9 @@
 import 'dart:math';
 
-import 'package:tajeerai_mobile/features/conversations/data/remote/conversation_remote_data_source.dart';
-import 'package:tajeerai_mobile/features/conversations/domain/entities/conversation.dart';
-import 'package:tajeerai_mobile/features/conversations/domain/entities/message.dart';
-import 'package:tajeerai_mobile/infrastructure/realtime/socket_manager.dart';
+import 'package:TajeerAi/features/conversations/data/remote/conversation_remote_data_source.dart';
+import 'package:TajeerAi/features/conversations/domain/entities/conversation.dart';
+import 'package:TajeerAi/features/conversations/domain/entities/message.dart';
+import 'package:TajeerAi/infrastructure/realtime/socket_manager.dart';
 
 /// A [ConversationRemoteDataSource] that never touches a socket.
 ///

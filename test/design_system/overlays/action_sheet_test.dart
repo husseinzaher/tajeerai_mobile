@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/design_system/overlays/action_sheet.dart';
+import 'package:TajeerAi/design_system/overlays/action_sheet.dart';
 
 import '../../support/widget_harness.dart';
 

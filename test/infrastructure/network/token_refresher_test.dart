@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/infrastructure/network/token_refresher.dart';
+import 'package:TajeerAi/infrastructure/network/token_refresher.dart';
 
 /// A renewer that holds every renewal open until the test answers it.
 class _GatedRenewer implements CredentialRenewer {

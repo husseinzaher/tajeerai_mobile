@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tajeerai_mobile/app/bootstrap/dependencies.dart';
-import 'package:tajeerai_mobile/app/theme/theme.dart';
-import 'package:tajeerai_mobile/app/theme/theme_mode_manager.dart';
-import 'package:tajeerai_mobile/infrastructure/storage/preferences_storage.dart';
+import 'package:TajeerAi/app/bootstrap/dependencies.dart';
+import 'package:TajeerAi/app/theme/theme.dart';
+import 'package:TajeerAi/app/theme/theme_mode_manager.dart';
+import 'package:TajeerAi/infrastructure/storage/preferences_storage.dart';
 
 /// What the member chose, and what happens when that choice is unreadable.
 ///

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/features/auth/presentation/widgets/login_identifier_input_formatter.dart';
+import 'package:TajeerAi/features/auth/presentation/widgets/login_identifier_input_formatter.dart';
 
 void main() {
   const LoginIdentifierInputFormatter formatter =

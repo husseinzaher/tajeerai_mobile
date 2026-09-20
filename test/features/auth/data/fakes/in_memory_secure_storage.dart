@@ -1,4 +1,4 @@
-import 'package:tajeerai_mobile/infrastructure/storage/secure_storage.dart';
+import 'package:TajeerAi/infrastructure/storage/secure_storage.dart';
 
 /// A [SecureStorage] backed by a map.
 ///

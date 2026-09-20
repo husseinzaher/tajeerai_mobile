@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/app/localization/locale_manager.dart';
-import 'package:tajeerai_mobile/app/localization/translations/app_strings.dart';
+import 'package:TajeerAi/app/localization/locale_manager.dart';
+import 'package:TajeerAi/app/localization/translations/app_strings.dart';
 
 /// The Arabic-first half of the product's copy.
 ///

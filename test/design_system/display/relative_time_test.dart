@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/design_system/display/relative_time.dart';
-import 'package:tajeerai_mobile/design_system/localization/ds_messages_ar.dart';
-import 'package:tajeerai_mobile/design_system/localization/ds_messages_en.dart';
+import 'package:TajeerAi/design_system/display/relative_time.dart';
+import 'package:TajeerAi/design_system/localization/ds_messages_ar.dart';
+import 'package:TajeerAi/design_system/localization/ds_messages_en.dart';
 
 /// Pure functions, so this pumps nothing.
 ///

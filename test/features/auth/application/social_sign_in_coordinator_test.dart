@@ -1,13 +1,13 @@
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/failures/app_failure.dart';
-import 'package:tajeerai_mobile/features/auth/application/coordinators/social_sign_in_coordinator.dart';
-import 'package:tajeerai_mobile/features/auth/domain/entities/user.dart';
-import 'package:tajeerai_mobile/infrastructure/device/google_sign_in/google_sign_in_gateway.dart';
-import 'package:tajeerai_mobile/infrastructure/device/web_auth/web_authenticator.dart';
-import 'package:tajeerai_mobile/infrastructure/logging/logger.dart';
-import 'package:tajeerai_mobile/infrastructure/security/pkce.dart';
+import 'package:TajeerAi/failures/app_failure.dart';
+import 'package:TajeerAi/features/auth/application/coordinators/social_sign_in_coordinator.dart';
+import 'package:TajeerAi/features/auth/domain/entities/user.dart';
+import 'package:TajeerAi/infrastructure/device/google_sign_in/google_sign_in_gateway.dart';
+import 'package:TajeerAi/infrastructure/device/web_auth/web_authenticator.dart';
+import 'package:TajeerAi/infrastructure/logging/logger.dart';
+import 'package:TajeerAi/infrastructure/security/pkce.dart';
 
 import '../domain/fakes/fake_auth_repository.dart';
 

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/features/customers/domain/entities/customer.dart';
+import 'package:TajeerAi/features/customers/domain/entities/customer.dart';
 
 import '../../../support/fixed_clock.dart';
 

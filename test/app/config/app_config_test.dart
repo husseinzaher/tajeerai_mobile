@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/app/config/app_config.dart';
-import 'package:tajeerai_mobile/app/config/environment.dart';
+import 'package:TajeerAi/app/config/app_config.dart';
+import 'package:TajeerAi/app/config/environment.dart';
 
 void main() {
   group('Environment', () {

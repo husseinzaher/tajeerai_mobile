@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/app/router/routes.dart';
-import 'package:tajeerai_mobile/app/shell/shell_destination.dart';
-import 'package:tajeerai_mobile/features/auth/domain/entities/user.dart';
+import 'package:TajeerAi/app/router/routes.dart';
+import 'package:TajeerAi/app/shell/shell_destination.dart';
+import 'package:TajeerAi/features/auth/domain/entities/user.dart';
 
 AuthenticatedUser _holding(
   Set<String> permissions, {

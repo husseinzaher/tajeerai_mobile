@@ -11,18 +11,12 @@ import '../../../../app/localization/translations/app_strings.dart';
 import '../../../../design_system/design_system.dart';
 import '../../domain/entities/conversation.dart';
 import '../../domain/entities/message.dart';
-import '../controllers/conversation_thread_controller.dart';
-<<<<<<< HEAD
+import '../../application/coordinators/conversation_media_picker.dart';
 import '../../application/coordinators/conversation_voice_recorder.dart';
+import '../controllers/conversation_attachment_opener.dart';
 import '../controllers/conversation_audio_controller.dart';
-import '../controllers/conversation_media_picker.dart';
-=======
-import '../helpers/conversation_attachment_opener.dart';
-import '../helpers/conversation_audio_controller.dart';
-import '../helpers/conversation_media_picker.dart';
-import '../helpers/conversation_video_controller.dart';
-import '../helpers/conversation_voice_recorder.dart';
->>>>>>> a8b64d0ba59c37032ce8650cbdc54fa4a3bcfe73
+import '../controllers/conversation_thread_controller.dart';
+import '../controllers/conversation_video_controller.dart';
 import '../widgets/async_view_state.dart';
 import '../widgets/conversation_view_data.dart';
 import '../widgets/message_view_data.dart';
@@ -118,16 +112,12 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
       AsyncValue<List<Message>> next,
     ) {
       next.whenData((List<Message> items) {
-<<<<<<< HEAD
-        unawaited(ref.read(messageMediaCoordinatorProvider).cacheAll(items));
-=======
         unawaited(() async {
           await ref.read(messageMediaCoordinatorProvider).cacheAll(items);
           if (mounted) {
             setState(() => _mediaCacheGeneration += 1);
           }
         }());
->>>>>>> a8b64d0ba59c37032ce8650cbdc54fa4a3bcfe73
       });
     });
 

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:tajeerai_mobile/app/localization/locale_manager.dart';
-import 'package:tajeerai_mobile/app/theme/theme.dart';
-import 'package:tajeerai_mobile/design_system/design_system.dart';
+import 'package:TajeerAi/app/localization/locale_manager.dart';
+import 'package:TajeerAi/app/theme/theme.dart';
+import 'package:TajeerAi/design_system/design_system.dart';
 
 /// Wraps a widget in the app's real theme.
 ///

@@ -3,8 +3,8 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/app/theme/theme.dart';
-import 'package:tajeerai_mobile/design_system/inputs/app_select.dart';
+import 'package:TajeerAi/app/theme/theme.dart';
+import 'package:TajeerAi/design_system/inputs/app_select.dart';
 
 import '../../support/golden_harness.dart';
 import '../../support/widget_harness.dart';

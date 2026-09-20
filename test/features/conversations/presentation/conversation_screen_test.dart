@@ -6,25 +6,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tajeerai_mobile/app/bootstrap/dependencies.dart';
-import 'package:tajeerai_mobile/app/theme/theme.dart';
-import 'package:tajeerai_mobile/design_system/localization/ds_messages_en.dart';
-import 'package:tajeerai_mobile/design_system/messaging/composer.dart';
-import 'package:tajeerai_mobile/design_system/messaging/message_bubble.dart';
-import 'package:tajeerai_mobile/design_system/shell/toolbar.dart';
-import 'package:tajeerai_mobile/failures/app_failure.dart';
-import 'package:tajeerai_mobile/features/conversations/domain/entities/conversation.dart';
-import 'package:tajeerai_mobile/features/conversations/domain/entities/message.dart';
-import 'package:tajeerai_mobile/features/conversations/application/coordinators/message_media_coordinator.dart';
-import 'package:tajeerai_mobile/features/conversations/presentation/controllers/conversation_thread_controller.dart';
-import 'package:tajeerai_mobile/infrastructure/logging/logger.dart';
-import 'package:tajeerai_mobile/infrastructure/storage/file_storage.dart';
+import 'package:TajeerAi/app/bootstrap/dependencies.dart';
+import 'package:TajeerAi/app/theme/theme.dart';
+import 'package:TajeerAi/design_system/localization/ds_messages_en.dart';
+import 'package:TajeerAi/design_system/messaging/composer.dart';
+import 'package:TajeerAi/design_system/messaging/message_bubble.dart';
+import 'package:TajeerAi/design_system/shell/toolbar.dart';
+import 'package:TajeerAi/failures/app_failure.dart';
+import 'package:TajeerAi/features/conversations/domain/entities/conversation.dart';
+import 'package:TajeerAi/features/conversations/domain/entities/message.dart';
+import 'package:TajeerAi/features/conversations/application/coordinators/message_media_coordinator.dart';
+import 'package:TajeerAi/features/conversations/presentation/controllers/conversation_thread_controller.dart';
+import 'package:TajeerAi/infrastructure/logging/logger.dart';
+import 'package:TajeerAi/infrastructure/storage/file_storage.dart';
 
 import '../application/fakes/fake_conversation_media_remote.dart';
 import '../domain/fakes/fake_message_repository.dart';
 
-import 'package:tajeerai_mobile/features/conversations/presentation/screens/conversation_screen.dart';
-import 'package:tajeerai_mobile/infrastructure/storage/preferences_storage.dart';
+import 'package:TajeerAi/features/conversations/presentation/screens/conversation_screen.dart';
+import 'package:TajeerAi/infrastructure/storage/preferences_storage.dart';
 
 import '../../../support/fixed_clock.dart';
 

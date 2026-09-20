@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:tajeerai_mobile/app/theme/theme.dart';
-import 'package:tajeerai_mobile/design_system/buttons/app_button.dart';
-import 'package:tajeerai_mobile/design_system/channels/channel_descriptor.dart';
-import 'package:tajeerai_mobile/design_system/channels/channel_glyph.dart';
-import 'package:tajeerai_mobile/design_system/display/avatar.dart';
-import 'package:tajeerai_mobile/design_system/display/badge.dart';
-import 'package:tajeerai_mobile/design_system/display/list_item.dart';
-import 'package:tajeerai_mobile/design_system/feedback/async_view.dart';
-import 'package:tajeerai_mobile/design_system/feedback/error_state.dart';
-import 'package:tajeerai_mobile/design_system/feedback/loading_state.dart';
-import 'package:tajeerai_mobile/design_system/inbox/conversation_list.dart';
-import 'package:tajeerai_mobile/design_system/inbox/conversation_list_item.dart';
-import 'package:tajeerai_mobile/design_system/inbox/conversation_summary.dart';
-import 'package:tajeerai_mobile/design_system/localization/ds_messages_ar.dart';
-import 'package:tajeerai_mobile/design_system/localization/ds_messages_en.dart';
+import 'package:TajeerAi/app/theme/theme.dart';
+import 'package:TajeerAi/design_system/buttons/app_button.dart';
+import 'package:TajeerAi/design_system/channels/channel_descriptor.dart';
+import 'package:TajeerAi/design_system/channels/channel_glyph.dart';
+import 'package:TajeerAi/design_system/display/avatar.dart';
+import 'package:TajeerAi/design_system/display/badge.dart';
+import 'package:TajeerAi/design_system/display/list_item.dart';
+import 'package:TajeerAi/design_system/feedback/async_view.dart';
+import 'package:TajeerAi/design_system/feedback/error_state.dart';
+import 'package:TajeerAi/design_system/feedback/loading_state.dart';
+import 'package:TajeerAi/design_system/inbox/conversation_list.dart';
+import 'package:TajeerAi/design_system/inbox/conversation_list_item.dart';
+import 'package:TajeerAi/design_system/inbox/conversation_summary.dart';
+import 'package:TajeerAi/design_system/localization/ds_messages_ar.dart';
+import 'package:TajeerAi/design_system/localization/ds_messages_en.dart';
 
 import '../../support/widget_harness.dart';
 

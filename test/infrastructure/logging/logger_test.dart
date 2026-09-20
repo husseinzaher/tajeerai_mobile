@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/infrastructure/logging/logger.dart';
+import 'package:TajeerAi/infrastructure/logging/logger.dart';
 
 void main() {
   group('Logger.redact', () {

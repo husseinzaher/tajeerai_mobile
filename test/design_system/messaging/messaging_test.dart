@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:tajeerai_mobile/app/theme/theme.dart';
-import 'package:tajeerai_mobile/design_system/buttons/app_button.dart';
-import 'package:tajeerai_mobile/design_system/feedback/async_view.dart';
-import 'package:tajeerai_mobile/design_system/feedback/error_state.dart';
-import 'package:tajeerai_mobile/design_system/localization/ds_messages_ar.dart';
-import 'package:tajeerai_mobile/design_system/localization/ds_messages_en.dart';
-import 'package:tajeerai_mobile/design_system/messaging/day_and_system_lines.dart';
-import 'package:tajeerai_mobile/design_system/messaging/message_bubble.dart';
-import 'package:tajeerai_mobile/design_system/messaging/message_data.dart';
-import 'package:tajeerai_mobile/design_system/messaging/message_status_icon.dart';
-import 'package:tajeerai_mobile/design_system/messaging/message_timeline.dart';
-import 'package:tajeerai_mobile/design_system/messaging/typing_indicator.dart';
+import 'package:TajeerAi/app/theme/theme.dart';
+import 'package:TajeerAi/design_system/buttons/app_button.dart';
+import 'package:TajeerAi/design_system/feedback/async_view.dart';
+import 'package:TajeerAi/design_system/feedback/error_state.dart';
+import 'package:TajeerAi/design_system/localization/ds_messages_ar.dart';
+import 'package:TajeerAi/design_system/localization/ds_messages_en.dart';
+import 'package:TajeerAi/design_system/messaging/day_and_system_lines.dart';
+import 'package:TajeerAi/design_system/messaging/message_bubble.dart';
+import 'package:TajeerAi/design_system/messaging/message_data.dart';
+import 'package:TajeerAi/design_system/messaging/message_status_icon.dart';
+import 'package:TajeerAi/design_system/messaging/message_timeline.dart';
+import 'package:TajeerAi/design_system/messaging/typing_indicator.dart';
 
 import '../../support/widget_harness.dart';
 

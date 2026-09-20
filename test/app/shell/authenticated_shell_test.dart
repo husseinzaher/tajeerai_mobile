@@ -4,19 +4,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tajeerai_mobile/app/bootstrap/dependencies.dart';
-import 'package:tajeerai_mobile/app/shell/authenticated_shell.dart';
-import 'package:tajeerai_mobile/app/shell/shell_destination.dart';
-import 'package:tajeerai_mobile/app/theme/theme.dart';
-import 'package:tajeerai_mobile/design_system/display/profile_header.dart';
-import 'package:tajeerai_mobile/design_system/layouts/app_scaffold.dart';
-import 'package:tajeerai_mobile/design_system/shell/bottom_navigation.dart';
-import 'package:tajeerai_mobile/design_system/shell/navigation_drawer.dart';
-import 'package:tajeerai_mobile/design_system/shell/toolbar.dart';
-import 'package:tajeerai_mobile/features/auth/application/state/auth_state.dart';
-import 'package:tajeerai_mobile/features/auth/domain/entities/user.dart';
-import 'package:tajeerai_mobile/features/auth/presentation/controllers/auth_controller.dart';
-import 'package:tajeerai_mobile/infrastructure/storage/preferences_storage.dart';
+import 'package:TajeerAi/app/bootstrap/dependencies.dart';
+import 'package:TajeerAi/app/shell/authenticated_shell.dart';
+import 'package:TajeerAi/app/shell/shell_destination.dart';
+import 'package:TajeerAi/app/theme/theme.dart';
+import 'package:TajeerAi/design_system/display/profile_header.dart';
+import 'package:TajeerAi/design_system/layouts/app_scaffold.dart';
+import 'package:TajeerAi/design_system/shell/bottom_navigation.dart';
+import 'package:TajeerAi/design_system/shell/navigation_drawer.dart';
+import 'package:TajeerAi/design_system/shell/toolbar.dart';
+import 'package:TajeerAi/features/auth/application/state/auth_state.dart';
+import 'package:TajeerAi/features/auth/domain/entities/user.dart';
+import 'package:TajeerAi/features/auth/presentation/controllers/auth_controller.dart';
+import 'package:TajeerAi/infrastructure/storage/preferences_storage.dart';
 
 const AuthenticatedUser _ada = AuthenticatedUser(
   id: 'u1',

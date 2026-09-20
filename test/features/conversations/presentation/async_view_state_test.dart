@@ -2,10 +2,10 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/design_system/feedback/async_view.dart';
-import 'package:tajeerai_mobile/features/conversations/application/state/sync_state.dart';
-import 'package:tajeerai_mobile/features/conversations/domain/entities/conversation.dart';
-import 'package:tajeerai_mobile/features/conversations/presentation/widgets/async_view_state.dart';
+import 'package:TajeerAi/design_system/feedback/async_view.dart';
+import 'package:TajeerAi/features/conversations/application/state/sync_state.dart';
+import 'package:TajeerAi/features/conversations/domain/entities/conversation.dart';
+import 'package:TajeerAi/features/conversations/presentation/widgets/async_view_state.dart';
 
 import '../../../support/fixed_clock.dart';
 

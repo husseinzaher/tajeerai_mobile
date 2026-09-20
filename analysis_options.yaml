@@ -25,6 +25,8 @@ analyzer:
     strict-raw-types: true
 
   errors:
+    # The package is deliberately named TajeerAi rather than lower_case_with_underscores.
+    package_names: ignore
     # An unused import or a dead field is a defect in a codebase this size --
     # it means a refactor was left half-finished.
     unused_import: error

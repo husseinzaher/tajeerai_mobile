@@ -1,11 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/app/localization/locale_manager.dart';
-import 'package:tajeerai_mobile/app/localization/translations/app_strings.dart';
-import 'package:tajeerai_mobile/design_system/feedback/connection_banner.dart';
-import 'package:tajeerai_mobile/design_system/inbox/conversation_summary.dart';
-import 'package:tajeerai_mobile/features/conversations/application/state/sync_state.dart';
-import 'package:tajeerai_mobile/features/conversations/domain/entities/conversation.dart';
-import 'package:tajeerai_mobile/features/conversations/presentation/widgets/conversation_view_data.dart';
+import 'package:TajeerAi/app/localization/locale_manager.dart';
+import 'package:TajeerAi/app/localization/translations/app_strings.dart';
+import 'package:TajeerAi/design_system/feedback/connection_banner.dart';
+import 'package:TajeerAi/design_system/inbox/conversation_summary.dart';
+import 'package:TajeerAi/features/conversations/application/state/sync_state.dart';
+import 'package:TajeerAi/features/conversations/domain/entities/conversation.dart';
+import 'package:TajeerAi/features/conversations/presentation/widgets/conversation_view_data.dart';
 
 import '../../../support/fixed_clock.dart';
 

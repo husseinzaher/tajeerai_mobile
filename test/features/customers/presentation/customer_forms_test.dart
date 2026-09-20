@@ -3,17 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
-import 'package:tajeerai_mobile/app/bootstrap/dependencies.dart';
-import 'package:tajeerai_mobile/app/localization/locale_manager.dart';
-import 'package:tajeerai_mobile/app/localization/translations/app_strings.dart';
-import 'package:tajeerai_mobile/app/theme/theme.dart';
-import 'package:tajeerai_mobile/design_system/design_system.dart';
-import 'package:tajeerai_mobile/failures/app_failure.dart';
-import 'package:tajeerai_mobile/features/customers/domain/entities/customer.dart';
-import 'package:tajeerai_mobile/features/customers/domain/entities/customer_note.dart';
-import 'package:tajeerai_mobile/features/customers/domain/repositories/customer_repository.dart';
-import 'package:tajeerai_mobile/features/customers/presentation/screens/customer_form_screen.dart';
-import 'package:tajeerai_mobile/features/customers/presentation/screens/customer_note_form_screen.dart';
+import 'package:TajeerAi/app/bootstrap/dependencies.dart';
+import 'package:TajeerAi/app/localization/locale_manager.dart';
+import 'package:TajeerAi/app/localization/translations/app_strings.dart';
+import 'package:TajeerAi/app/theme/theme.dart';
+import 'package:TajeerAi/design_system/design_system.dart';
+import 'package:TajeerAi/failures/app_failure.dart';
+import 'package:TajeerAi/features/customers/domain/entities/customer.dart';
+import 'package:TajeerAi/features/customers/domain/entities/customer_note.dart';
+import 'package:TajeerAi/features/customers/domain/repositories/customer_repository.dart';
+import 'package:TajeerAi/features/customers/presentation/screens/customer_form_screen.dart';
+import 'package:TajeerAi/features/customers/presentation/screens/customer_note_form_screen.dart';
 
 import '../../../support/fixed_clock.dart';
 

@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tajeerai_mobile/app/bootstrap/dependencies.dart';
-import 'package:tajeerai_mobile/app/settings/settings_screen.dart';
-import 'package:tajeerai_mobile/app/theme/theme_mode_manager.dart';
-import 'package:tajeerai_mobile/design_system/design_system.dart';
-import 'package:tajeerai_mobile/features/auth/application/state/auth_state.dart';
-import 'package:tajeerai_mobile/features/auth/domain/entities/user.dart';
-import 'package:tajeerai_mobile/features/auth/presentation/controllers/auth_controller.dart';
-import 'package:tajeerai_mobile/infrastructure/device/platform_info.dart';
-import 'package:tajeerai_mobile/infrastructure/storage/preferences_storage.dart';
+import 'package:TajeerAi/app/bootstrap/dependencies.dart';
+import 'package:TajeerAi/app/settings/settings_screen.dart';
+import 'package:TajeerAi/app/theme/theme_mode_manager.dart';
+import 'package:TajeerAi/design_system/design_system.dart';
+import 'package:TajeerAi/features/auth/application/state/auth_state.dart';
+import 'package:TajeerAi/features/auth/domain/entities/user.dart';
+import 'package:TajeerAi/features/auth/presentation/controllers/auth_controller.dart';
+import 'package:TajeerAi/infrastructure/device/platform_info.dart';
+import 'package:TajeerAi/infrastructure/storage/preferences_storage.dart';
 
 import '../../support/widget_harness.dart';
 

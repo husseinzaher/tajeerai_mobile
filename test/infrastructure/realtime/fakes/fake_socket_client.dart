@@ -1,11 +1,11 @@
 import 'dart:async';
 
-import 'package:tajeerai_mobile/infrastructure/network/token_refresher.dart';
-import 'package:tajeerai_mobile/infrastructure/realtime/authentication/socket_credentials.dart';
-import 'package:tajeerai_mobile/infrastructure/realtime/socket_client.dart';
-import 'package:tajeerai_mobile/infrastructure/realtime/socket_command.dart';
-import 'package:tajeerai_mobile/infrastructure/realtime/socket_event.dart';
-import 'package:tajeerai_mobile/infrastructure/realtime/socket_exception.dart';
+import 'package:TajeerAi/infrastructure/network/token_refresher.dart';
+import 'package:TajeerAi/infrastructure/realtime/authentication/socket_credentials.dart';
+import 'package:TajeerAi/infrastructure/realtime/socket_client.dart';
+import 'package:TajeerAi/infrastructure/realtime/socket_command.dart';
+import 'package:TajeerAi/infrastructure/realtime/socket_event.dart';
+import 'package:TajeerAi/infrastructure/realtime/socket_exception.dart';
 
 /// A [SocketClient] with no socket.
 ///

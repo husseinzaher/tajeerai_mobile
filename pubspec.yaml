@@ -89,6 +89,7 @@ dev_dependencies:
   drift_dev: ^2.34.6
   mocktail: ^1.0.5
   flutter_launcher_icons: ^0.14.4
+  path_provider_platform_interface: ^2.1.3
 
   # Used by tool/build_tokens.dart to format its own output. CI's format
   # check does not exclude generated sources, so a generator that emits

@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:tajeerai_mobile/failures/app_failure.dart';
-import 'package:tajeerai_mobile/features/conversations/domain/entities/conversation.dart';
-import 'package:tajeerai_mobile/features/conversations/domain/repositories/conversation_repository.dart';
+import 'package:TajeerAi/failures/app_failure.dart';
+import 'package:TajeerAi/features/conversations/domain/entities/conversation.dart';
+import 'package:TajeerAi/features/conversations/domain/repositories/conversation_repository.dart';
 
 /// An in-memory [ConversationRepository].
 ///

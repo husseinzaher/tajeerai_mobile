@@ -2,18 +2,18 @@ import 'dart:ui' show Tristate;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/app/theme/theme.dart';
-import 'package:tajeerai_mobile/design_system/display/avatar.dart';
-import 'package:tajeerai_mobile/design_system/display/avatar_group.dart';
-import 'package:tajeerai_mobile/design_system/display/badge.dart';
-import 'package:tajeerai_mobile/design_system/display/chip.dart';
-import 'package:tajeerai_mobile/design_system/display/labelled_separator.dart';
-import 'package:tajeerai_mobile/design_system/display/list_item.dart';
-import 'package:tajeerai_mobile/design_system/display/list_section.dart';
-import 'package:tajeerai_mobile/design_system/display/segmented_control.dart';
-import 'package:tajeerai_mobile/design_system/display/separator.dart';
-import 'package:tajeerai_mobile/design_system/display/status_dot.dart';
-import 'package:tajeerai_mobile/design_system/display/tabs.dart';
+import 'package:TajeerAi/app/theme/theme.dart';
+import 'package:TajeerAi/design_system/display/avatar.dart';
+import 'package:TajeerAi/design_system/display/avatar_group.dart';
+import 'package:TajeerAi/design_system/display/badge.dart';
+import 'package:TajeerAi/design_system/display/chip.dart';
+import 'package:TajeerAi/design_system/display/labelled_separator.dart';
+import 'package:TajeerAi/design_system/display/list_item.dart';
+import 'package:TajeerAi/design_system/display/list_section.dart';
+import 'package:TajeerAi/design_system/display/segmented_control.dart';
+import 'package:TajeerAi/design_system/display/separator.dart';
+import 'package:TajeerAi/design_system/display/status_dot.dart';
+import 'package:TajeerAi/design_system/display/tabs.dart';
 
 import '../../support/widget_harness.dart';
 

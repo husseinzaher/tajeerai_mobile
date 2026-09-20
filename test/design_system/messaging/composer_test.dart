@@ -2,15 +2,15 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:tajeerai_mobile/design_system/channels/channel_capabilities.dart';
-import 'package:tajeerai_mobile/design_system/display/chip.dart';
-import 'package:tajeerai_mobile/design_system/localization/ds_messages_en.dart';
-import 'package:tajeerai_mobile/design_system/messaging/attachment_previews.dart';
-import 'package:tajeerai_mobile/design_system/messaging/composer.dart';
-import 'package:tajeerai_mobile/design_system/messaging/message_data.dart';
-import 'package:tajeerai_mobile/design_system/messaging/quick_reply_bar.dart';
-import 'package:tajeerai_mobile/design_system/messaging/reply_preview.dart';
-import 'package:tajeerai_mobile/design_system/messaging/voice_record_button.dart';
+import 'package:TajeerAi/design_system/channels/channel_capabilities.dart';
+import 'package:TajeerAi/design_system/display/chip.dart';
+import 'package:TajeerAi/design_system/localization/ds_messages_en.dart';
+import 'package:TajeerAi/design_system/messaging/attachment_previews.dart';
+import 'package:TajeerAi/design_system/messaging/composer.dart';
+import 'package:TajeerAi/design_system/messaging/message_data.dart';
+import 'package:TajeerAi/design_system/messaging/quick_reply_bar.dart';
+import 'package:TajeerAi/design_system/messaging/reply_preview.dart';
+import 'package:TajeerAi/design_system/messaging/voice_record_button.dart';
 
 import '../../support/widget_harness.dart';
 

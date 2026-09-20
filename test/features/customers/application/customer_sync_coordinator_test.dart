@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/failures/app_failure.dart';
-import 'package:tajeerai_mobile/features/customers/application/coordinators/customer_sync_coordinator.dart';
-import 'package:tajeerai_mobile/features/customers/domain/entities/customer.dart';
-import 'package:tajeerai_mobile/features/customers/domain/repositories/customer_repository.dart';
-import 'package:tajeerai_mobile/infrastructure/database/app_database.dart';
-import 'package:tajeerai_mobile/infrastructure/logging/logger.dart';
+import 'package:TajeerAi/failures/app_failure.dart';
+import 'package:TajeerAi/features/customers/application/coordinators/customer_sync_coordinator.dart';
+import 'package:TajeerAi/features/customers/domain/entities/customer.dart';
+import 'package:TajeerAi/features/customers/domain/repositories/customer_repository.dart';
+import 'package:TajeerAi/infrastructure/database/app_database.dart';
+import 'package:TajeerAi/infrastructure/logging/logger.dart';
 
 import '../../../support/fixed_clock.dart';
 import '../../../support/test_database.dart';

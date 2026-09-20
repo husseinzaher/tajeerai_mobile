@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/app/theme/theme.dart';
+import 'package:TajeerAi/app/theme/theme.dart';
 
 import '../../../tool/tokens/token_manifest.dart';
 

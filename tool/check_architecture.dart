@@ -184,5 +184,5 @@ String _readPackageName(String packageRoot) {
     if (match != null) return match.group(1)!;
   }
 
-  return 'tajeerai_mobile';
+  return 'TajeerAi';
 }

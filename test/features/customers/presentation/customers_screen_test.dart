@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/app/bootstrap/dependencies.dart';
-import 'package:tajeerai_mobile/app/localization/locale_manager.dart';
-import 'package:tajeerai_mobile/app/localization/translations/app_strings.dart';
-import 'package:tajeerai_mobile/features/customers/domain/entities/customer.dart';
-import 'package:tajeerai_mobile/features/customers/domain/entities/customer_note.dart';
-import 'package:tajeerai_mobile/features/customers/domain/repositories/customer_repository.dart';
-import 'package:tajeerai_mobile/features/customers/presentation/screens/customers_screen.dart';
+import 'package:TajeerAi/app/bootstrap/dependencies.dart';
+import 'package:TajeerAi/app/localization/locale_manager.dart';
+import 'package:TajeerAi/app/localization/translations/app_strings.dart';
+import 'package:TajeerAi/features/customers/domain/entities/customer.dart';
+import 'package:TajeerAi/features/customers/domain/entities/customer_note.dart';
+import 'package:TajeerAi/features/customers/domain/repositories/customer_repository.dart';
+import 'package:TajeerAi/features/customers/presentation/screens/customers_screen.dart';
 
 import '../../../support/fixed_clock.dart';
 import '../../../support/widget_harness.dart';

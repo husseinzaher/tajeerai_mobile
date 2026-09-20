@@ -13,8 +13,11 @@
 #   SKIP_VERIFY=1            Skip `make verify` (default: run verify)
 #   DRY_RUN=1                Validate and print planned steps only
 #   PUSH_TAG=0|1             Push a newly created release tag (mode defaults apply)
-#   UPLOAD=0|1               Upload AAB to Google Play (mode defaults apply)
+#   UPLOAD=0|1               Upload AAB to Google Play (default: 1 for local and github)
 #   GOOGLE_PLAY_TRACK=...    Play track (default: internal)
+#
+# Local release flow (make cd-local):
+#   version validation → make verify → make android-build → AAB check → Play upload
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -119,11 +122,7 @@ apply_mode_defaults() {
   fi
 
   if [[ -z "$UPLOAD" ]]; then
-    if [[ "$CD_MODE" == "github" ]]; then
-      UPLOAD=1
-    else
-      UPLOAD=0
-    fi
+    UPLOAD=1
   fi
 }
 
@@ -276,6 +275,18 @@ play_upload_configured() {
   play_service_account_path >/dev/null
 }
 
+validate_upload_prerequisites() {
+  if [[ "$UPLOAD" != "1" || "$DRY_RUN" == "1" ]]; then
+    return
+  fi
+
+  require_command fastlane
+
+  if ! play_upload_configured; then
+    fail "Google Play upload is required for this release but credentials are missing. Set GOOGLE_PLAY_SERVICE_ACCOUNT_JSON to a service-account JSON file path, or place the file at android/play-service-account.json (gitignored)."
+  fi
+}
+
 upload_to_play() {
   if [[ "$UPLOAD" != "1" ]]; then
     UPLOAD_STATUS="SKIPPED"
@@ -283,18 +294,14 @@ upload_to_play() {
   fi
 
   local service_account
-  if ! service_account="$(play_service_account_path)"; then
-    UPLOAD_STATUS="FAILED"
-    fail_after_tag "Google Play upload is not configured. Set GOOGLE_PLAY_SERVICE_ACCOUNT_JSON to a service-account JSON file path, or place the file at android/play-service-account.json (gitignored)."
-  fi
-
-  require_command fastlane
+  service_account="$(play_service_account_path)"
 
   log "Uploading AAB to Google Play (track: $GOOGLE_PLAY_TRACK)..."
   if fastlane supply \
     --aab "$AAB_PATH" \
     --package_name "$PACKAGE_NAME" \
     --track "$GOOGLE_PLAY_TRACK" \
+    --release_status completed \
     --json_key "$service_account" \
     --skip_upload_apk \
     --skip_upload_metadata \
@@ -312,9 +319,9 @@ print_release_plan() {
   log "Latest tag:      ${LATEST_TAG}"
   log "Commits found:   ${COMMITS_COUNT}"
   log "Release type:    ${RELEASE_TYPE}"
-  log "Next version:    ${VERSION_NAME}"
+  log "Version:         ${VERSION_NAME}"
   log "Version code:    ${VERSION_CODE}"
-  log "New Git tag:     ${RELEASE_TAG}"
+  log "Git tag:         ${RELEASE_TAG}"
   log "Tag status:      ${TAG_STATUS}"
   log "Tag action:      ${TAG_ACTION}"
   if [[ "$SKIP_VERIFY" != "1" ]]; then
@@ -341,34 +348,37 @@ print_summary() {
     log "Android Release"
   fi
   log "========================================"
-  log "Mode:            $CD_MODE"
-  log "Latest tag:      ${LATEST_TAG}"
-  log "Commits found:   ${COMMITS_COUNT}"
-  log "Release type:    ${RELEASE_TYPE}"
-  log "Next version:    ${VERSION_NAME}"
-  log "Version code:    ${VERSION_CODE}"
-  log "New Git tag:     ${RELEASE_TAG}"
-  log "Tag action:      ${TAG_ACTION}"
-  if [[ "$DRY_RUN" != "1" ]]; then
-    log "Verification:    ${VERIFY_STATUS}"
-    log "Build:           ${BUILD_STATUS}"
+  if [[ "$DRY_RUN" == "1" ]]; then
+    log "Mode:            $CD_MODE"
+    log "Latest tag:      ${LATEST_TAG}"
+    log "Commits found:   ${COMMITS_COUNT}"
+    log "Release type:    ${RELEASE_TYPE}"
+    log "Version:         ${VERSION_NAME}"
+    log "Version code:    ${VERSION_CODE}"
+    log "Git tag:         ${RELEASE_TAG}"
+    log "Tag action:      ${TAG_ACTION}"
+  else
+    log "Version:         ${VERSION_NAME}"
+    log "Version code:    ${VERSION_CODE}"
+    log "Git tag:         ${RELEASE_TAG}"
+    log "Verify:          ${VERIFY_STATUS}"
     log "AAB:             ${AAB_STATUS}"
-    log "Artifact:        ${AAB_REL}"
+    log "AAB path:        ${AAB_REL}"
     if [[ -n "$AAB_SIZE" ]]; then
-      log "Size:            ${AAB_SIZE}"
+      log "AAB size:        ${AAB_SIZE}"
+    fi
+    if [[ "$UPLOAD" == "1" ]]; then
+      log "Google Play track: ${GOOGLE_PLAY_TRACK}"
+      log "Google Play upload: ${UPLOAD_STATUS}"
+    else
+      log "Google Play upload: SKIPPED"
     fi
     if [[ "$TAG_ACTION" == "CREATED" ]]; then
       if [[ "$TAG_PUSHED" == "yes" ]]; then
-        log "Tag pushed:      yes"
+        log "Git tag pushed:  yes"
       else
-        log "Tag pushed:      no (local only; GitHub mode sets PUSH_TAG=1)"
+        log "Git tag pushed:  no (local only; GitHub mode sets PUSH_TAG=1)"
       fi
-    fi
-    if [[ "$UPLOAD" == "1" ]]; then
-      log "Track:           ${GOOGLE_PLAY_TRACK}"
-      log "Upload:          ${UPLOAD_STATUS}"
-    else
-      log "Upload:          SKIPPED"
     fi
   fi
   log "========================================"
@@ -392,6 +402,7 @@ main() {
     return
   fi
 
+  validate_upload_prerequisites
   run_verify
   run_build
   verify_artifact

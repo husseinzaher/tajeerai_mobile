@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/failures/app_failure.dart';
-import 'package:tajeerai_mobile/infrastructure/realtime/serialization/event_codec.dart';
-import 'package:tajeerai_mobile/infrastructure/realtime/socket_command.dart';
-import 'package:tajeerai_mobile/infrastructure/realtime/socket_event.dart';
-import 'package:tajeerai_mobile/infrastructure/realtime/socket_exception.dart';
+import 'package:TajeerAi/failures/app_failure.dart';
+import 'package:TajeerAi/infrastructure/realtime/serialization/event_codec.dart';
+import 'package:TajeerAi/infrastructure/realtime/socket_command.dart';
+import 'package:TajeerAi/infrastructure/realtime/socket_event.dart';
+import 'package:TajeerAi/infrastructure/realtime/socket_exception.dart';
 
 import '../../support/fixed_clock.dart';
 

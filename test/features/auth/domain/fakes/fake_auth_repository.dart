@@ -1,11 +1,11 @@
 import 'dart:async';
 
-import 'package:tajeerai_mobile/features/auth/domain/entities/social_auth_config.dart';
-import 'package:tajeerai_mobile/features/auth/domain/entities/user.dart';
-import 'package:tajeerai_mobile/features/auth/domain/repositories/auth_repository.dart';
-import 'package:tajeerai_mobile/features/auth/domain/value_objects/login_identifier.dart';
-import 'package:tajeerai_mobile/features/auth/domain/value_objects/password.dart';
-import 'package:tajeerai_mobile/features/auth/domain/value_objects/session_renewal.dart';
+import 'package:TajeerAi/features/auth/domain/entities/social_auth_config.dart';
+import 'package:TajeerAi/features/auth/domain/entities/user.dart';
+import 'package:TajeerAi/features/auth/domain/repositories/auth_repository.dart';
+import 'package:TajeerAi/features/auth/domain/value_objects/login_identifier.dart';
+import 'package:TajeerAi/features/auth/domain/value_objects/password.dart';
+import 'package:TajeerAi/features/auth/domain/value_objects/session_renewal.dart';
 
 /// An in-memory [AuthRepository].
 class FakeAuthRepository implements AuthRepository {

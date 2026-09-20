@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/failures/app_failure.dart';
-import 'package:tajeerai_mobile/features/auth/domain/entities/user.dart';
-import 'package:tajeerai_mobile/features/auth/domain/services/auth_service.dart';
-import 'package:tajeerai_mobile/features/auth/domain/value_objects/login_identifier.dart';
-import 'package:tajeerai_mobile/features/auth/domain/value_objects/password.dart';
+import 'package:TajeerAi/failures/app_failure.dart';
+import 'package:TajeerAi/features/auth/domain/entities/user.dart';
+import 'package:TajeerAi/features/auth/domain/services/auth_service.dart';
+import 'package:TajeerAi/features/auth/domain/value_objects/login_identifier.dart';
+import 'package:TajeerAi/features/auth/domain/value_objects/password.dart';
 
 import 'fakes/fake_auth_repository.dart';
 

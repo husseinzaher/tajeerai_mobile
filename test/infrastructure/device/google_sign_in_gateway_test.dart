@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/infrastructure/device/google_sign_in/google_sign_in_gateway.dart';
+import 'package:TajeerAi/infrastructure/device/google_sign_in/google_sign_in_gateway.dart';
 
 void main() {
   group('native client ids from the environment', () {

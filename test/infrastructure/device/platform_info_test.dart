@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/infrastructure/device/connectivity/connectivity_monitor.dart';
-import 'package:tajeerai_mobile/infrastructure/device/platform_info.dart';
+import 'package:TajeerAi/infrastructure/device/connectivity/connectivity_monitor.dart';
+import 'package:TajeerAi/infrastructure/device/platform_info.dart';
 
 void main() {
   group('PlatformInfo', () {

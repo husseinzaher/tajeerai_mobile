@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/design_system/primitives/pressable.dart';
+import 'package:TajeerAi/design_system/primitives/pressable.dart';
 
 import '../../support/widget_harness.dart';
 

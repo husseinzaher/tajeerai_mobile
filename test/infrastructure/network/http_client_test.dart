@@ -5,13 +5,13 @@ import 'dart:typed_data';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/app/config/app_config.dart';
-import 'package:tajeerai_mobile/app/config/environment.dart';
-import 'package:tajeerai_mobile/failures/app_failure.dart';
-import 'package:tajeerai_mobile/infrastructure/logging/logger.dart';
-import 'package:tajeerai_mobile/infrastructure/network/http_client.dart';
-import 'package:tajeerai_mobile/infrastructure/network/http_exception.dart';
-import 'package:tajeerai_mobile/infrastructure/network/token_refresher.dart';
+import 'package:TajeerAi/app/config/app_config.dart';
+import 'package:TajeerAi/app/config/environment.dart';
+import 'package:TajeerAi/failures/app_failure.dart';
+import 'package:TajeerAi/infrastructure/logging/logger.dart';
+import 'package:TajeerAi/infrastructure/network/http_client.dart';
+import 'package:TajeerAi/infrastructure/network/http_exception.dart';
+import 'package:TajeerAi/infrastructure/network/token_refresher.dart';
 
 /// One scripted answer from the server.
 typedef _Answer = ({

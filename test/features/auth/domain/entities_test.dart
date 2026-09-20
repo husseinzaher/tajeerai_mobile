@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/features/auth/domain/entities/user.dart';
+import 'package:TajeerAi/features/auth/domain/entities/user.dart';
 
 const _user = AuthenticatedUser(
   id: 'u1',

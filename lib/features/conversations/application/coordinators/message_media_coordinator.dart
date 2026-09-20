@@ -73,9 +73,6 @@ class MessageMediaCoordinator {
         bytes,
       );
 
-<<<<<<< HEAD
-      await _messages.updateMedia(messageId: message.id, localMediaPath: path);
-=======
       if (message.type == 'video') {
         await _storage.ensureVideoThumbnail(path);
       }
@@ -83,7 +80,6 @@ class MessageMediaCoordinator {
       await _messages.updateMedia(messageId: message.id, localMediaPath: path);
 
       return path;
->>>>>>> a8b64d0ba59c37032ce8650cbdc54fa4a3bcfe73
     } on Object catch (error, stackTrace) {
       _logger.debug(
         'media cache failed',
@@ -93,10 +89,7 @@ class MessageMediaCoordinator {
         'media cache stack',
         data: <String, Object?>{'trace': '$stackTrace'},
       );
-<<<<<<< HEAD
-=======
       return existing;
->>>>>>> a8b64d0ba59c37032ce8650cbdc54fa4a3bcfe73
     } finally {
       _inFlight.remove(message.id);
     }

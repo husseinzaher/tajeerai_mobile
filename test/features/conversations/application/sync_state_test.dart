@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/features/conversations/application/events/conversation_app_events.dart';
-import 'package:tajeerai_mobile/features/conversations/application/state/sync_state.dart';
+import 'package:TajeerAi/features/conversations/application/events/conversation_app_events.dart';
+import 'package:TajeerAi/features/conversations/application/state/sync_state.dart';
 
 import '../../../support/fixed_clock.dart';
 

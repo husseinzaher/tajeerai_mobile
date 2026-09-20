@@ -24,7 +24,7 @@ class ResolvedImport {
   /// For imports inside this project, the path relative to the package root
   /// (`lib/features/auth/data/...`).
   ///
-  /// Relative and `package:tajeerai_mobile/` imports both resolve here, so a
+  /// Relative and `package:TajeerAi/` imports both resolve here, so a
   /// rule cannot be evaded by switching import style -- which is rule 29.
   final String? projectPath;
 
@@ -188,7 +188,7 @@ class ImportAnalyzer {
       final name = withoutScheme.substring(0, slash);
 
       // This project's own package: imports resolve to project paths, so
-      // `package:tajeerai_mobile/features/...` is checked exactly like the
+      // `package:TajeerAi/features/...` is checked exactly like the
       // equivalent relative import.
       if (name == packageName) {
         return ResolvedImport(

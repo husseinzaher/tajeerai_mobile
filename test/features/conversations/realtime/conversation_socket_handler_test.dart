@@ -1,12 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/features/conversations/domain/entities/conversation.dart';
-import 'package:tajeerai_mobile/features/conversations/domain/entities/message.dart';
-import 'package:tajeerai_mobile/features/conversations/realtime/conversation_events.dart';
-import 'package:tajeerai_mobile/features/conversations/realtime/conversation_socket_handler.dart';
-import 'package:tajeerai_mobile/features/conversations/realtime/message_events.dart';
-import 'package:tajeerai_mobile/infrastructure/database/app_database.dart';
-import 'package:tajeerai_mobile/infrastructure/logging/logger.dart';
-import 'package:tajeerai_mobile/infrastructure/realtime/socket_event.dart';
+import 'package:TajeerAi/features/conversations/domain/entities/conversation.dart';
+import 'package:TajeerAi/features/conversations/domain/entities/message.dart';
+import 'package:TajeerAi/features/conversations/realtime/conversation_events.dart';
+import 'package:TajeerAi/features/conversations/realtime/conversation_socket_handler.dart';
+import 'package:TajeerAi/features/conversations/realtime/message_events.dart';
+import 'package:TajeerAi/infrastructure/database/app_database.dart';
+import 'package:TajeerAi/infrastructure/logging/logger.dart';
+import 'package:TajeerAi/infrastructure/realtime/socket_event.dart';
 
 import '../../../support/fixed_clock.dart';
 import '../../../support/test_database.dart';

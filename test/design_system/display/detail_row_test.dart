@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:tajeerai_mobile/design_system/display/detail_row.dart';
+import 'package:TajeerAi/design_system/display/detail_row.dart';
 
 import '../../support/widget_harness.dart';
 

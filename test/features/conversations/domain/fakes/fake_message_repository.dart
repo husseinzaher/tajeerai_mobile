@@ -1,9 +1,9 @@
 import 'dart:async';
 
-import 'package:tajeerai_mobile/features/conversations/domain/entities/message.dart';
-import 'package:tajeerai_mobile/features/conversations/domain/repositories/message_repository.dart';
-import 'package:tajeerai_mobile/features/conversations/domain/value_objects/message_content.dart';
-import 'package:tajeerai_mobile/features/conversations/domain/value_objects/outbound_media.dart';
+import 'package:TajeerAi/features/conversations/domain/entities/message.dart';
+import 'package:TajeerAi/features/conversations/domain/repositories/message_repository.dart';
+import 'package:TajeerAi/features/conversations/domain/value_objects/message_content.dart';
+import 'package:TajeerAi/features/conversations/domain/value_objects/outbound_media.dart';
 
 /// Records a state update the service asked for.
 class StateUpdate {

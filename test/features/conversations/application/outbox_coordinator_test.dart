@@ -2,14 +2,14 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/failures/app_failure.dart';
-import 'package:tajeerai_mobile/features/conversations/application/coordinators/outbox_coordinator.dart';
-import 'package:tajeerai_mobile/features/conversations/application/events/conversation_app_events.dart';
-import 'package:tajeerai_mobile/features/conversations/domain/entities/message.dart';
-import 'package:tajeerai_mobile/features/conversations/realtime/conversation_events.dart';
-import 'package:tajeerai_mobile/infrastructure/database/app_database.dart';
-import 'package:tajeerai_mobile/infrastructure/database/tables/outbox_table.dart';
-import 'package:tajeerai_mobile/infrastructure/logging/logger.dart';
+import 'package:TajeerAi/failures/app_failure.dart';
+import 'package:TajeerAi/features/conversations/application/coordinators/outbox_coordinator.dart';
+import 'package:TajeerAi/features/conversations/application/events/conversation_app_events.dart';
+import 'package:TajeerAi/features/conversations/domain/entities/message.dart';
+import 'package:TajeerAi/features/conversations/realtime/conversation_events.dart';
+import 'package:TajeerAi/infrastructure/database/app_database.dart';
+import 'package:TajeerAi/infrastructure/database/tables/outbox_table.dart';
+import 'package:TajeerAi/infrastructure/logging/logger.dart';
 
 import '../../../support/fixed_clock.dart';
 import '../../../support/test_database.dart';

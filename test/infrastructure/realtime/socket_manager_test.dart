@@ -1,12 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/infrastructure/logging/logger.dart';
-import 'package:tajeerai_mobile/infrastructure/network/token_refresher.dart';
-import 'package:tajeerai_mobile/infrastructure/realtime/connection/connection_state.dart';
-import 'package:tajeerai_mobile/infrastructure/realtime/connection/reconnect_policy.dart';
-import 'package:tajeerai_mobile/infrastructure/realtime/socket_command.dart';
-import 'package:tajeerai_mobile/infrastructure/realtime/socket_event.dart';
-import 'package:tajeerai_mobile/infrastructure/realtime/socket_exception.dart';
-import 'package:tajeerai_mobile/infrastructure/realtime/socket_manager.dart';
+import 'package:TajeerAi/infrastructure/logging/logger.dart';
+import 'package:TajeerAi/infrastructure/network/token_refresher.dart';
+import 'package:TajeerAi/infrastructure/realtime/connection/connection_state.dart';
+import 'package:TajeerAi/infrastructure/realtime/connection/reconnect_policy.dart';
+import 'package:TajeerAi/infrastructure/realtime/socket_command.dart';
+import 'package:TajeerAi/infrastructure/realtime/socket_event.dart';
+import 'package:TajeerAi/infrastructure/realtime/socket_exception.dart';
+import 'package:TajeerAi/infrastructure/realtime/socket_manager.dart';
 
 import 'fakes/fake_socket_client.dart';
 

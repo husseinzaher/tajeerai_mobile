@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/features/conversations/data/local/conversation_tables.dart';
-import 'package:tajeerai_mobile/infrastructure/database/app_database.dart';
+import 'package:TajeerAi/features/conversations/data/local/conversation_tables.dart';
+import 'package:TajeerAi/infrastructure/database/app_database.dart';
 
 import '../../support/fixed_clock.dart';
 import '../../support/test_database.dart';

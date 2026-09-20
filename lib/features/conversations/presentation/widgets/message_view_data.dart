@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 
 import '../../../../design_system/design_system.dart';
-import '../../../../infrastructure/storage/file_storage.dart';
 import '../../domain/entities/message.dart';
 
 /// A message, as the thread draws it.
@@ -120,9 +119,19 @@ String? _mimeFromType(String type) => switch (type) {
 String? _posterPathFor(String? videoPath) {
   if (videoPath == null) return null;
 
-  final String thumbnailPath = FileStorage.thumbnailPathFor(videoPath);
+  final String thumbnailPath = _videoThumbnailPath(videoPath);
 
   return File(thumbnailPath).existsSync() ? thumbnailPath : null;
+}
+
+String _videoThumbnailPath(String videoPath) {
+  return p.setExtension(
+    p.join(
+      p.dirname(videoPath),
+      '${p.basenameWithoutExtension(videoPath)}_thumb',
+    ),
+    '.jpg',
+  );
 }
 
 String? _mimeFromPath(String path) {

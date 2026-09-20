@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/features/auth/data/local/auth_local_data_source.dart';
-import 'package:tajeerai_mobile/features/auth/domain/entities/user.dart';
-import 'package:tajeerai_mobile/features/conversations/data/local/conversation_tables.dart';
-import 'package:tajeerai_mobile/infrastructure/database/app_database.dart';
-import 'package:tajeerai_mobile/infrastructure/storage/secure_storage.dart';
+import 'package:TajeerAi/features/auth/data/local/auth_local_data_source.dart';
+import 'package:TajeerAi/features/auth/domain/entities/user.dart';
+import 'package:TajeerAi/features/conversations/data/local/conversation_tables.dart';
+import 'package:TajeerAi/infrastructure/database/app_database.dart';
+import 'package:TajeerAi/infrastructure/storage/secure_storage.dart';
 
 import '../../../support/fixed_clock.dart';
 import '../../../support/test_database.dart';

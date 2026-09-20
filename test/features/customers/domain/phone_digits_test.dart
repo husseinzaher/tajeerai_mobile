@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/features/customers/domain/value_objects/phone_digits.dart';
+import 'package:TajeerAi/features/customers/domain/value_objects/phone_digits.dart';
 
 /// The cases are shared with the backend's `PhoneNumber.digits`, whose regex
 /// is `/(?!^\+)[^\d]/g`. Where the two disagree, one of them is a bug.

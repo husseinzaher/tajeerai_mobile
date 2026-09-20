@@ -1,4 +1,4 @@
-import 'package:tajeerai_mobile/infrastructure/database/app_database.dart';
+import 'package:TajeerAi/infrastructure/database/app_database.dart';
 
 /// Opens a fresh in-memory database for one test.
 ///

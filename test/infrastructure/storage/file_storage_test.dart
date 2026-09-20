@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
-import 'package:tajeerai_mobile/infrastructure/storage/file_storage.dart';
+import 'package:TajeerAi/infrastructure/storage/file_storage.dart';
 
 void main() {
   late Directory documents;

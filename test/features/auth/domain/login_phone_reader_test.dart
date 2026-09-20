@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/features/auth/domain/value_objects/login_phone_reader.dart';
+import 'package:TajeerAi/features/auth/domain/value_objects/login_phone_reader.dart';
 
 void main() {
   group('readDialledNumber', () {

@@ -3,11 +3,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:tajeerai_mobile/design_system/auth/auth_header.dart';
-import 'package:tajeerai_mobile/design_system/auth/auth_layout.dart';
-import 'package:tajeerai_mobile/design_system/auth/brand_logo.dart';
-import 'package:tajeerai_mobile/design_system/auth/social_button.dart';
-import 'package:tajeerai_mobile/design_system/auth/social_provider_mark.dart';
+import 'package:TajeerAi/design_system/auth/auth_header.dart';
+import 'package:TajeerAi/design_system/auth/auth_layout.dart';
+import 'package:TajeerAi/design_system/auth/brand_logo.dart';
+import 'package:TajeerAi/design_system/auth/social_button.dart';
+import 'package:TajeerAi/design_system/auth/social_provider_mark.dart';
 
 import '../../support/widget_harness.dart';
 

@@ -1,8 +1,8 @@
 import 'package:drift/drift.dart';
 import 'package:drift_dev/api/migrations_native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tajeerai_mobile/infrastructure/database/app_database.dart';
-import 'package:tajeerai_mobile/infrastructure/database/migrations/schema_migrations.dart';
+import 'package:TajeerAi/infrastructure/database/app_database.dart';
+import 'package:TajeerAi/infrastructure/database/migrations/schema_migrations.dart';
 
 import 'generated/schema.dart';
 import 'generated/schema_v1.dart' as v1;
