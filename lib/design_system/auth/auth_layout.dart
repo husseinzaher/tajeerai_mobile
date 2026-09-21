@@ -7,8 +7,9 @@ import '../../app/theme/theme.dart';
 /// Owns the four things a sign-in screen gets wrong when each one writes it
 /// again: it centres when there is room and scrolls when there is not, it
 /// stays out from under the keyboard, it caps its width so a form on a tablet
-/// is not a strip of text the width of the display, and it keeps one corner for
-/// a control that belongs to the screen rather than the form — the language.
+/// is not a strip of text the width of the display, and it keeps a row across
+/// the top for the controls that belong to the screen rather than to the form —
+/// the language in one corner, a way out of the screen in the other.
 ///
 /// It draws nothing decorative. The reference places soft warm shapes behind
 /// the form; the brief for this system rules out decoration without a job, and
@@ -19,6 +20,7 @@ class AppAuthLayout extends StatelessWidget {
     this.logo,
     this.header,
     this.footer,
+    this.topStart,
     this.topEnd,
     this.maxWidth = 400,
     super.key,
@@ -33,6 +35,13 @@ class AppAuthLayout extends StatelessWidget {
   /// Under the form: a security note, a legal line.
   final Widget? footer;
 
+  /// The top-start corner — top-right in Arabic. Somewhere else to go.
+  ///
+  /// Separate from [topEnd] rather than a list, because which corner a control
+  /// sits in is the whole point: the two must not reflow into each other when
+  /// one of them is absent.
+  final Widget? topStart;
+
   /// The top-end corner — top-left in Arabic. A language switcher, usually.
   final Widget? topEnd;
 
@@ -43,15 +52,22 @@ class AppAuthLayout extends StatelessWidget {
     return SafeArea(
       child: Column(
         children: <Widget>[
-          if (topEnd != null)
+          if (topStart != null || topEnd != null)
             Padding(
               padding: const EdgeInsetsDirectional.symmetric(
                 horizontal: TajeerSpacing.md,
                 vertical: TajeerSpacing.xs,
               ),
-              child: Align(
-                alignment: AlignmentDirectional.centerEnd,
-                child: topEnd,
+              /*
+                A spacer holds the absent corner open, so the control that is
+                present stays in its own corner rather than sliding across to
+                where the reader expects the other one.
+              */
+              child: Row(
+                children: <Widget>[
+                  if (topStart != null) topStart! else const Spacer(),
+                  if (topEnd != null) ...<Widget>[const Spacer(), topEnd!],
+                ],
               ),
             ),
           Expanded(

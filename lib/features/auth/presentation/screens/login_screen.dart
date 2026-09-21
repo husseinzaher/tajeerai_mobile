@@ -36,6 +36,7 @@ class LoginScreen extends ConsumerWidget {
 
     return AppScaffold(
       body: AppAuthLayout(
+        topStart: const _BlogLink(),
         topEnd: const _LanguageSwitcher(),
         logo: const AppBrandLogo(variant: AppBrandLogoVariant.mark),
         header: AppAuthHeader(
@@ -45,22 +46,6 @@ class LoginScreen extends ConsumerWidget {
         footer: Column(
           spacing: TajeerSpacing.sm,
           children: <Widget>[
-            /*
-              The only way into the blog a guest has.
-
-              Members reach it from the drawer; somebody without an account
-              only ever sees this screen, so without a link here the blog is
-              unreachable except by following one from outside the app -- which
-              is exactly backwards for the one thing in here written to be read
-              before signing up.
-            */
-            AppButton(
-              label: strings.blog,
-              variant: AppButtonVariant.link,
-              size: AppButtonSize.small,
-              leading: const Icon(LucideIcons.bookOpen),
-              onPressed: () => unawaited(context.push(AppRoutes.blog)),
-            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               spacing: TajeerSpacing.xs,
@@ -95,6 +80,33 @@ class LoginScreen extends ConsumerWidget {
   }
 }
 
+/// The way out of this screen, in its top-start corner.
+///
+/// The blog is the only thing in this app somebody without an account may
+/// read, and this is the only screen they ever see -- so without this button
+/// it is reachable only by following a link from outside the app, which is
+/// backwards for the one thing here written to be read *before* signing up.
+///
+/// Shaped like the language switcher opposite it, because the two are the same
+/// kind of thing: controls belonging to the screen rather than to the form.
+class _BlogLink extends ConsumerWidget {
+  const _BlogLink();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final AppStrings strings = ref.watch(appStringsProvider);
+
+    return AppButton(
+      label: strings.blog,
+      variant: AppButtonVariant.outline,
+      leading: const Icon(LucideIcons.bookOpen),
+      // Pushed, so the reader who was about to sign in still has this screen
+      // underneath when they close the article.
+      onPressed: () => unawaited(context.push(AppRoutes.blog)),
+    );
+  }
+}
+
 /// The language control in the screen's top-end corner.
 ///
 /// Not a component: an [AppButton] that opens an [AppActionSheet], both from the
@@ -109,10 +121,15 @@ class _LanguageSwitcher extends ConsumerWidget {
     final AppStrings strings = ref.watch(appStringsProvider);
 
     return AppButton(
-      label: current.nativeName,
+      /*
+        The flag alone, and no globe in front of it. The trigger's job is to
+        say which language is active, which a flag does at a glance and in less
+        room than either name - and the sheet behind it still spells both out.
+      */
+      label: current.flag,
       variant: AppButtonVariant.outline,
-      leading: const Icon(LucideIcons.globe),
       trailing: const Icon(LucideIcons.chevronDown),
+      // The flag is decoration to a screen reader; the name is the answer.
       semanticLabel: '${strings.language}: ${current.nativeName}',
       onPressed: () => AppActionSheet.show(
         context: context,
@@ -122,7 +139,7 @@ class _LanguageSwitcher extends ConsumerWidget {
           // current language can still find theirs.
           for (final AppLocale option in AppLocale.values)
             AppAction(
-              label: option.nativeName,
+              label: option.flaggedName,
               onSelected: () =>
                   unawaited(ref.read(localeProvider.notifier).select(option)),
             ),

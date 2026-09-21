@@ -482,7 +482,8 @@ void main() {
 
       await tester.tap(find.bySemanticsLabel('Language: English'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('العربية'));
+      // Containing, not equal: the option now reads '🇸🇦  العربية'.
+      await tester.tap(find.textContaining('العربية'));
       await tester.pumpAndSettle();
 
       expect(find.text('مرحباً بعودتك'), findsOneWidget);

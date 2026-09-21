@@ -67,5 +67,14 @@ void main() {
   test('each language names itself in its own script', () {
     expect(AppLocale.arabic.nativeName, 'العربية');
     expect(AppLocale.english.nativeName, 'English');
+
+    /*
+      The flag is a product decision, not something the language tag implies:
+      Arabic is spoken across the region and carries Saudi Arabia's because
+      that is this product's market. Asserted so it cannot drift silently.
+    */
+    expect(AppLocale.arabic.flag, '🇸🇦');
+    expect(AppLocale.english.flag, '🇬🇧');
+    expect(AppLocale.arabic.flaggedName, '🇸🇦  العربية');
   });
 }

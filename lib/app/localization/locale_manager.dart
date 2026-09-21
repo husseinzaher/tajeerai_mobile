@@ -11,10 +11,10 @@ import '../../infrastructure/storage/preferences_storage.dart';
 /// Every layout in this app uses logical directions (`start`/`end`,
 /// `EdgeInsetsDirectional`) so the same widgets mirror without a second build.
 enum AppLocale {
-  arabic('ar', TextDirection.rtl, 'العربية'),
-  english('en', TextDirection.ltr, 'English');
+  arabic('ar', TextDirection.rtl, 'العربية', '🇸🇦'),
+  english('en', TextDirection.ltr, 'English', '🇬🇧');
 
-  const AppLocale(this.code, this.direction, this.nativeName);
+  const AppLocale(this.code, this.direction, this.nativeName, this.flag);
 
   final String code;
   final TextDirection direction;
@@ -26,6 +26,21 @@ enum AppLocale {
   /// current one can still find theirs — which is the entire point of the
   /// control.
   final String nativeName;
+
+  /// The flag shown beside [nativeName].
+  ///
+  /// A language is not a country, and these two are picked rather than
+  /// derived. Arabic is spoken across the region and carries 🇸🇦 because this
+  /// product's market is Saudi; English carries 🇬🇧 because it is the language
+  /// rather than a place, and a Gulf reader does not read 🇺🇸 as "English".
+  ///
+  /// An emoji rather than an asset: it needs no file, no size, and no second
+  /// copy for the dark appearance, and it follows the reader's own system font
+  /// the way the rest of the text does.
+  final String flag;
+
+  /// The flag and the name, for a control that shows one language.
+  String get flaggedName => '$flag  $nativeName';
 
   Locale get locale => Locale(code);
 

@@ -180,7 +180,8 @@ void main() {
     ) async {
       await pump(tester);
 
-      await tester.tap(find.text('العربية'));
+      // Containing, not equal: the option now reads '🇸🇦  العربية'.
+      await tester.tap(find.textContaining('العربية'));
       await settle(tester);
 
       expect(find.text('الإعدادات'), findsOneWidget);

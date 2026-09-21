@@ -221,6 +221,56 @@ void main() {
       },
     );
 
+    testWidgets('holds each corner control on its own side', (
+      WidgetTester tester,
+    ) async {
+      for (final TextDirection direction in TextDirection.values) {
+        await tester.pumpWidget(
+          wrapWidget(
+            KeyedSubtree(
+              key: ValueKey<TextDirection>(direction),
+              child: const AppAuthLayout(
+                topStart: Text('ST'),
+                topEnd: Text('EN'),
+                child: SizedBox(),
+              ),
+            ),
+            textDirection: direction,
+          ),
+        );
+
+        final double start = tester.getCenter(find.text('ST')).dx;
+        final double end = tester.getCenter(find.text('EN')).dx;
+
+        // They share a row, and which side each takes follows the reading
+        // direction rather than the order they were passed in.
+        expect(
+          tester.getCenter(find.text('ST')).dy,
+          tester.getCenter(find.text('EN')).dy,
+        );
+        if (direction == TextDirection.ltr) {
+          expect(start, lessThan(end), reason: 'ltr start = left');
+        } else {
+          expect(start, greaterThan(end), reason: 'rtl start = right');
+        }
+      }
+    });
+
+    testWidgets('keeps the end corner in place when the start one is absent', (
+      WidgetTester tester,
+    ) async {
+      // A spacer holds the missing corner open. Without it the one control
+      // present slides across to the other side, which is worse than a gap.
+      await tester.pumpWidget(
+        wrapWidget(const AppAuthLayout(topEnd: Text('EN'), child: SizedBox())),
+      );
+
+      expect(
+        tester.getCenter(find.text('EN')).dx,
+        greaterThan(tester.getSize(find.byType(AppAuthLayout)).width / 2),
+      );
+    });
+
     testWidgets('scrolls rather than overflows when there is no room', (
       WidgetTester tester,
     ) async {

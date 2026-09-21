@@ -121,7 +121,7 @@ class SettingsScreen extends ConsumerWidget {
             child: AppSegmentedControl<AppLocale>(
               options: <AppLocale, String>{
                 for (final AppLocale option in AppLocale.values)
-                  option: option.nativeName,
+                  option: option.flaggedName,
               },
               value: locale,
               onChanged: (AppLocale next) =>
