@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:TajeerAi/app/bootstrap/dependencies.dart';
+import 'package:TajeerAi/app/router/routes.dart';
 import 'package:TajeerAi/app/shell/authenticated_shell.dart';
 import 'package:TajeerAi/app/shell/shell_destination.dart';
 import 'package:TajeerAi/app/theme/theme.dart';
@@ -116,6 +117,14 @@ void main() {
                 ],
               ),
           ],
+        ),
+        // The blog lives outside the shell, which is the whole reason it is a
+        // footer action rather than a tab. The test router has to carry it too
+        // or the drawer's link has nowhere to go.
+        GoRoute(
+          path: AppRoutes.blog,
+          builder: (BuildContext context, GoRouterState state) =>
+              _screen('blog'),
         ),
       ],
     );
@@ -261,6 +270,22 @@ void main() {
       expect(_inDrawer('Settings'), findsOneWidget);
     });
 
+    testWidgets('the drawer opens the blog, which is not one of the tabs', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(subject());
+      await _openDrawer(tester);
+
+      await tester.tap(_inDrawer('Blog'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.text('blog'), findsOneWidget);
+      // Pushed, not switched to: the member's tab is still underneath, so
+      // closing the article returns them to where they were reading.
+      expect(find.byType(AppBottomNavigation), findsNothing);
+    });
+
     testWidgets('signing out ends the session and navigates nowhere itself', (
       WidgetTester tester,
     ) async {
@@ -287,6 +312,7 @@ void main() {
       await tester.pumpWidget(subject());
       await _openDrawer(tester);
 
+      expect(_inDrawer('المدونة'), findsOneWidget);
       expect(_inDrawer('صندوق الوارد'), findsOneWidget);
       expect(_inDrawer('الإعدادات'), findsOneWidget);
       expect(find.text('تسجيل الخروج'), findsOneWidget);

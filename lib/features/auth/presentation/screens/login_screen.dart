@@ -2,10 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../app/localization/locale_manager.dart';
 import '../../../../app/localization/translations/app_strings.dart';
+import '../../../../app/router/routes.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../design_system/design_system.dart';
 import '../controllers/login_controller.dart';
@@ -43,6 +45,22 @@ class LoginScreen extends ConsumerWidget {
         footer: Column(
           spacing: TajeerSpacing.sm,
           children: <Widget>[
+            /*
+              The only way into the blog a guest has.
+
+              Members reach it from the drawer; somebody without an account
+              only ever sees this screen, so without a link here the blog is
+              unreachable except by following one from outside the app -- which
+              is exactly backwards for the one thing in here written to be read
+              before signing up.
+            */
+            AppButton(
+              label: strings.blog,
+              variant: AppButtonVariant.link,
+              size: AppButtonSize.small,
+              leading: const Icon(LucideIcons.bookOpen),
+              onPressed: () => unawaited(context.push(AppRoutes.blog)),
+            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               spacing: TajeerSpacing.xs,

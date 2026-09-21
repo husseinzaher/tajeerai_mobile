@@ -9,6 +9,7 @@ import '../../design_system/design_system.dart';
 import '../../features/auth/domain/entities/user.dart';
 import '../../features/auth/presentation/controllers/auth_controller.dart';
 import '../localization/translations/app_strings.dart';
+import '../router/routes.dart';
 import 'shell_destination.dart';
 
 /// The frame around every signed-in screen.
@@ -58,6 +59,18 @@ class AuthenticatedShell extends ConsumerWidget {
         onSelect: _select,
         groups: <AppNavGroup>[AppNavGroup(destinations: destinations)],
         footerActions: <AppDrawerAction>[
+          AppDrawerAction(
+            label: strings.blog,
+            icon: LucideIcons.bookOpen,
+            /*
+              A footer action rather than a destination, because the blog is
+              not one of the shell's branches: it is a top-level route outside
+              this frame, and `goBranch` cannot reach it. `push` rather than
+              `go`, so closing the article returns the member to the tab they
+              left rather than to whichever branch the router considers first.
+            */
+            onPressed: () => unawaited(context.push(AppRoutes.blog)),
+          ),
           AppDrawerAction(
             label: strings.signOut,
             icon: LucideIcons.logOut,
