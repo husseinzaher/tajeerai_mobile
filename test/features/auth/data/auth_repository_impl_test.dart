@@ -440,4 +440,43 @@ void main() {
       },
     );
   });
+
+  group('the avatar the server chose', () {
+    /*
+      `avatarUrl` is the backend's answer - the uploaded file when there is
+      one, the member's Gravatar when there is not. The client does not hash
+      anything, and must not second-guess which to show.
+    */
+    test('prefers avatarUrl over the uploaded media object', () {
+      final Map<String, Object?> payload = _sessionPayload();
+      (payload['user']! as Map<String, Object?>)['avatarUrl'] =
+          'https://gravatar.com/avatar/abc?s=200&d=404';
+
+      final Session session = SessionDto.decode(payload);
+
+      expect(
+        session.user.avatarUrl,
+        'https://gravatar.com/avatar/abc?s=200&d=404',
+      );
+    });
+
+    test('falls back to the media object when the server sent no avatarUrl', () {
+      // An older API, or a build talking to one: the uploaded picture is still
+      // shown rather than nothing.
+      final Session session = SessionDto.decode(_sessionPayload());
+
+      expect(session.user.avatarUrl, 'https://cdn.test/a.png');
+    });
+
+    test('treats an empty avatarUrl as no picture at all', () {
+      final Map<String, Object?> payload = _sessionPayload();
+      (payload['user']! as Map<String, Object?>)
+        ..['avatarUrl'] = ''
+        ..['avatar'] = null;
+
+      final Session session = SessionDto.decode(payload);
+
+      expect(session.user.avatarUrl, isNull);
+    });
+  });
 }

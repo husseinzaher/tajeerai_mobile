@@ -42,7 +42,13 @@ abstract final class SessionDto {
       phone: json['phone']?.toString(),
       role: json['role']?.toString() ?? 'member',
       locale: json['locale']?.toString() ?? 'ar',
-      avatarUrl: _mediaUrl(json['avatar']),
+      /*
+        `avatarUrl` is what the server decided to draw - the uploaded file when
+        there is one, the member's Gravatar when there is not. `avatar` is read
+        behind it so a build talking to an older API still shows the uploaded
+        picture rather than nothing.
+      */
+      avatarUrl: _string(json['avatarUrl']) ?? _mediaUrl(json['avatar']),
       isPlatformAdmin: json['isPlatformAdmin'] == true,
       permissions: _stringSet(json['permissions']),
       denied: _stringSet(json['denied']),
@@ -57,6 +63,14 @@ abstract final class SessionDto {
       locale: json['locale']?.toString() ?? 'ar',
       logoUrl: _mediaUrl(json['logo']),
     );
+  }
+
+  /// A non-empty string, or null. An absent field and an empty one mean the
+  /// same thing here and must not become the URL `''`.
+  static String? _string(Object? raw) {
+    final String value = raw?.toString() ?? '';
+
+    return value.isEmpty ? null : value;
   }
 
   /// Pulls the URL out of the backend's `MediaResourceDto`, which is an object
