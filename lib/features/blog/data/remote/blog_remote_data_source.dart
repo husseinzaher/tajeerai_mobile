@@ -68,14 +68,18 @@ class BlogRemoteDataSource {
   }
 
   /*
-    Media arrives as an origin-relative path - `/api/v1/media/public/<id>` -
-    because the website and the API share an origin and a hostname baked into
+    Media arrives as an origin-rooted path - `/api/v1/media/public/<id>` -
+    because the website and the API share an origin, and a hostname baked into
     stored content is how a domain change breaks old articles. A phone has no
     origin, so the address is completed here, at the one boundary that knows
     which deployment this build points at.
+
+    Against the *origin*, not the API root: the stored path already carries the
+    backend's `/api` prefix, and completing it against a base that also carries
+    one asks for `/api/api/v1/...`.
   */
   String _absolute(String url) =>
-      url.startsWith('/') ? _http.resolve(url).toString() : url;
+      url.startsWith('/') ? _http.resolveFromOrigin(url).toString() : url;
 
   ArticleImage? _absolutiseImage(ArticleImage? image) {
     if (image == null) return null;

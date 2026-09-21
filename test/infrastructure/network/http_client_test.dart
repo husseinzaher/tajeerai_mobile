@@ -360,4 +360,30 @@ void main() {
     expect(adapter.requests.single.method, 'PATCH');
     expect(adapter.requests.single.data, <String, Object?>{'name': 'Sara'});
   });
+
+  group('building absolute URLs', () {
+    test('resolve completes a path this client would request', () {
+      final HttpClient client = _client(_ScriptedAdapter());
+
+      // Relative to the API root: origin plus the backend's global prefix.
+      expect(
+        client.resolve('/v1/auth/social/google/start').toString(),
+        'http://localhost/api/v1/auth/social/google/start',
+      );
+    });
+
+    test('resolveFromOrigin does not repeat the backend prefix', () {
+      final HttpClient client = _client(_ScriptedAdapter());
+
+      /*
+        A media address stored inside an article already carries `/api`. Sent
+        through `resolve` it became `/api/api/v1/...`, which 404s -- every blog
+        cover on the phone was a broken-image box.
+      */
+      expect(
+        client.resolveFromOrigin('/api/v1/media/public/m1').toString(),
+        'http://localhost/api/v1/media/public/m1',
+      );
+    });
+  });
 }

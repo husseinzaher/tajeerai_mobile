@@ -245,6 +245,20 @@ class HttpClient {
           );
   }
 
+  /// The absolute URL an **origin-rooted** path resolves to.
+  ///
+  /// Distinct from [resolve], and the distinction is the whole point of having
+  /// two. [resolve] completes a path this client would request, so it is
+  /// relative to the API root — origin *plus* the backend's global `/api`
+  /// prefix. A path that arrives inside stored content already carries that
+  /// prefix, because the website serves the API and its own pages from one
+  /// origin and a media address is saved as `/api/v1/media/public/<id>`.
+  ///
+  /// Completing one of those against the API root produces `…/api/api/v1/…`,
+  /// which 404s — every cover image on the blog was a broken-image box until
+  /// this existed.
+  Uri resolveFromOrigin(String path) => _cookieOrigin.resolve(path);
+
   /// Puts cookies back in the jar, by name and value.
   ///
   /// The jar lives in memory, so a cold start has none, and every request
