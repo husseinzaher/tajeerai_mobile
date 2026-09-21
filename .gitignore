@@ -25,6 +25,22 @@ build/
 # Coverage
 coverage/
 
+# Golden failure artifacts.
+#
+# When `matchesGoldenFile` fails, the comparator writes four images into a
+# `failures/` directory beside the test that failed, so the diff can be looked
+# at. They are output: the next failing run overwrites them, and a passing run
+# leaves the previous set lying there -- which is how images from a variant
+# that no longer exists came to be committed.
+#
+# Scoped to the four names the comparator writes rather than to `failures/`,
+# because `lib/failures/` and `test/failures/` are real source directories
+# holding the failure taxonomy.
+**/failures/*_masterImage.png
+**/failures/*_testImage.png
+**/failures/*_isolatedDiff.png
+**/failures/*_maskedDiff.png
+
 # IDE
 .idea/
 .vscode/
