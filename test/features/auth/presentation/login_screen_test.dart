@@ -3,9 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:TajeerAi/app/bootstrap/dependencies.dart';
+import 'package:TajeerAi/app/router/routes.dart';
+import 'package:TajeerAi/app/theme/theme.dart';
 import 'package:TajeerAi/design_system/auth/social_button.dart';
 import 'package:TajeerAi/design_system/auth/social_provider_mark.dart';
 import 'package:TajeerAi/design_system/buttons/app_button.dart';
@@ -483,6 +486,74 @@ void main() {
 
       expect(find.text('مرحباً بعودتك'), findsOneWidget);
       expect(preferences.readString(PreferencesStorage.localeKey), 'ar');
+    });
+  });
+
+  group('the way to the blog', () {
+    /*
+      The sign-in screen under a real router, because this is the one control
+      here that navigates. Everything else on this screen either submits a form
+      or changes a setting, which is why the rest of the file needs no router
+      at all.
+    */
+    Widget routed() {
+      final GoRouter router = GoRouter(
+        initialLocation: AppRoutes.login,
+        routes: <RouteBase>[
+          GoRoute(
+            path: AppRoutes.login,
+            builder: (BuildContext context, GoRouterState state) =>
+                const LoginScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.blog,
+            builder: (BuildContext context, GoRouterState state) =>
+                const Scaffold(body: Text('the blog')),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+
+      return ProviderScope(
+        overrides: [
+          sessionCoordinatorProvider.overrideWithValue(coordinator),
+          preferencesStorageProvider.overrideWithValue(preferences),
+          platformInfoProvider.overrideWithValue(_platformInfo),
+        ],
+        child: MaterialApp.router(
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.of(TajeerPreset.fallback, Brightness.light),
+          routerConfig: router,
+        ),
+      );
+    }
+
+    testWidgets('a guest can reach the blog without an account', (
+      tester,
+    ) async {
+      await tester.pumpWidget(routed());
+
+      await tapVisible(tester, find.widgetWithText(AppButton, 'Blog'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('the blog'), findsOneWidget);
+    });
+
+    testWidgets('and comes back to sign in', (tester) async {
+      await tester.pumpWidget(routed());
+
+      await tapVisible(tester, find.widgetWithText(AppButton, 'Blog'));
+      await tester.pumpAndSettle();
+
+      // Pushed rather than replaced: the reader who was about to sign in still
+      // has the screen they were on underneath.
+      final NavigatorState navigator = tester.state(
+        find.byType(Navigator).first,
+      );
+      navigator.pop();
+      await tester.pumpAndSettle();
+
+      expect(find.text('Welcome back'), findsOneWidget);
     });
   });
 }
