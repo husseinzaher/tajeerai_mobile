@@ -172,10 +172,11 @@ void main() {
       expect(find.text('Email or phone'), findsOneWidget);
       expect(find.text('Password'), findsOneWidget);
 
-      // Built from design-system parts, not bespoke widgets. Two buttons: the
-      // submit, and the language switcher in the corner.
+      // Built from design-system parts, not bespoke widgets. Three buttons:
+      // the submit, the language switcher in the corner, and the link to the
+      // blog -- the one thing here a guest may read without an account.
       expect(find.byType(AppTextField), findsNWidgets(2));
-      expect(find.byType(AppButton), findsNWidgets(2));
+      expect(find.byType(AppButton), findsNWidgets(3));
     });
 
     testWidgets('renders in dark mode', (tester) async {
