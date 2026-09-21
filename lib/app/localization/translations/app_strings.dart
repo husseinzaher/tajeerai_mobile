@@ -213,6 +213,58 @@ class AppStrings {
     },
 
     // -- customers ----------------------------------------------------------
+    // -- Blog -------------------------------------------------------------
+    'blog': <String, String>{'en': 'Blog', 'ar': 'المدونة'},
+    'blogTagline': <String, String>{
+      'en': 'Guides and advice for growing your store',
+      'ar': 'مقالات وأدلة ونصائح لمساعدتك في نمو متجرك',
+    },
+    'searchArticles': <String, String>{
+      'en': 'Search articles…',
+      'ar': 'ابحث في المقالات…',
+    },
+    'blogEmpty': <String, String>{
+      'en': 'No articles yet',
+      'ar': 'لا توجد مقالات بعد',
+    },
+    'blogEmptyDescription': <String, String>{
+      'en': 'New guides are published here regularly.',
+      'ar': 'تُنشر هنا أدلة جديدة بانتظام.',
+    },
+    'blogNoMatches': <String, String>{
+      'en': 'No article matches that',
+      'ar': 'لا يوجد مقال يطابق ذلك',
+    },
+    'blogNoMatchesDescription': <String, String>{
+      'en': 'Try a different word, or clear the filter.',
+      'ar': 'جرّب كلمة أخرى، أو امسح عامل التصفية.',
+    },
+    'blogUnreadable': <String, String>{
+      'en': 'The blog could not be loaded.',
+      'ar': 'تعذّر تحميل المدونة.',
+    },
+    'articleUnreadable': <String, String>{
+      'en': 'This article could not be loaded.',
+      'ar': 'تعذّر تحميل هذا المقال.',
+    },
+    'articleMissing': <String, String>{
+      'en': 'This article is no longer available.',
+      'ar': 'لم يعد هذا المقال متاحًا.',
+    },
+    'allArticles': <String, String>{'en': 'All', 'ar': 'الكل'},
+    'readingMinutes': <String, String>{
+      'en': '{count} min read',
+      'ar': '{count} دقائق قراءة',
+    },
+    'relatedArticles': <String, String>{
+      'en': 'Related articles',
+      'ar': 'مقالات ذات صلة',
+    },
+    'commonQuestions': <String, String>{
+      'en': 'Common questions',
+      'ar': 'أسئلة شائعة',
+    },
+
     'customers': <String, String>{'en': 'Contacts', 'ar': 'جهات الاتصال'},
     'searchCustomers': <String, String>{
       'en': 'Search contacts…',
@@ -500,6 +552,25 @@ class AppStrings {
     'social_workspace_suspended' => call('socialWorkspaceSuspended'),
     _ => call('socialFailed'),
   };
+
+  String get blog => call('blog');
+  String get blogTagline => call('blogTagline');
+  String get searchArticles => call('searchArticles');
+  String get blogEmpty => call('blogEmpty');
+  String get blogEmptyDescription => call('blogEmptyDescription');
+  String get blogNoMatches => call('blogNoMatches');
+  String get blogNoMatchesDescription => call('blogNoMatchesDescription');
+  String get blogUnreadable => call('blogUnreadable');
+  String get articleUnreadable => call('articleUnreadable');
+  String get articleMissing => call('articleMissing');
+  String get allArticles => call('allArticles');
+  String get relatedArticles => call('relatedArticles');
+  String get commonQuestions => call('commonQuestions');
+
+  /// "5 min read". A count rather than a sentence, because the number is the
+  /// information and every language puts it somewhere different.
+  String readingTime(int minutes) =>
+      call('readingMinutes').replaceAll('{count}', '$minutes');
 
   String get customers => call('customers');
   String get searchCustomers => call('searchCustomers');

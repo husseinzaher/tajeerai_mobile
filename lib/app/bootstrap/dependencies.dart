@@ -38,6 +38,9 @@ import '../../features/caller_id/domain/repositories/caller_lookup_repository.da
 import '../../features/customers/application/contracts/customer_directory_capability.dart';
 import '../../features/customers/application/coordinators/customer_directory_coordinator.dart';
 import '../../features/customers/application/coordinators/customer_sync_coordinator.dart';
+import '../../features/blog/data/remote/blog_remote_data_source.dart';
+import '../../features/blog/data/repositories/blog_repository_impl.dart';
+import '../../features/blog/domain/repositories/blog_repository.dart';
 import '../../features/customers/data/remote/customer_remote_data_source.dart';
 import '../../features/customers/data/repositories/customer_repository_impl.dart';
 import '../../features/customers/domain/repositories/customer_repository.dart';
@@ -417,6 +420,28 @@ final Provider<ConversationSocketHandler> conversationSocketHandlerProvider =
 
       return handler;
     });
+
+// ---------------------------------------------------------------------------
+// Blog feature
+// ---------------------------------------------------------------------------
+
+/*
+  The only feature in this app that reads without a session, and the only one
+  with no local database behind it. Both facts are recorded in
+  ARCHITECTURE.md §11: the socket cannot serve a guest because its handshake
+  carries a token, and the workspace database is emptied on sign-out, which is
+  the wrong lifetime for content a guest reads.
+*/
+final Provider<BlogRemoteDataSource> blogRemoteDataSourceProvider =
+    Provider<BlogRemoteDataSource>(
+      (ref) => BlogRemoteDataSource(ref.watch(httpClientProvider)),
+    );
+
+final Provider<BlogRepository> blogRepositoryProvider =
+    Provider<BlogRepository>(
+      (ref) =>
+          BlogRepositoryImpl(remote: ref.watch(blogRemoteDataSourceProvider)),
+    );
 
 // ---------------------------------------------------------------------------
 // Customers feature

@@ -8,6 +8,27 @@ abstract final class AppRoutes {
   // Unauthenticated.
   static const String login = '/login';
 
+  /// The blog: public content, readable without a session.
+  ///
+  /// The first product screen in this app a guest may open. It sits outside the
+  /// signed-in shell deliberately - the shell assumes a session to draw its
+  /// profile and its permission-filtered tabs - so the blog is a top-level
+  /// route reachable in either state, and a signed-in member reaches it from
+  /// the drawer rather than a fourth tab.
+  static const String blog = '/blog';
+
+  /// One article, addressed by the slug the website uses.
+  ///
+  /// The same slug, so a link shared from the site opens the same article here:
+  /// `/blog/how-to-connect-whatsapp`. Arabic slugs are percent-encoded in a URL
+  /// and decoded back by the router, which is what lets an Arabic article keep
+  /// an Arabic address.
+  static const String blogArticle = ':slug';
+
+  /// The full path, for pushing from anywhere and for a deep link.
+  static String blogArticlePath(String slug) =>
+      '$blog/${Uri.encodeComponent(slug)}';
+
   // Authenticated.
   static const String conversations = '/conversations';
 
@@ -63,6 +84,8 @@ abstract final class AppRoutes {
 /// Named routes, for `goNamed` and for deep links.
 abstract final class AppRouteNames {
   static const String login = 'login';
+  static const String blog = 'blog';
+  static const String blogArticle = 'blog-article';
   static const String conversations = 'conversations';
   static const String conversationDetail = 'conversation-detail';
   static const String customers = 'customers';

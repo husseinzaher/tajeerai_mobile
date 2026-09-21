@@ -406,8 +406,31 @@ HTTP is **secondary**. It is used for exactly three things:
    screens would be a larger change than the screens. They sync into the local
    database like everything else, so the screens still read offline.
 
+4. **The blog** — public articles, read without a session.
+
+   The socket is authenticated by construction: its handshake carries a token,
+   and there is no token before sign-in. The blog's whole point is that a guest
+   can read it, so the socket cannot serve it and HTTP is not a shortcut here
+   but the only transport that exists.
+
+   It is also the one thing on this list that does **not** sync into the local
+   database, and that is deliberate rather than an omission.
+   `AppDatabase.clearWorkspaceData()` empties every table on sign-out, and §8
+   says plainly that anything which must outlive a session does not belong in
+   it. A guest has no session to outlive. Blog reads are therefore served from
+   the network with an in-memory cache for the life of the screen, and the
+   offline story is an honest error state rather than stale workspace data.
+
 A new HTTP call for anything else is an architectural decision that belongs in
 this document, not a convenience.
+
+A public endpoint needs one more thing than a private one: it must not be
+allowed to end a session. A 401 anywhere else renews the credential once and
+retries, and a refusal signs the member out — correct for workspace data, wrong
+for an article, where the reader may have no session at all and the request
+should simply fail. `HttpClient` therefore skips renewal for the blog's paths,
+the same exemption `/v1/auth/` already has and for the same reason: a 401 there
+is an answer, not a stale token.
 
 **RULE 36** keeps every call where that decision can be reviewed. `HttpClient`
 is imported only by a feature's `data/remote/` sources, the network layer and

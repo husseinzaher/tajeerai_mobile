@@ -38,6 +38,7 @@ export 'channels/channel_descriptor.dart';
 export 'channels/channel_glyph.dart';
 export 'channels/channel_palette.dart';
 export 'display/avatar.dart';
+export 'display/network_image.dart';
 export 'display/avatar_group.dart';
 export 'display/badge.dart';
 export 'display/chip.dart';

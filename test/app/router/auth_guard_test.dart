@@ -17,6 +17,8 @@ const _session = Session(
 );
 
 void main() {
+  _blogGroups();
+
   group('while the session is still unknown', () {
     const state = AuthState.unknown();
 
@@ -51,27 +53,43 @@ void main() {
       );
     });
 
-    test('sends a protected route to login', () {
+    /*
+      To login, and carrying where they were going: signing in now returns the
+      member to the screen that sent them there rather than to the inbox.
+    */
+    test('sends a protected route to login, remembering it', () {
+      final redirect = AuthGuard.redirect(
+        state: state,
+        location: AppRoutes.conversations,
+      );
+
+      expect(redirect, startsWith(AppRoutes.login));
       expect(
-        AuthGuard.redirect(state: state, location: AppRoutes.conversations),
-        AppRoutes.login,
+        Uri.parse(redirect!).queryParameters['from'],
+        AppRoutes.conversations,
       );
     });
 
-    test('sends a deep link into a thread to login', () {
-      expect(
-        AuthGuard.redirect(
+    test(
+      'sends a deep link into a thread to login, remembering the thread',
+      () {
+        final redirect = AuthGuard.redirect(
           state: state,
           location: AppRoutes.conversationDetailPath('c1'),
-        ),
-        AppRoutes.login,
-      );
-    });
+        );
+
+        expect(redirect, startsWith(AppRoutes.login));
+        expect(
+          Uri.parse(redirect!).queryParameters['from'],
+          AppRoutes.conversationDetailPath('c1'),
+        );
+      },
+    );
 
     test('sends the splash route to login once resolved', () {
       expect(
         AuthGuard.redirect(state: state, location: AppRoutes.splash),
-        AppRoutes.login,
+        startsWith(AppRoutes.login),
       );
     });
   });
@@ -217,6 +235,135 @@ void main() {
         AppRoutes.conversationDetailPath('abc-123'),
         '/conversations/thread/abc-123',
       );
+    });
+  });
+}
+
+/// The blog is the first product screen in this app a guest may open, and the
+/// first public *subtree* - an article carries its slug, which the exact-set
+/// test the guard grew up with cannot express at all.
+void _blogGroups() {
+  group('the blog, which anyone may read', () {
+    test('lets a guest open the index', () {
+      expect(
+        AuthGuard.redirect(
+          state: const AuthState.unauthenticated(),
+          location: AppRoutes.blog,
+        ),
+        isNull,
+      );
+    });
+
+    test('lets a guest open an article, whatever its slug', () {
+      for (final slug in <String>[
+        'how-to-connect-whatsapp',
+        'ربط-المتجر-بواتساب',
+        'a-very-long-slug-with-many-hyphens-2026',
+      ]) {
+        expect(
+          AuthGuard.redirect(
+            state: const AuthState.unauthenticated(),
+            location: AppRoutes.blogArticlePath(slug),
+          ),
+          isNull,
+          reason: slug,
+        );
+      }
+    });
+
+    /* A member tapping a shared link must land on the article, not the inbox. */
+    test('does not bounce a signed-in member off an article', () {
+      expect(
+        AuthGuard.redirect(
+          state: const AuthState.authenticated(_session),
+          location: AppRoutes.blogArticlePath('how-to-connect-whatsapp'),
+        ),
+        isNull,
+      );
+    });
+
+    test('still sends a signed-in member away from login', () {
+      expect(
+        AuthGuard.redirect(
+          state: const AuthState.authenticated(_session),
+          location: AppRoutes.login,
+        ),
+        AppRoutes.conversations,
+      );
+    });
+
+    /* `/blogging` is not inside `/blog`, and a prefix test that said it was
+       would open a private route by accident. */
+    test('does not treat a route that merely starts with the same letters as public', () {
+      expect(
+        AuthGuard.redirect(
+          state: const AuthState.unauthenticated(),
+          location: '/blogging',
+        ),
+        startsWith(AppRoutes.login),
+      );
+    });
+  });
+
+  group('returning to where you were going', () {
+    test('remembers the destination when it sends a guest to sign in', () {
+      final redirect = AuthGuard.redirect(
+        state: const AuthState.unauthenticated(),
+        location: AppRoutes.customers,
+      );
+
+      expect(redirect, contains(AppRoutes.login));
+      expect(Uri.parse(redirect!).queryParameters['from'], AppRoutes.customers);
+    });
+
+    test('returns the member to it once they have signed in', () {
+      expect(
+        AuthGuard.redirect(
+          state: const AuthState.authenticated(_session),
+          location: AppRoutes.login,
+          queryParameters: <String, String>{'from': AppRoutes.customers},
+        ),
+        AppRoutes.customers,
+      );
+    });
+
+    test('falls back to home when nothing was remembered', () {
+      expect(
+        AuthGuard.redirect(
+          state: const AuthState.authenticated(_session),
+          location: AppRoutes.login,
+        ),
+        AppRoutes.conversations,
+      );
+    });
+
+    /*
+      A destination is a path in this app. Anything else is a redirect this app
+      would be performing on a stranger's behalf, and that it can only be set
+      from inside today is not a reason to allow it tomorrow.
+    */
+    test('refuses a destination that is not a plain in-app path', () {
+      for (final hostile in <String>[
+        'https://evil.example',
+        '//evil.example',
+        'javascript:alert(1)',
+        AppRoutes.login,
+        '',
+      ]) {
+        expect(
+          AuthGuard.redirect(
+            state: const AuthState.authenticated(_session),
+            location: AppRoutes.login,
+            queryParameters: <String, String>{'from': hostile},
+          ),
+          AppRoutes.conversations,
+          reason: hostile,
+        );
+      }
+    });
+
+    test('survives a destination that was never encoded', () {
+      expect(AuthGuard.intendedDestination(const <String, String>{}), isNull);
     });
   });
 }

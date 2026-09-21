@@ -9,6 +9,7 @@ import '../../display/avatar.dart';
 import '../../display/badge.dart';
 import '../../display/avatar_group.dart';
 import '../../display/chip.dart';
+import '../../display/network_image.dart';
 import '../../display/detail_row.dart';
 import '../../display/labelled_separator.dart';
 import '../../display/list_item.dart';
@@ -519,6 +520,33 @@ ShowcaseSection statesSection() => ShowcaseSection(
           AppSkeleton.text(width: 220),
           AppSkeleton.text(width: 160),
           AppSkeleton.circle(),
+        ],
+      ),
+    ),
+    ShowcaseExample(
+      name: 'A picture from the network',
+      description:
+          'The box exists before the bytes do. A list whose rows grow as '
+          'photographs arrive reflows under the reader\'s thumb, so the ratio '
+          'is declared first and the image fades in inside a box that was '
+          'already the right size. An address that answers with nothing shows '
+          'a muted frame rather than the platform\'s broken-image glyph: a '
+          'reader who sees that icon concludes the app is broken, and one who '
+          'sees a frame concludes this picture is missing. Shown here waiting, '
+          'which is the state a page is in when it has no address yet.',
+      /*
+        The waiting state only. A showcase page is captured as a golden, and
+        the golden harness fails any test that reaches the network - so an
+        example loading a real picture would be a flake and one loading a
+        deliberately broken address would be a failure. The other two states
+        are asserted where they can be, rather than photographed:
+        `test/design_system/display/network_image_test.dart`.
+      */
+      builder: (BuildContext context) => const Row(
+        spacing: TajeerSpacing.sm,
+        children: <Widget>[
+          Expanded(child: AppNetworkImage(url: null, aspectRatio: 16 / 9)),
+          Expanded(child: AppNetworkImage(url: '', aspectRatio: 1)),
         ],
       ),
     ),

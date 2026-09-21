@@ -126,6 +126,18 @@ class HttpClient {
   /// 401 would have a failed sign-in, refresh or sign-out try to renew itself.
   static const String _authPrefix = '/v1/auth/';
 
+  /// The blog is public, so a 401 from it is an answer rather than a stale token.
+  ///
+  /// Renewal has a consequence: a refusal signs the member out. That is right
+  /// for workspace data, where a rejected refresh means the session is over,
+  /// and wrong for an article a guest is reading - they may have no session at
+  /// all, and the one thing a public read must never do is end somebody's.
+  static const String _publicPrefix = '/v1/blog/public/';
+
+  /// Whether a 401 on this path should be treated as a stale credential.
+  static bool _renewable(String path) =>
+      !path.startsWith(_authPrefix) && !path.startsWith(_publicPrefix);
+
   Future<Map<String, Object?>> get(String path, {Map<String, Object?>? query}) {
     return _send(path, () => _dio.get<Object?>(path, queryParameters: query));
   }
@@ -182,9 +194,7 @@ class HttpClient {
 
     final Future<RefreshOutcome> Function()? renew = _renewCredential;
 
-    if (response.statusCode == 401 &&
-        renew != null &&
-        !path.startsWith(_authPrefix)) {
+    if (response.statusCode == 401 && renew != null && _renewable(path)) {
       if (await renew() is TokenRefreshed) {
         response = await _attempt(
           () => _dio.get<Object?>(
@@ -269,9 +279,7 @@ class HttpClient {
 
     final Future<RefreshOutcome> Function()? renew = _renewCredential;
 
-    if (response.statusCode == 401 &&
-        renew != null &&
-        !path.startsWith(_authPrefix)) {
+    if (response.statusCode == 401 && renew != null && _renewable(path)) {
       // Once. The retry carries the renewed cookie from the jar.
       if (await renew() is TokenRefreshed) {
         response = await _attempt(request);

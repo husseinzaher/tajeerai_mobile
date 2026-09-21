@@ -6,6 +6,8 @@ import 'package:go_router/go_router.dart';
 import '../../features/auth/application/state/auth_state.dart';
 import '../../features/auth/presentation/controllers/auth_controller.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
+import '../../features/blog/presentation/screens/blog_article_screen.dart';
+import '../../features/blog/presentation/screens/blog_list_screen.dart';
 import '../../features/conversations/presentation/screens/conversation_list_screen.dart';
 import '../../features/conversations/presentation/screens/conversation_screen.dart';
 import '../../features/customers/presentation/screens/customer_detail_screen.dart';
@@ -50,6 +52,11 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((ref) {
         // and watching here would rebuild the provider itself on every change.
         state: ref.read(authControllerProvider),
         location: state.matchedLocation,
+        /*
+          The query as well as the path: the login route carries where the
+          caller was going, and the guard is what sends them back there.
+        */
+        queryParameters: state.uri.queryParameters,
       );
     },
     routes: <RouteBase>[
@@ -62,6 +69,35 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.login,
         name: AppRouteNames.login,
         builder: (context, state) => const LoginScreen(),
+      ),
+      /*
+        Public, and outside the shell.
+
+        The shell draws a profile and permission-filtered tabs, neither of
+        which exists for a reader who has never signed in - so the blog is a
+        top-level route in both states rather than a branch a guest would
+        crash in. `AuthGuard.publicPrefixes` is what lets the article path
+        through with its slug attached.
+      */
+      GoRoute(
+        path: AppRoutes.blog,
+        name: AppRouteNames.blog,
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const BlogListScreen(),
+        routes: <RouteBase>[
+          GoRoute(
+            path: AppRoutes.blogArticle,
+            name: AppRouteNames.blogArticle,
+            parentNavigatorKey: rootNavigatorKey,
+            builder: (context, state) => BlogArticleScreen(
+              /*
+                Decoded: an Arabic slug is percent-encoded in the address and
+                the backend expects the characters, not the escapes.
+              */
+              slug: Uri.decodeComponent(state.pathParameters['slug'] ?? ''),
+            ),
+          ),
+        ],
       ),
       // Debug only. `kDebugMode` is a const, so the release compiler drops the
       // branch and tree-shakes the showcase out entirely -- the import above
