@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+		Universal Links for the blog.
+
+		iOS fetches https://tajeerai.com/.well-known/apple-app-site-association
+		on install and again periodically, and opens only the paths that file
+		lists - so the paths live there rather than here, and this only names
+		the domains worth asking about. `applinks:` covers both the bare and
+		the www host because a reader's link may carry either.
+
+		This file is inert until the Runner target's CODE_SIGN_ENTITLEMENTS
+		build setting points at it, which is a one-time change in Xcode. Until
+		then a tapped link opens the website, which is the correct fallback
+		rather than a failure.
+	-->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:tajeerai.com</string>
+		<string>applinks:www.tajeerai.com</string>
+	</array>
+</dict>
+</plist>

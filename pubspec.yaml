@@ -71,6 +71,9 @@ dependencies:
   phone_numbers_parser: ^9.0.26
   video_player: ^2.10.0
   video_thumbnail: ^0.5.6
+  flutter_widget_from_html_core: ^0.17.4
+  url_launcher: ^6.3.2
+  app_links: ^7.2.1
 
 dev_dependencies:
   flutter_test:

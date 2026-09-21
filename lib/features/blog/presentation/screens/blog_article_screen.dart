@@ -11,6 +11,7 @@ import '../../../../failures/app_failure.dart';
 import '../../domain/entities/article.dart';
 import '../controllers/blog_list_controller.dart';
 import '../widgets/article_card.dart';
+import '../widgets/article_link.dart';
 import '../widgets/blog_async_view.dart';
 
 /// One article, read without signing in.
@@ -253,11 +254,15 @@ class _Block extends StatelessWidget {
 
   Widget _prose(BuildContext context, ProseBlock block) {
     final String heading = block.heading?.resolve(language) ?? '';
+    final String html = block.html?.resolve(language).trim() ?? '';
     final List<String> paragraphs = block.paragraphs.isEmpty
         ? const <String>[]
         : block.paragraphs.first.resolve(language);
 
-    if (heading.isEmpty && paragraphs.isEmpty && block.image == null) {
+    if (heading.isEmpty &&
+        html.isEmpty &&
+        paragraphs.isEmpty &&
+        block.image == null) {
       return const SizedBox.shrink();
     }
 
@@ -278,11 +283,27 @@ class _Block extends StatelessWidget {
             AppBidiText(heading),
             const SizedBox(height: TajeerSpacing.xs),
           ],
-          for (final String paragraph in paragraphs)
-            Padding(
-              padding: const EdgeInsets.only(bottom: TajeerSpacing.sm),
-              child: Text(paragraph, style: context.text.bodyMedium),
-            ),
+          /*
+            The formatted prose when the article has it, the plain paragraphs
+            when it does not.
+
+            Both are stored, and which one exists is a fact about *when* the
+            post was written rather than about this screen: everything written
+            before the backend could format anything has only paragraphs, and
+            rendering those instead is the same article without the emphasis,
+            the sub-headings and the links - not a broken one.
+          */
+          if (html.isNotEmpty)
+            AppRichTextView(
+              html: html,
+              onLinkTap: (String href) => ArticleLink.follow(context, href),
+            )
+          else
+            for (final String paragraph in paragraphs)
+              Padding(
+                padding: const EdgeInsets.only(bottom: TajeerSpacing.sm),
+                child: Text(paragraph, style: context.text.bodyMedium),
+              ),
         ],
       ),
     );

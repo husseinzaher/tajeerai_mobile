@@ -10,6 +10,7 @@ import '../features/auth/presentation/controllers/auth_controller.dart';
 import '../infrastructure/database/drift_database_path.dart';
 import 'bootstrap/dependencies.dart';
 import 'localization/locale_manager.dart';
+import 'router/deep_link_listener.dart';
 import 'router/app_router.dart';
 import '../design_system/design_system.dart';
 import 'theme/theme.dart';
@@ -40,7 +41,33 @@ class _TajeerAppState extends ConsumerState<TajeerApp> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _wireSessionToRealtime();
       ref.read(authControllerProvider.notifier).restore();
+      /*
+        After the router exists, because a link that arrives before it has
+        nowhere to go. Also after the first frame for the same reason the
+        session restore is: a cold start opened by a link should show the
+        splash and then the article, not a white rectangle and then both.
+      */
+      unawaited(_startDeepLinks());
     });
+  }
+
+  DeepLinkListener? _deepLinks;
+
+  Future<void> _startDeepLinks() async {
+    final DeepLinkListener listener = DeepLinkListener(
+      router: ref.read(appRouterProvider),
+      logger: ref.read(appLoggerProvider),
+    );
+
+    _deepLinks = listener;
+
+    await listener.start();
+  }
+
+  @override
+  void dispose() {
+    unawaited(_deepLinks?.dispose());
+    super.dispose();
   }
 
   /// Starts and stops the realtime stack with the session.

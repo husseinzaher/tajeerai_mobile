@@ -43,6 +43,47 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!--
+                Blog links from the web.
+
+                `autoVerify` asks Android to check
+                `https://tajeerai.com/.well-known/assetlinks.json` at install
+                time and, if this app's signing certificate is listed there,
+                open these links without ever asking the reader. Unverified,
+                the same filter still works but Android shows a chooser - so a
+                missing or wrong assetlinks file degrades to a worse experience
+                rather than a broken one.
+
+                Scoped to `/blog` by path prefix, not to the whole host: this
+                app has no opinion about the pricing page, and claiming it
+                would take that link away from the browser for nothing.
+            -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="tajeerai.com" android:pathPrefix="/blog" />
+                <data android:scheme="https" android:host="www.tajeerai.com" android:pathPrefix="/blog" />
+                <!-- The website prefixes its pages with a locale. -->
+                <data android:scheme="https" android:host="tajeerai.com" android:pathPrefix="/ar/blog" />
+                <data android:scheme="https" android:host="tajeerai.com" android:pathPrefix="/en/blog" />
+                <data android:scheme="https" android:host="www.tajeerai.com" android:pathPrefix="/ar/blog" />
+                <data android:scheme="https" android:host="www.tajeerai.com" android:pathPrefix="/en/blog" />
+            </intent-filter>
+            <!--
+                The same destinations over the app's own scheme, for a link
+                that does not need to survive being opened on a desktop -
+                a push notification, or a campaign that knows the app is here.
+
+                Host-qualified (`tajeerai://blog/...`), which is what keeps it
+                out of the social sign-in callback's way below.
+            -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="tajeerai" android:host="blog" />
+            </intent-filter>
         </activity>
         <!--
             Where a social sign-in comes back to.
@@ -62,11 +103,22 @@
             android:name="com.linusu.flutter_web_auth_2.CallbackActivity"
             android:exported="true"
             android:taskAffinity="">
+            <!--
+                Scoped to the callback's own host.
+
+                It used to claim `tajeerai://` with no host at all, which
+                matched *every* address in this app's scheme - so a
+                `tajeerai://blog/...` link would have been offered to this
+                activity too and Android would have asked the reader which of
+                two screens they meant. The callback has only ever been
+                `tajeerai://auth/callback`, so naming that host is both
+                narrower and more honest.
+            -->
             <intent-filter android:label="tajeerai_social_callback">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="tajeerai" />
+                <data android:scheme="tajeerai" android:host="auth" />
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

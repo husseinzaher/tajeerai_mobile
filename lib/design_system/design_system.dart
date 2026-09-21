@@ -39,6 +39,7 @@ export 'channels/channel_glyph.dart';
 export 'channels/channel_palette.dart';
 export 'display/avatar.dart';
 export 'display/network_image.dart';
+export 'display/rich_text_view.dart';
 export 'display/avatar_group.dart';
 export 'display/badge.dart';
 export 'display/chip.dart';

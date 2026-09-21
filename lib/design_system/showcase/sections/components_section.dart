@@ -10,6 +10,7 @@ import '../../display/badge.dart';
 import '../../display/avatar_group.dart';
 import '../../display/chip.dart';
 import '../../display/network_image.dart';
+import '../../display/rich_text_view.dart';
 import '../../display/detail_row.dart';
 import '../../display/labelled_separator.dart';
 import '../../display/list_item.dart';
@@ -521,6 +522,27 @@ ShowcaseSection statesSection() => ShowcaseSection(
           AppSkeleton.text(width: 160),
           AppSkeleton.circle(),
         ],
+      ),
+    ),
+    ShowcaseExample(
+      name: 'An article, as it was written',
+      description:
+          'A blog post is stored twice: as plain paragraphs, and as the HTML '
+          'its writer formatted. Rendering only the paragraphs made every '
+          'article a wall of text and threw away the sub-headings, the lists, '
+          'the emphasis on the one sentence that carries a section, and the '
+          'links to other articles. The vocabulary is small and fixed - it is '
+          'whatever the backend\'s sanitiser lets through - and a link is '
+          'reported to the caller rather than followed here, because a '
+          'component cannot know whether an address is a screen in this app '
+          'or somebody else\'s page.',
+      builder: (BuildContext context) => const AppRichTextView(
+        html:
+            '<h3>لماذا يبدأ كل شيء بالرد السريع</h3>'
+            '<p>العميل الذي ينتظر ساعة <strong>يشتري من مكان آخر</strong>، '
+            'ولا علاقة لذلك بسعرك.</p>'
+            '<ul><li>ردّ خلال دقائق</li><li>اربط الكتالوج بالمحادثة</li></ul>'
+            '<blockquote>أسرع رد هو الذي لا ينتظر أحد أن يكتبه.</blockquote>',
       ),
     ),
     ShowcaseExample(
