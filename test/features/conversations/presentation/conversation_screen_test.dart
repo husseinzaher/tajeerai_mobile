@@ -30,6 +30,8 @@ import 'package:TajeerAi/infrastructure/storage/preferences_storage.dart';
 
 import '../../../support/fixed_clock.dart';
 
+import 'package:TajeerAi/features/conversations/domain/value_objects/session_window.dart';
+
 const String _id = 'c1';
 
 /// The thread's actions, recorded rather than sent.
@@ -125,15 +127,28 @@ List<Message> _longThread(int count) => List<Message>.generate(
   ),
 );
 
-Conversation _conversation({bool archived = false, int failed = 0}) =>
-    Conversation(
-      id: _id,
-      state: ConversationState.open,
-      customerName: 'Sara Ahmed',
-      isArchived: archived,
-      failedMessageCount: failed,
-      createdAt: testEpoch,
-    );
+Conversation _conversation({
+  bool archived = false,
+  int failed = 0,
+  SessionWindow window = SessionWindow.unreported,
+}) => Conversation(
+  id: _id,
+  state: ConversationState.open,
+  customerName: 'Sara Ahmed',
+  isArchived: archived,
+  failedMessageCount: failed,
+  sessionWindow: window,
+  createdAt: testEpoch,
+);
+
+/// A window the server says is open, with [hours] still to run.
+SessionWindow _open(int hours) => SessionWindow(
+  isOpenPerServer: true,
+  expiresAt: DateTime.now().add(Duration(hours: hours, minutes: 1)),
+);
+
+/// A window the server says has shut.
+const SessionWindow _shut = SessionWindow(isOpenPerServer: false);
 
 void main() {
   late PreferencesStorage preferences;
@@ -304,6 +319,78 @@ void main() {
       // read as two problems.
       expect(find.byType(AppStatusBanner), findsOneWidget);
       expect(find.text('3 not sent'), findsOneWidget);
+    });
+
+    group("WhatsApp's 24-hour window", () {
+      /*
+        The server refuses an out-of-window send whatever this does, and that
+        is the enforcement. What these assert is the difference between being
+        told before you type and finding a failed message in the thread
+        afterwards.
+      */
+      testWidgets('a closed window says so and takes the composer away', (
+        WidgetTester tester,
+      ) async {
+        await tester.pumpWidget(subject());
+        await tester.pump();
+        conversation.add(_conversation(window: _shut));
+        messages.add(<Message>[]);
+        await settle(tester);
+
+        // The banner names the condition...
+        expect(find.byType(AppStatusBanner), findsOneWidget);
+        expect(find.textContaining('WhatsApp session expired'), findsOneWidget);
+        // ...and the composer, where the dead control is, says what to do.
+        expect(
+          find.textContaining('customer must send a new message'),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('an open window counts down instead of warning', (
+        WidgetTester tester,
+      ) async {
+        await tester.pumpWidget(subject());
+        await tester.pump();
+        conversation.add(_conversation(window: _open(6)));
+        messages.add(<Message>[]);
+        await settle(tester);
+
+        expect(find.textContaining('WhatsApp session active'), findsOneWidget);
+        expect(find.textContaining('6h'), findsOneWidget);
+      });
+
+      testWidgets('a closed window outranks the failed count', (
+        WidgetTester tester,
+      ) async {
+        // On WhatsApp the shut window is usually *why* those sends failed, and
+        // it is the only one of the two that says what to do next. The count
+        // stays on the rail's badge and on each failed bubble.
+        await tester.pumpWidget(subject());
+        await tester.pump();
+        conversation.add(_conversation(failed: 3, window: _shut));
+        messages.add(<Message>[]);
+        await settle(tester);
+
+        expect(find.byType(AppStatusBanner), findsOneWidget);
+        expect(find.textContaining('WhatsApp session expired'), findsOneWidget);
+        expect(find.text('3 not sent'), findsNothing);
+      });
+
+      testWidgets('a channel the server said nothing about is left alone', (
+        WidgetTester tester,
+      ) async {
+        // No window reported: this app must not invent one and disable a
+        // composer the backend would have accepted.
+        await tester.pumpWidget(subject());
+        await tester.pump();
+        conversation.add(_conversation());
+        messages.add(<Message>[]);
+        await settle(tester);
+
+        expect(find.byType(AppStatusBanner), findsNothing);
+        expect(find.textContaining('WhatsApp session'), findsNothing);
+      });
     });
 
     testWidgets('the customer typing shows a bubble, and losing it hides one', (

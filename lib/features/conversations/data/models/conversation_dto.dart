@@ -1,4 +1,5 @@
 import '../../domain/entities/conversation.dart';
+import '../../domain/value_objects/session_window.dart';
 
 /// Decodes the backend's conversation payload.
 ///
@@ -42,6 +43,7 @@ abstract final class ConversationDto {
       isArchived: _isSet(json['archivedAt']) || json['isArchived'] == true,
       isMuted: json['muted'] == true || json['isMuted'] == true,
       isBotEnabled: json['isBotEnabled'] == true,
+      sessionWindow: _sessionWindow(json),
       createdAt: parseTime(json['createdAt']) ?? DateTime.now().toUtc(),
       updatedAt: parseTime(json['updatedAt']),
     );
@@ -170,5 +172,28 @@ abstract final class ConversationDto {
     if (raw is! String || raw.isEmpty) return null;
 
     return DateTime.tryParse(raw)?.toUtc();
+  }
+
+  /// The 24-hour window, exactly as the server answered it.
+  ///
+  /// `isWithinCustomerServiceWindow` absent means the server said nothing -
+  /// an older API, or a channel with no window - and that is kept distinct
+  /// from `false`. Defaulting it either way would have this app deciding a
+  /// rule it does not own: one way disables a composer the backend would have
+  /// accepted, the other invites a send the backend will refuse.
+  static SessionWindow _sessionWindow(Map<String, Object?> json) {
+    final Object? verdict = json['isWithinCustomerServiceWindow'];
+
+    if (verdict is! bool) {
+      return SessionWindow.unreported;
+    }
+
+    return SessionWindow(
+      isOpenPerServer: verdict,
+      expiresAt: parseTime(json['windowExpiresAt']),
+      lastCustomerMessageAt:
+          parseTime(json['lastCustomerMessageAt']) ??
+          parseTime(json['lastInboundMessageAt']),
+    );
   }
 }

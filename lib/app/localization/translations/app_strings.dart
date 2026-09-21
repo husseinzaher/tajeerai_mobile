@@ -213,6 +213,34 @@ class AppStrings {
     },
 
     // -- customers ----------------------------------------------------------
+    // -- WhatsApp's 24-hour window -----------------------------------------
+    // The same sentences the web Inbox uses, on purpose: two phrasings for one
+    // problem read as two problems.
+    'sessionActive': <String, String>{
+      'en': 'WhatsApp session active',
+      'ar': 'جلسة واتساب مفتوحة',
+    },
+    'sessionExpiresIn': <String, String>{
+      'en': 'Expires in {time}',
+      'ar': 'تنتهي خلال {time}',
+    },
+    'sessionRemainingHours': <String, String>{
+      'en': '{hours}h {minutes}m',
+      'ar': '{hours} س {minutes} د',
+    },
+    'sessionRemainingMinutes': <String, String>{
+      'en': '{minutes}m',
+      'ar': '{minutes} د',
+    },
+    'sessionExpired': <String, String>{
+      'en': 'WhatsApp session expired',
+      'ar': 'انتهت جلسة واتساب',
+    },
+    'sessionExpiredHint': <String, String>{
+      'en': 'The customer must send a new message before a free-form message can be sent.',
+      'ar': 'يجب أن يرسل العميل رسالة جديدة قبل إرسال رسالة حرة.',
+    },
+
     // -- Blog -------------------------------------------------------------
     'blog': <String, String>{'en': 'Blog', 'ar': 'المدونة'},
     'blogTagline': <String, String>{
@@ -553,6 +581,17 @@ class AppStrings {
     _ => call('socialFailed'),
   };
 
+  String get sessionActive => call('sessionActive');
+  String get sessionExpired => call('sessionExpired');
+  String get sessionExpiredHint => call('sessionExpiredHint');
+  String sessionExpiresIn(String time) =>
+      call('sessionExpiresIn').replaceAll('{time}', time);
+  String sessionRemainingHours(int hours, int minutes) =>
+      call('sessionRemainingHours')
+          .replaceAll('{hours}', '$hours')
+          .replaceAll('{minutes}', '$minutes');
+  String sessionRemainingMinutes(int minutes) =>
+      call('sessionRemainingMinutes').replaceAll('{minutes}', '$minutes');
   String get blog => call('blog');
   String get blogTagline => call('blogTagline');
   String get searchArticles => call('searchArticles');

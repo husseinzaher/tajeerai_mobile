@@ -1,3 +1,5 @@
+import '../value_objects/session_window.dart';
+
 /// Where a conversation sits in its lifecycle. Mirrors the backend's
 /// `ConversationState`.
 enum ConversationState { open, pending, closed, archived }
@@ -28,6 +30,7 @@ final class Conversation {
     this.isArchived = false,
     this.isMuted = false,
     this.isBotEnabled = false,
+    this.sessionWindow = SessionWindow.unreported,
     this.updatedAt,
   });
 
@@ -56,6 +59,15 @@ final class Conversation {
   final bool isArchived;
   final bool isMuted;
   final bool isBotEnabled;
+
+  /// WhatsApp's 24-hour window, exactly as the server reported it.
+  ///
+  /// Carried rather than computed: which channels have a window, and how long
+  /// it runs, are the server's rules and not this app's. A conversation the
+  /// server said nothing about holds [SessionWindow.unreported], which blocks
+  /// nothing.
+  final SessionWindow sessionWindow;
+
   final DateTime createdAt;
   final DateTime? updatedAt;
 

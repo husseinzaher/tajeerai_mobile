@@ -29,7 +29,10 @@ abstract final class SchemaMigrations {
   /// v5 -- `caller_identity_cache` for fast CallScreeningService lookups.
   /// v6 -- `conversations.failed_message_count`, so the rail can say which
   ///       thread has a send that did not go out.
-  static const int version = 6;
+  /// v7 -- `conversations.window_expires_at` and
+  ///       `is_within_customer_service_window`, so the composer knows whether
+  ///       WhatsApp will accept a free-form message before one is typed.
+  static const int version = 7;
 
   static MigrationStrategy strategy(GeneratedDatabase database) {
     return MigrationStrategy(
@@ -71,6 +74,23 @@ abstract final class SchemaMigrations {
           await migrator.addColumn(
             schema.conversations,
             schema.conversations.failedMessageCount,
+          );
+        },
+        from6To7: (Migrator migrator, Schema7 schema) async {
+          /*
+            Both null on an upgraded device, which is the honest answer until
+            the next sync: this device has never been told what the window is.
+            Null means "unreported" and blocks nothing, so an upgrade cannot
+            disable a composer that was working a minute ago - the server still
+            refuses a send that is genuinely outside the window.
+          */
+          await migrator.addColumn(
+            schema.conversations,
+            schema.conversations.windowExpiresAt,
+          );
+          await migrator.addColumn(
+            schema.conversations,
+            schema.conversations.isWithinCustomerServiceWindow,
           );
         },
       ),

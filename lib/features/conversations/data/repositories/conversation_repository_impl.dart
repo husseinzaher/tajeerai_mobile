@@ -10,6 +10,7 @@ import '../../domain/repositories/conversation_repository.dart';
 import '../local/conversation_dao.dart';
 import '../local/conversation_tables.dart';
 import '../remote/conversation_remote_data_source.dart';
+import '../../domain/value_objects/session_window.dart';
 
 /// The [ConversationRepository] implementation.
 ///
@@ -193,6 +194,11 @@ class ConversationRepositoryImpl implements ConversationRepository {
       isArchived: row.isArchived,
       isMuted: row.isMuted,
       isBotEnabled: row.isBotEnabled,
+      sessionWindow: SessionWindow(
+        isOpenPerServer: row.isWithinCustomerServiceWindow,
+        expiresAt: row.windowExpiresAt,
+        lastCustomerMessageAt: row.lastInboundMessageAt,
+      ),
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     );
@@ -223,6 +229,10 @@ class ConversationRepositoryImpl implements ConversationRepository {
       isPinned: Value<bool>(conversation.isPinned),
       isArchived: Value<bool>(conversation.isArchived),
       isMuted: Value<bool>(conversation.isMuted),
+      windowExpiresAt: Value<DateTime?>(conversation.sessionWindow.expiresAt),
+      isWithinCustomerServiceWindow: Value<bool?>(
+        conversation.sessionWindow.isOpenPerServer,
+      ),
       createdAt: conversation.createdAt,
       updatedAt: Value<DateTime?>(conversation.updatedAt),
     );

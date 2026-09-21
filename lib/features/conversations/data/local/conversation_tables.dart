@@ -79,6 +79,19 @@ class Conversations extends Table {
 
   DateTimeColumn get lastInboundMessageAt => dateTime().nullable()();
 
+  /// WhatsApp's 24-hour window, as the server reported it.
+  ///
+  /// Stored rather than derived, for the same reason [failedMessageCount] is:
+  /// which channels have a window and how long it runs are the server's rules.
+  /// A phone that recomputed them would be a second implementation, and the
+  /// one that drifted would be the one deciding whether the composer works.
+  ///
+  /// Null in [isWithinCustomerServiceWindow] means the server said nothing -
+  /// an older API, or a channel with no window - which is deliberately not the
+  /// same as `false` and blocks nothing.
+  DateTimeColumn get windowExpiresAt => dateTime().nullable()();
+  BoolColumn get isWithinCustomerServiceWindow => boolean().nullable()();
+
   BoolColumn get isPinned => boolean().withDefault(const Constant(false))();
   BoolColumn get isArchived => boolean().withDefault(const Constant(false))();
   BoolColumn get isMuted => boolean().withDefault(const Constant(false))();

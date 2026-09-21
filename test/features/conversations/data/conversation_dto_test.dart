@@ -348,4 +348,58 @@ void main() {
       );
     });
   });
+
+  group('the 24-hour window the server reported', () {
+    test('is carried through verbatim', () {
+      final conversation = ConversationDto.decode(<String, Object?>{
+        'id': 'c1',
+        'state': 'open',
+        'createdAt': '2026-09-21T10:00:00.000Z',
+        'isWithinCustomerServiceWindow': true,
+        'windowExpiresAt': '2026-09-22T09:00:00.000Z',
+        'lastInboundMessageAt': '2026-09-21T09:00:00.000Z',
+      });
+
+      expect(conversation.sessionWindow.isOpenPerServer, isTrue);
+      expect(
+        conversation.sessionWindow.expiresAt,
+        DateTime.utc(2026, 9, 22, 9),
+      );
+      expect(
+        conversation.sessionWindow.lastCustomerMessageAt,
+        DateTime.utc(2026, 9, 21, 9),
+      );
+    });
+
+    /*
+      An older API, or a channel with no window. Absent must not become
+      `false`: that would have the app disabling a composer the backend would
+      have accepted, on a rule it does not own.
+    */
+    test('is unreported when the server did not answer', () {
+      final conversation = ConversationDto.decode(<String, Object?>{
+        'id': 'c1',
+        'state': 'open',
+        'createdAt': '2026-09-21T10:00:00.000Z',
+      });
+
+      expect(conversation.sessionWindow.isReported, isFalse);
+      expect(conversation.sessionWindow.isClosed(DateTime.utc(2030)), isFalse);
+    });
+
+    test('a closed window is carried as closed, not as unreported', () {
+      final conversation = ConversationDto.decode(<String, Object?>{
+        'id': 'c1',
+        'state': 'open',
+        'createdAt': '2026-09-21T10:00:00.000Z',
+        'isWithinCustomerServiceWindow': false,
+      });
+
+      expect(conversation.sessionWindow.isReported, isTrue);
+      expect(
+        conversation.sessionWindow.isClosed(DateTime.utc(2026, 9, 21)),
+        isTrue,
+      );
+    });
+  });
 }
