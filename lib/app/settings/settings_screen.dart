@@ -32,6 +32,7 @@ class SettingsScreen extends ConsumerWidget {
     final AppStrings strings = ref.watch(appStringsProvider);
     final Session? session = ref.watch(authControllerProvider).session;
     final AppThemeMode mode = ref.watch(themeSelectionProvider).mode;
+    final TajeerPreset preset = ref.watch(themeSelectionProvider).preset;
     final AppLocale locale = ref.watch(localeProvider);
     final PlatformInfo platform = ref.watch(platformInfoProvider);
 
@@ -106,6 +107,37 @@ class SettingsScreen extends ConsumerWidget {
               value: mode,
               onChanged: (AppThemeMode next) => unawaited(
                 ref.read(themeSelectionProvider.notifier).selectMode(next),
+              ),
+            ),
+          ),
+        ],
+      ),
+      /*
+        The colour identity, in a section of its own rather than a second
+        unlabelled control under Appearance: light/dark and *which palette* are
+        two different questions, and two segmented strips under one heading make
+        the reader guess which is which.
+
+        It is also a choice the app could not make until now - `selectPreset`
+        existed and nothing called it, so the presets in `design/tokens.json`
+        were reachable only from the showcase. Added with the teal identity
+        (owner, 2026-09-22). The order is the web dashboard's: the product's own
+        identity first, then the reference teal, then the indigo it shipped on.
+      */
+      AppListSection(
+        title: strings.colourIdentity,
+        children: <Widget>[
+          Padding(
+            padding: const EdgeInsets.all(TajeerSpacing.sm),
+            child: AppSegmentedControl<TajeerPreset>(
+              options: <TajeerPreset, String>{
+                TajeerPreset.tajeer: strings.presetTajeer,
+                TajeerPreset.teal: strings.presetTeal,
+                TajeerPreset.aurora: strings.presetAurora,
+              },
+              value: preset,
+              onChanged: (TajeerPreset next) => unawaited(
+                ref.read(themeSelectionProvider.notifier).selectPreset(next),
               ),
             ),
           ),

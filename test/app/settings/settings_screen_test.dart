@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:TajeerAi/app/bootstrap/dependencies.dart';
 import 'package:TajeerAi/app/settings/settings_screen.dart';
 import 'package:TajeerAi/app/theme/theme_mode_manager.dart';
+import 'package:TajeerAi/app/theme/tokens.g.dart';
 import 'package:TajeerAi/design_system/design_system.dart';
 import 'package:TajeerAi/features/auth/application/state/auth_state.dart';
 import 'package:TajeerAi/features/auth/domain/entities/user.dart';
@@ -173,6 +174,41 @@ void main() {
       );
       expect(container.read(themeSelectionProvider).mode, AppThemeMode.dark);
       expect(preferences.readString(PreferencesStorage.themeModeKey), 'dark');
+    });
+
+    /**
+     * The colour identity, which the app had no way of choosing until the teal
+     * preset arrived: `selectPreset` existed and nothing called it.
+     */
+    testWidgets('picking a colour identity keeps it', (WidgetTester tester) async {
+      await pump(tester);
+
+      await tester.tap(find.text('Teal'));
+      await settle(tester);
+
+      final ProviderContainer container = ProviderScope.containerOf(
+        tester.element(find.byType(SettingsScreen)),
+      );
+      expect(container.read(themeSelectionProvider).preset, TajeerPreset.teal);
+      expect(preferences.readString(PreferencesStorage.themePresetKey), 'teal');
+    });
+
+    /* Two separate questions: the palette must not move the appearance. */
+    testWidgets('leaves the appearance alone when the palette changes', (
+      WidgetTester tester,
+    ) async {
+      await pump(tester);
+
+      await tester.tap(find.text('Dark'));
+      await settle(tester);
+      await tester.tap(find.text('Teal'));
+      await settle(tester);
+
+      final ProviderContainer container = ProviderScope.containerOf(
+        tester.element(find.byType(SettingsScreen)),
+      );
+      expect(container.read(themeSelectionProvider).mode, AppThemeMode.dark);
+      expect(container.read(themeSelectionProvider).preset, TajeerPreset.teal);
     });
 
     testWidgets('picking a language redraws the screen in it', (

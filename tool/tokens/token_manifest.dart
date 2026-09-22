@@ -155,7 +155,7 @@ abstract final class TokenManifest {
   /// Every preset must define every token in [colors] and every level in
   /// [elevationLevels], in both themes -- that is what lets one component set
   /// render under all of them without naming any.
-  static const List<String> presets = <String>['aurora', 'tajeer'];
+  static const List<String> presets = <String>['aurora', 'tajeer', 'teal'];
 
   /// The preset a fresh install wears, and the fallback for a stored value
   /// nobody recognises any more.

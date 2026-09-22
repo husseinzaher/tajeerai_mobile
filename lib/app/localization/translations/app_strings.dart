@@ -402,6 +402,12 @@ class AppStrings {
     'themeSystem': <String, String>{'en': 'System', 'ar': 'النظام'},
     'themeLight': <String, String>{'en': 'Light', 'ar': 'فاتح'},
     'themeDark': <String, String>{'en': 'Dark', 'ar': 'داكن'},
+    // The colour identity, which is a different choice from light/dark: the
+    // web dashboard offers the same three under the same names.
+    'colourIdentity': <String, String>{'en': 'Colours', 'ar': 'الألوان'},
+    'presetTajeer': <String, String>{'en': 'Tajeer', 'ar': 'تاجر'},
+    'presetTeal': <String, String>{'en': 'Teal', 'ar': 'فيروزي'},
+    'presetAurora': <String, String>{'en': 'Aurora', 'ar': 'أورورا'},
     'about': <String, String>{'en': 'About', 'ar': 'حول التطبيق'},
     'appVersion': <String, String>{'en': 'Version', 'ar': 'الإصدار'},
     'signOutConfirmTitle': <String, String>{
@@ -652,6 +658,10 @@ class AppStrings {
   String get themeSystem => call('themeSystem');
   String get themeLight => call('themeLight');
   String get themeDark => call('themeDark');
+  String get colourIdentity => call('colourIdentity');
+  String get presetTajeer => call('presetTajeer');
+  String get presetTeal => call('presetTeal');
+  String get presetAurora => call('presetAurora');
   String get about => call('about');
   String get appVersion => call('appVersion');
   String get signOutConfirmTitle => call('signOutConfirmTitle');
