@@ -84,8 +84,10 @@ abstract final class DeepLink {
 
       return phone == null || phone.isEmpty
           ? path
-          : Uri(path: path, queryParameters: <String, String>{'phone': phone})
-                .toString();
+          : Uri(
+              path: path,
+              queryParameters: <String, String>{'phone': phone},
+            ).toString();
     }
 
     return AppRoutes.customerDetailPath(segments[1]);

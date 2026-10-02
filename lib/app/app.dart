@@ -91,7 +91,7 @@ class _TajeerAppState extends ConsumerState<TajeerApp> {
     // config, so a change of language here has to reach it too.
     ref.listenManual(
       localeProvider,
-      (_, __) => unawaited(_syncCallerIdRuntime()),
+      (_, _) => unawaited(_syncCallerIdRuntime()),
     );
 
     coordinator.events.listen((event) async {

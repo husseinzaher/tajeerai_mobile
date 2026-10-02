@@ -1,5 +1,4 @@
 import '../../../../failures/app_failure.dart';
-import '../../domain/entities/customer_order.dart';
 import '../../domain/repositories/customer_order_repository.dart';
 import '../contracts/customer_orders_capability.dart';
 

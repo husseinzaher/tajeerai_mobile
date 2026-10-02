@@ -19,14 +19,22 @@ AppMessageData _message(
   isFromBot: bot,
 );
 
+AppRecordEntryData _record(
+  String id,
+  DateTime at, {
+  AppRecordKind kind = AppRecordKind.note,
+}) => AppRecordEntryData(id: id, kind: kind, at: at, text: id);
+
 /// What the builder produced, as something a person can read in a failure:
-/// `day 3/12`, `unread 2`, and message ids with `(` where a run starts and `)`
-/// where it ends.
+/// `day 3/12`, `unread 2`, `record n1`, and message ids with `(` where a run
+/// starts and `)` where it ends.
 List<String> _shape(List<AppTimelineEntry> entries) => <String>[
   for (final AppTimelineEntry entry in entries)
     switch (entry) {
       AppTimelineDay(:final DateTime day) => 'day ${day.month}/${day.day}',
       AppTimelineUnread(:final int count) => 'unread $count',
+      AppTimelineRecord(:final AppRecordEntryData record) =>
+        'record ${record.id}',
       AppTimelineMessage(
         :final AppMessageData message,
         :final bool startsRun,
@@ -36,8 +44,8 @@ List<String> _shape(List<AppTimelineEntry> entries) => <String>[
     },
 ];
 
-DateTime _at(int day, int hour, int minute) =>
-    DateTime(2026, 3, day, hour, minute);
+DateTime _at(int day, int hour, int minute, [int second = 0]) =>
+    DateTime(2026, 3, day, hour, minute, second);
 
 void main() {
   test('an empty thread draws nothing', () {
@@ -230,6 +238,109 @@ void main() {
           unreadCount: 2,
         ).whereType<AppTimelineUnread>(),
         isEmpty,
+      );
+    });
+  });
+
+  group('the record', () {
+    test('an entry between two messages sits in time order', () {
+      expect(
+        _shape(
+          AppTimelineBuilder.build(
+            <AppMessageData>[
+              _message('m1', _at(12, 9, 0)),
+              _message('m2', _at(12, 9, 10)),
+            ],
+            records: <AppRecordEntryData>[_record('n1', _at(12, 9, 5))],
+          ),
+        ),
+        <String>['day 3/12', '(m1)', 'record n1', '(m2)'],
+      );
+    });
+
+    test('it breaks a run it falls inside', () {
+      expect(
+        _shape(
+          AppTimelineBuilder.build(
+            <AppMessageData>[
+              _message('m1', _at(12, 9, 0)),
+              _message('m2', _at(12, 9, 1)),
+              _message('m3', _at(12, 9, 2)),
+            ],
+            records: <AppRecordEntryData>[_record('n1', _at(12, 9, 1, 30))],
+          ),
+        ),
+        <String>['day 3/12', '(m1', 'm2)', 'record n1', '(m3)'],
+      );
+    });
+
+    test('what was written after the last message still draws', () {
+      expect(
+        _shape(
+          AppTimelineBuilder.build(
+            <AppMessageData>[_message('m1', _at(12, 9, 0))],
+            records: <AppRecordEntryData>[
+              _record('n1', _at(12, 9, 5)),
+              _record('s1', _at(12, 9, 6), kind: AppRecordKind.summary),
+            ],
+          ),
+        ),
+        <String>['day 3/12', '(m1)', 'record n1', 'record s1'],
+      );
+    });
+
+    test('an entry on a later day brings its own day heading', () {
+      expect(
+        _shape(
+          AppTimelineBuilder.build(
+            <AppMessageData>[_message('m1', _at(11, 9, 0))],
+            records: <AppRecordEntryData>[_record('n1', _at(12, 9, 0))],
+          ),
+        ),
+        <String>['day 3/11', '(m1)', 'day 3/12', 'record n1'],
+      );
+    });
+
+    test('entries handed over in any order draw oldest first', () {
+      expect(
+        _shape(
+          AppTimelineBuilder.build(
+            <AppMessageData>[],
+            records: <AppRecordEntryData>[
+              _record('n2', _at(12, 10, 0)),
+              _record('n1', _at(12, 9, 0)),
+            ],
+          ),
+        ),
+        <String>['day 3/12', 'record n1', 'record n2'],
+      );
+    });
+
+    test('an entry before the first message comes first', () {
+      expect(
+        _shape(
+          AppTimelineBuilder.build(
+            <AppMessageData>[_message('m1', _at(12, 9, 0))],
+            records: <AppRecordEntryData>[_record('n1', _at(12, 8, 0))],
+          ),
+        ),
+        <String>['day 3/12', 'record n1', '(m1)'],
+      );
+    });
+
+    test('a record does not move the unread marker', () {
+      expect(
+        _shape(
+          AppTimelineBuilder.build(
+            <AppMessageData>[
+              _message('m1', _at(12, 9, 0)),
+              _message('m2', _at(12, 9, 10)),
+            ],
+            records: <AppRecordEntryData>[_record('n1', _at(12, 9, 5))],
+            unreadCount: 1,
+          ),
+        ),
+        <String>['day 3/12', '(m1)', 'record n1', 'unread 1', '(m2)'],
       );
     });
   });

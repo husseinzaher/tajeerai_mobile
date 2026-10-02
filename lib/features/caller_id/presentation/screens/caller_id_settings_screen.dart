@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../app/localization/translations/app_strings.dart';
-import '../../../../app/theme/app_theme.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../app/theme/theme_mode_manager.dart';
 import '../../../../design_system/design_system.dart';

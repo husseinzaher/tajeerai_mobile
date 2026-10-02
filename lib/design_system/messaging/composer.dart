@@ -313,7 +313,9 @@ class _AppComposerState extends State<AppComposer> {
                         variant: AppButtonVariant.ghost,
                         leading: const Icon(LucideIcons.sparkles),
                         loading: widget.summarizing,
-                        onPressed: widget.summarizing ? null : widget.onSummarize,
+                        onPressed: widget.summarizing
+                            ? null
+                            : widget.onSummarize,
                       ),
                   ],
                 ),

@@ -386,7 +386,8 @@ final Provider<VoiceRecorder Function()> voiceRecorderFactoryProvider =
 final Provider<ConversationRecordRemoteDataSource>
 conversationRecordRemoteDataSourceProvider =
     Provider<ConversationRecordRemoteDataSource>(
-      (ref) => ConversationRecordRemoteDataSource(ref.watch(httpClientProvider)),
+      (ref) =>
+          ConversationRecordRemoteDataSource(ref.watch(httpClientProvider)),
     );
 
 final Provider<ConversationRecordRepository>

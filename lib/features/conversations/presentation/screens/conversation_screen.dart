@@ -171,11 +171,15 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     final String? text = switch (entry.type) {
       'note' => entry.body,
       'summary' => entry.body,
-      'closed' => entry.reason == null
-          ? strings.logClosed.replaceAll('{name}', author)
-          : strings.logClosedWithReason
-                .replaceAll('{name}', author)
-                .replaceAll('{reason}', strings.closeReasonName(entry.reason!)),
+      'closed' =>
+        entry.reason == null
+            ? strings.logClosed.replaceAll('{name}', author)
+            : strings.logClosedWithReason
+                  .replaceAll('{name}', author)
+                  .replaceAll(
+                    '{reason}',
+                    strings.closeReasonName(entry.reason!),
+                  ),
       'reopened' => strings.logReopened.replaceAll('{name}', author),
       _ => entry.body?.trim(),
     };
@@ -303,7 +307,10 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
         },
       );
       ref
-          .read(conversationRecordControllerProvider(widget.conversationId).notifier)
+          .read(
+            conversationRecordControllerProvider(widget.conversationId)
+                .notifier,
+          )
           .clearOutcome();
     });
 
@@ -400,9 +407,8 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
         onSummarize: () => unawaited(
           ref
               .read(
-                conversationRecordControllerProvider(
-                  widget.conversationId,
-                ).notifier,
+                conversationRecordControllerProvider(widget.conversationId)
+                    .notifier,
               )
               .summarize(),
         ),

@@ -631,10 +631,7 @@ class AppStrings {
       'en': 'Keeps the card up for the whole call and shows a summary when it ends.',
       'ar': 'يُبقي البطاقة طوال المكالمة ويعرض ملخصًا عند انتهائها.',
     },
-    'callerIdNeverDismiss': <String, String>{
-      'en': 'Never',
-      'ar': 'لا يختفي',
-    },
+    'callerIdNeverDismiss': <String, String>{'en': 'Never', 'ar': 'لا يختفي'},
     'callerIdLogCalls': <String, String>{
       'en': 'Log calls to the customer record',
       'ar': 'تسجيل المكالمات في سجل العميل',
@@ -694,19 +691,10 @@ class AppStrings {
       'ar': 'أول تواصل {date}',
     },
     'customerPanelCall': <String, String>{'en': 'Call', 'ar': 'اتصال'},
-    'customerPanelReminder': <String, String>{
-      'en': 'Reminder',
-      'ar': 'تذكير',
-    },
+    'customerPanelReminder': <String, String>{'en': 'Reminder', 'ar': 'تذكير'},
     'customerPanelOpen': <String, String>{'en': 'Open', 'ar': 'فتح'},
-    'customerPanelTabData': <String, String>{
-      'en': 'Details',
-      'ar': 'البيانات',
-    },
-    'customerPanelTabOrders': <String, String>{
-      'en': 'Orders',
-      'ar': 'الطلبات',
-    },
+    'customerPanelTabData': <String, String>{'en': 'Details', 'ar': 'البيانات'},
+    'customerPanelTabOrders': <String, String>{'en': 'Orders', 'ar': 'الطلبات'},
     'customerPanelTabFollowUps': <String, String>{
       'en': 'Follow-ups',
       'ar': 'المتابعات',
@@ -716,10 +704,7 @@ class AppStrings {
       'ar': 'حقول البيانات',
     },
     'customerPanelName': <String, String>{'en': 'Name', 'ar': 'الاسم'},
-    'customerPanelNotSet': <String, String>{
-      'en': 'Not set',
-      'ar': 'غير محدد',
-    },
+    'customerPanelNotSet': <String, String>{'en': 'Not set', 'ar': 'غير محدد'},
     'customerPanelWhatsAppUsername': <String, String>{
       'en': 'WhatsApp username',
       'ar': 'اسم مستخدم واتساب',
@@ -830,7 +815,10 @@ class AppStrings {
       'ar': 'لا يوجد عميل مرتبط بهذه المحادثة بعد.',
     },
     'orderStateDraft': <String, String>{'en': 'Draft', 'ar': 'مسودة'},
-    'orderStatePending': <String, String>{'en': 'Pending', 'ar': 'قيد الانتظار'},
+    'orderStatePending': <String, String>{
+      'en': 'Pending',
+      'ar': 'قيد الانتظار',
+    },
     'orderStatePaid': <String, String>{'en': 'Paid', 'ar': 'مدفوع'},
     'orderStateProcessing': <String, String>{
       'en': 'Processing',
@@ -1032,15 +1020,20 @@ class AppStrings {
   String get callerIdPreview => call('callerIdPreview');
   String get callerIdPreviewNote => call('callerIdPreviewNote');
   String get callerIdSetupSteps => call('callerIdSetupSteps');
-  String get callerIdScreeningDescription => call('callerIdScreeningDescription');
+  String get callerIdScreeningDescription =>
+      call('callerIdScreeningDescription');
   String get callerIdOverlayDescription => call('callerIdOverlayDescription');
   String get callerIdGrant => call('callerIdGrant');
   String get callerIdGranted => call('callerIdGranted');
   String get callerIdCalls => call('callerIdCalls');
-  String get callerIdShowIncomingDescription => call('callerIdShowIncomingDescription');
-  String get callerIdShowOutgoingDescription => call('callerIdShowOutgoingDescription');
-  String get callerIdUnknownOnlyDescription => call('callerIdUnknownOnlyDescription');
-  String get callerIdShowContactsDescription => call('callerIdShowContactsDescription');
+  String get callerIdShowIncomingDescription =>
+      call('callerIdShowIncomingDescription');
+  String get callerIdShowOutgoingDescription =>
+      call('callerIdShowOutgoingDescription');
+  String get callerIdUnknownOnlyDescription =>
+      call('callerIdUnknownOnlyDescription');
+  String get callerIdShowContactsDescription =>
+      call('callerIdShowContactsDescription');
   String get callerIdCardPosition => call('callerIdCardPosition');
   String get callerIdPositionTop => call('callerIdPositionTop');
   String get callerIdPositionCenter => call('callerIdPositionCenter');
@@ -1051,16 +1044,21 @@ class AppStrings {
   String get callerIdShowPhoneNumber => call('callerIdShowPhoneNumber');
   String get callerIdShowBusinessInfo => call('callerIdShowBusinessInfo');
   String get callerIdShowTags => call('callerIdShowTags');
-  String get callerIdAutoDismissDescription => call('callerIdAutoDismissDescription');
-  String get callerIdDismissOnTapDescription => call('callerIdDismissOnTapDescription');
-  String get callerIdLocalLookupDescription => call('callerIdLocalLookupDescription');
-  String get callerIdServerLookupDescription => call('callerIdServerLookupDescription');
+  String get callerIdAutoDismissDescription =>
+      call('callerIdAutoDismissDescription');
+  String get callerIdDismissOnTapDescription =>
+      call('callerIdDismissOnTapDescription');
+  String get callerIdLocalLookupDescription =>
+      call('callerIdLocalLookupDescription');
+  String get callerIdServerLookupDescription =>
+      call('callerIdServerLookupDescription');
   String get callerIdUseCacheDescription => call('callerIdUseCacheDescription');
   String get callerIdSecondsUnit => call('callerIdSecondsUnit');
   String get callerIdContacts => call('callerIdContacts');
   String get callerIdContactsDescription => call('callerIdContactsDescription');
   String get callerIdPhoneState => call('callerIdPhoneState');
-  String get callerIdPhoneStateDescription => call('callerIdPhoneStateDescription');
+  String get callerIdPhoneStateDescription =>
+      call('callerIdPhoneStateDescription');
   String get callerIdNeverDismiss => call('callerIdNeverDismiss');
   String get callerIdLogCalls => call('callerIdLogCalls');
   String get callerIdLogCallsDescription => call('callerIdLogCallsDescription');
@@ -1089,7 +1087,8 @@ class AppStrings {
   String get customerPanelFields => call('customerPanelFields');
   String get customerPanelName => call('customerPanelName');
   String get customerPanelNotSet => call('customerPanelNotSet');
-  String get customerPanelWhatsAppUsername => call('customerPanelWhatsAppUsername');
+  String get customerPanelWhatsAppUsername =>
+      call('customerPanelWhatsAppUsername');
   String get customerPanelWhatsAppUserId => call('customerPanelWhatsAppUserId');
   String get customerPanelLanguage => call('customerPanelLanguage');
   String get customerPanelTags => call('customerPanelTags');
@@ -1102,9 +1101,11 @@ class AppStrings {
   String get customerPanelStarted => call('customerPanelStarted');
   String get customerPanelLastActivity => call('customerPanelLastActivity');
   String get customerPanelNoOrders => call('customerPanelNoOrders');
-  String get customerPanelNoOrdersDescription => call('customerPanelNoOrdersDescription');
+  String get customerPanelNoOrdersDescription =>
+      call('customerPanelNoOrdersDescription');
   String get customerPanelNoFollowUps => call('customerPanelNoFollowUps');
-  String get customerPanelNoFollowUpsDescription => call('customerPanelNoFollowUpsDescription');
+  String get customerPanelNoFollowUpsDescription =>
+      call('customerPanelNoFollowUpsDescription');
   String get customerPanelOverdue => call('customerPanelOverdue');
   String get customerPanelNoCustomer => call('customerPanelNoCustomer');
   String get conversationStateOpen => call('conversationStateOpen');
