@@ -51,6 +51,16 @@ import '../../features/blog/domain/repositories/blog_repository.dart';
 import '../../infrastructure/adapters/customers/remote/customer_remote_data_source.dart';
 import '../../infrastructure/adapters/customers/repositories/customer_repository_impl.dart';
 import '../../features/customers/domain/repositories/customer_repository.dart';
+import '../../features/customers/application/contracts/customer_record_capability.dart';
+import '../../features/customers/application/coordinators/customer_record_coordinator.dart';
+import '../../features/orders/application/contracts/customer_orders_capability.dart';
+import '../../features/orders/application/coordinators/customer_orders_coordinator.dart';
+import '../../features/orders/domain/repositories/customer_order_repository.dart';
+import '../../infrastructure/adapters/orders/remote/order_remote_data_source.dart';
+import '../../features/conversations/domain/repositories/conversation_record_repository.dart';
+import '../../infrastructure/adapters/conversations/remote/conversation_record_remote_data_source.dart';
+import '../../infrastructure/adapters/conversations/repositories/conversation_record_repository_impl.dart';
+import '../../infrastructure/adapters/orders/repositories/customer_order_repository_impl.dart';
 import '../../infrastructure/storage/database/app_database.dart';
 import '../../infrastructure/device/connectivity/connectivity_monitor.dart';
 import '../../infrastructure/device/platform_info.dart';
@@ -371,6 +381,24 @@ final Provider<AttachmentPicker> attachmentPickerProvider =
 final Provider<VoiceRecorder Function()> voiceRecorderFactoryProvider =
     Provider<VoiceRecorder Function()>((ref) => RecordVoiceRecorder.new);
 
+/// A thread's own record - notes, log lines, summaries - over HTTP, which is
+/// the one transport the backend offers for it (ARCHITECTURE.md §11).
+final Provider<ConversationRecordRemoteDataSource>
+conversationRecordRemoteDataSourceProvider =
+    Provider<ConversationRecordRemoteDataSource>(
+      (ref) => ConversationRecordRemoteDataSource(ref.watch(httpClientProvider)),
+    );
+
+final Provider<ConversationRecordRepository>
+conversationRecordRepositoryProvider = Provider<ConversationRecordRepository>((
+  ref,
+) {
+  return ConversationRecordRepositoryImpl(
+    dao: ref.watch(appDatabaseProvider).conversationNoteDao,
+    remote: ref.watch(conversationRecordRemoteDataSourceProvider),
+  );
+});
+
 final Provider<ConversationService> conversationServiceProvider =
     Provider<ConversationService>(
       (ref) => ConversationService(ref.watch(conversationRepositoryProvider)),
@@ -528,6 +556,42 @@ final Provider<CustomerDirectoryCapability> customerDirectoryProvider =
       return CustomerDirectoryCoordinator(
         customers: ref.watch(customerRepositoryProvider),
         sync: ref.watch(customerSyncProvider),
+      );
+    });
+
+/// A contact's record, as the conversation screen's customer panel reads it.
+///
+/// The contract, not the repository, for the reason `customerDirectoryProvider`
+/// is: another feature depending on this cannot reach past what it allows.
+final Provider<CustomerRecordCapability> customerRecordProvider =
+    Provider<CustomerRecordCapability>((ref) {
+      return CustomerRecordCoordinator(
+        customers: ref.watch(customerRepositoryProvider),
+      );
+    });
+
+// ---------------------------------------------------------------------------
+// Orders feature
+// ---------------------------------------------------------------------------
+
+final Provider<OrderRemoteDataSource> orderRemoteDataSourceProvider =
+    Provider<OrderRemoteDataSource>(
+      (ref) => OrderRemoteDataSource(ref.watch(httpClientProvider)),
+    );
+
+final Provider<CustomerOrderRepository> customerOrderRepositoryProvider =
+    Provider<CustomerOrderRepository>((ref) {
+      return CustomerOrderRepositoryImpl(
+        dao: ref.watch(appDatabaseProvider).orderDao,
+        remote: ref.watch(orderRemoteDataSourceProvider),
+      );
+    });
+
+/// A contact's recent orders, as other features see them.
+final Provider<CustomerOrdersCapability> customerOrdersProvider =
+    Provider<CustomerOrdersCapability>((ref) {
+      return CustomerOrdersCoordinator(
+        orders: ref.watch(customerOrderRepositoryProvider),
       );
     });
 

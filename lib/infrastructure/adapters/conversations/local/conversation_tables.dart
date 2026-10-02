@@ -172,3 +172,33 @@ class Messages extends Table {
   @override
   Set<Column<Object>> get primaryKey => <Column<Object>>{id};
 }
+
+/// A thread's own record: internal notes, the log of what happened to it,
+/// and the assistant's summaries.
+///
+/// Mirrors the API's `ConversationNoteView`. Replaced wholesale per thread on
+/// each refresh - the list is append-only on the server and never edited
+/// here - and read oldest first, which is the order a thread reads in.
+@DataClassName('ConversationNoteRow')
+class ConversationNotes extends Table {
+  /// The server's uuid.
+  TextColumn get id => text()();
+
+  TextColumn get conversationId => text()();
+
+  /// `note`, `closed`, `reopened`, `summary`, or something newer. Text on
+  /// purpose: the backend adds kinds without a schema change here.
+  TextColumn get type => text()();
+
+  /// The closing reason on a `closed` entry.
+  TextColumn get reason => text().nullable()();
+
+  TextColumn get body => text().nullable()();
+  TextColumn get authorId => text().nullable()();
+  TextColumn get authorName => text().nullable()();
+
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => <Column<Object>>{id};
+}

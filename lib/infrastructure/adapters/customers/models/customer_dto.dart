@@ -33,6 +33,7 @@ abstract final class CustomerDto {
       typeName: _text(type?['name']),
       source: _text(json['source']),
       photoUrl: _text(json['photoUrl']),
+      metadata: _map(json['metadata']) ?? const <String, Object?>{},
       createdAt: parseTime(json['createdAt']) ?? DateTime.now().toUtc(),
       updatedAt: parseTime(json['updatedAt']),
     );
@@ -98,6 +99,8 @@ abstract final class CustomerNoteDto {
       body: json['body']?.toString() ?? '',
       authorId: CustomerDto._text(json['authorId']),
       authorName: CustomerDto._text(json['authorName']),
+      followUpAt: CustomerDto.parseTime(json['followUpAt']),
+      followUpDoneAt: CustomerDto.parseTime(json['followUpDoneAt']),
       createdAt:
           CustomerDto.parseTime(json['createdAt']) ?? DateTime.now().toUtc(),
     );

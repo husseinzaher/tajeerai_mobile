@@ -676,6 +676,177 @@ class AppStrings {
       'en': 'Open customer',
       'ar': 'فتح العميل',
     },
+    // -- the conversation's customer panel ---------------------------------
+    'customerPanelTitle': <String, String>{
+      'en': 'Customer details',
+      'ar': 'تفاصيل العميل',
+    },
+    'customerPanelRegistered': <String, String>{
+      'en': 'Registered customer',
+      'ar': 'عميل مسجّل',
+    },
+    'customerPanelUnregistered': <String, String>{
+      'en': 'Not a customer yet',
+      'ar': 'غير مسجّل بعد',
+    },
+    'customerPanelFirstContact': <String, String>{
+      'en': 'First contact {date}',
+      'ar': 'أول تواصل {date}',
+    },
+    'customerPanelCall': <String, String>{'en': 'Call', 'ar': 'اتصال'},
+    'customerPanelReminder': <String, String>{
+      'en': 'Reminder',
+      'ar': 'تذكير',
+    },
+    'customerPanelOpen': <String, String>{'en': 'Open', 'ar': 'فتح'},
+    'customerPanelTabData': <String, String>{
+      'en': 'Details',
+      'ar': 'البيانات',
+    },
+    'customerPanelTabOrders': <String, String>{
+      'en': 'Orders',
+      'ar': 'الطلبات',
+    },
+    'customerPanelTabFollowUps': <String, String>{
+      'en': 'Follow-ups',
+      'ar': 'المتابعات',
+    },
+    'customerPanelFields': <String, String>{
+      'en': 'Contact fields',
+      'ar': 'حقول البيانات',
+    },
+    'customerPanelName': <String, String>{'en': 'Name', 'ar': 'الاسم'},
+    'customerPanelNotSet': <String, String>{
+      'en': 'Not set',
+      'ar': 'غير محدد',
+    },
+    'customerPanelWhatsAppUsername': <String, String>{
+      'en': 'WhatsApp username',
+      'ar': 'اسم مستخدم واتساب',
+    },
+    'customerPanelWhatsAppUserId': <String, String>{
+      'en': 'WhatsApp user id',
+      'ar': 'معرّف مستخدم واتساب',
+    },
+    'customerPanelLanguage': <String, String>{'en': 'Language', 'ar': 'اللغة'},
+    'customerPanelTags': <String, String>{'en': 'Tags', 'ar': 'العلامات'},
+    'customerPanelNoTags': <String, String>{
+      'en': 'No tags yet',
+      'ar': 'لا توجد علامات بعد',
+    },
+    'customerPanelConversation': <String, String>{
+      'en': 'Conversation',
+      'ar': 'المحادثة',
+    },
+    'customerPanelStatus': <String, String>{'en': 'Status', 'ar': 'الحالة'},
+    'customerPanelAssignee': <String, String>{
+      'en': 'Assigned to',
+      'ar': 'مُسندة إلى',
+    },
+    'customerPanelAssigned': <String, String>{
+      'en': 'A team member',
+      'ar': 'أحد أعضاء الفريق',
+    },
+    'customerPanelUnassigned': <String, String>{
+      'en': 'Unassigned',
+      'ar': 'غير مُسندة',
+    },
+    'customerPanelStarted': <String, String>{'en': 'Started', 'ar': 'بدأت'},
+    'conversationStateOpen': <String, String>{'en': 'Open', 'ar': 'مفتوحة'},
+    'conversationStatePending': <String, String>{
+      'en': 'Pending',
+      'ar': 'معلّقة',
+    },
+    'conversationStateClosed': <String, String>{'en': 'Closed', 'ar': 'مغلقة'},
+    'conversationStateArchived': <String, String>{
+      'en': 'Archived',
+      'ar': 'مؤرشفة',
+    },
+    // -- the thread's record: log lines, notes, the summary -----------------
+    'logClosed': <String, String>{
+      'en': 'Conversation closed by {name}',
+      'ar': 'تم إغلاق المحادثة بواسطة {name}',
+    },
+    'logClosedWithReason': <String, String>{
+      'en': 'Conversation closed by {name} — {reason}',
+      'ar': 'تم إغلاق المحادثة بواسطة {name} — {reason}',
+    },
+    'logReopened': <String, String>{
+      'en': 'Conversation reopened by {name}',
+      'ar': 'تمت إعادة فتح المحادثة بواسطة {name}',
+    },
+    'logSummarized': <String, String>{
+      'en': 'This conversation was summarised by {name}',
+      'ar': 'تم تلخيص هذه المحادثة بواسطة {name}',
+    },
+    'logSystem': <String, String>{'en': 'System', 'ar': 'النظام'},
+    'closeReasonResolved': <String, String>{'en': 'Resolved', 'ar': 'تم الحل'},
+    'closeReasonNoResponse': <String, String>{
+      'en': 'No response',
+      'ar': 'لا يوجد رد',
+    },
+    'closeReasonSpam': <String, String>{'en': 'Spam', 'ar': 'رسائل مزعجة'},
+    'closeReasonDuplicate': <String, String>{'en': 'Duplicate', 'ar': 'مكررة'},
+    'closeReasonOther': <String, String>{'en': 'Other', 'ar': 'أخرى'},
+    'noteSaved': <String, String>{
+      'en': 'Note added',
+      'ar': 'تمت إضافة الملاحظة',
+    },
+    'noteSaveFailed': <String, String>{
+      'en': 'The note could not be added.',
+      'ar': 'تعذّر إضافة الملاحظة.',
+    },
+    'summaryDone': <String, String>{
+      'en': 'The summary was added to the conversation',
+      'ar': 'تمت إضافة الملخص إلى المحادثة',
+    },
+    'summaryFailed': <String, String>{
+      'en': 'This conversation could not be summarised.',
+      'ar': 'تعذّر تلخيص هذه المحادثة.',
+    },
+    'summaryEmptyThread': <String, String>{
+      'en': 'There is nothing to summarise yet.',
+      'ar': 'لا يوجد ما يُلخَّص بعد.',
+    },
+    'customerPanelLastActivity': <String, String>{
+      'en': 'Last activity',
+      'ar': 'آخر نشاط',
+    },
+    'customerPanelNoOrders': <String, String>{
+      'en': 'No orders yet',
+      'ar': 'لا توجد طلبات بعد',
+    },
+    'customerPanelNoOrdersDescription': <String, String>{
+      'en': 'Orders this customer places will appear here.',
+      'ar': 'ستظهر هنا الطلبات التي يقدّمها هذا العميل.',
+    },
+    'customerPanelNoFollowUps': <String, String>{
+      'en': 'Nothing to follow up',
+      'ar': 'لا توجد متابعات',
+    },
+    'customerPanelNoFollowUpsDescription': <String, String>{
+      'en': 'Reminders set on this customer’s notes will appear here.',
+      'ar': 'ستظهر هنا التذكيرات المضبوطة على ملاحظات هذا العميل.',
+    },
+    'customerPanelOverdue': <String, String>{'en': 'Overdue', 'ar': 'متأخرة'},
+    'customerPanelNoCustomer': <String, String>{
+      'en': 'This conversation has no customer attached yet.',
+      'ar': 'لا يوجد عميل مرتبط بهذه المحادثة بعد.',
+    },
+    'orderStateDraft': <String, String>{'en': 'Draft', 'ar': 'مسودة'},
+    'orderStatePending': <String, String>{'en': 'Pending', 'ar': 'قيد الانتظار'},
+    'orderStatePaid': <String, String>{'en': 'Paid', 'ar': 'مدفوع'},
+    'orderStateProcessing': <String, String>{
+      'en': 'Processing',
+      'ar': 'قيد التجهيز',
+    },
+    'orderStateShipped': <String, String>{'en': 'Shipped', 'ar': 'تم الشحن'},
+    'orderStateDelivered': <String, String>{
+      'en': 'Delivered',
+      'ar': 'تم التوصيل',
+    },
+    'orderStateCancelled': <String, String>{'en': 'Cancelled', 'ar': 'ملغي'},
+    'orderStateRefunded': <String, String>{'en': 'Refunded', 'ar': 'مسترد'},
   };
 
   /// The table itself, for the test that checks every entry is translated.
@@ -909,6 +1080,80 @@ class AppStrings {
   String get callerIdCallBack => call('callerIdCallBack');
   String get callerIdMessage => call('callerIdMessage');
   String get callerIdOpenCustomer => call('callerIdOpenCustomer');
+  String get customerPanelTitle => call('customerPanelTitle');
+  String get customerPanelRegistered => call('customerPanelRegistered');
+  String get customerPanelUnregistered => call('customerPanelUnregistered');
+  String get customerPanelFirstContact => call('customerPanelFirstContact');
+  String get customerPanelCall => call('customerPanelCall');
+  String get customerPanelReminder => call('customerPanelReminder');
+  String get customerPanelOpen => call('customerPanelOpen');
+  String get customerPanelTabData => call('customerPanelTabData');
+  String get customerPanelTabOrders => call('customerPanelTabOrders');
+  String get customerPanelTabFollowUps => call('customerPanelTabFollowUps');
+  String get customerPanelFields => call('customerPanelFields');
+  String get customerPanelName => call('customerPanelName');
+  String get customerPanelNotSet => call('customerPanelNotSet');
+  String get customerPanelWhatsAppUsername => call('customerPanelWhatsAppUsername');
+  String get customerPanelWhatsAppUserId => call('customerPanelWhatsAppUserId');
+  String get customerPanelLanguage => call('customerPanelLanguage');
+  String get customerPanelTags => call('customerPanelTags');
+  String get customerPanelNoTags => call('customerPanelNoTags');
+  String get customerPanelConversation => call('customerPanelConversation');
+  String get customerPanelStatus => call('customerPanelStatus');
+  String get customerPanelAssignee => call('customerPanelAssignee');
+  String get customerPanelAssigned => call('customerPanelAssigned');
+  String get customerPanelUnassigned => call('customerPanelUnassigned');
+  String get customerPanelStarted => call('customerPanelStarted');
+  String get customerPanelLastActivity => call('customerPanelLastActivity');
+  String get customerPanelNoOrders => call('customerPanelNoOrders');
+  String get customerPanelNoOrdersDescription => call('customerPanelNoOrdersDescription');
+  String get customerPanelNoFollowUps => call('customerPanelNoFollowUps');
+  String get customerPanelNoFollowUpsDescription => call('customerPanelNoFollowUpsDescription');
+  String get customerPanelOverdue => call('customerPanelOverdue');
+  String get customerPanelNoCustomer => call('customerPanelNoCustomer');
+  String get conversationStateOpen => call('conversationStateOpen');
+  String get conversationStatePending => call('conversationStatePending');
+  String get conversationStateClosed => call('conversationStateClosed');
+  String get conversationStateArchived => call('conversationStateArchived');
+  String get logClosed => call('logClosed');
+  String get logClosedWithReason => call('logClosedWithReason');
+  String get logReopened => call('logReopened');
+  String get logSummarized => call('logSummarized');
+  String get logSystem => call('logSystem');
+  String get closeReasonResolved => call('closeReasonResolved');
+  String get closeReasonNoResponse => call('closeReasonNoResponse');
+  String get closeReasonSpam => call('closeReasonSpam');
+  String get closeReasonDuplicate => call('closeReasonDuplicate');
+  String get closeReasonOther => call('closeReasonOther');
+  String get noteSaved => call('noteSaved');
+  String get noteSaveFailed => call('noteSaveFailed');
+  String get summaryDone => call('summaryDone');
+  String get summaryFailed => call('summaryFailed');
+  String get summaryEmptyThread => call('summaryEmptyThread');
+
+  /// A closing reason as the server spells it, in the reader's language.
+  String closeReasonName(String reason) => switch (reason) {
+    'resolved' => call('closeReasonResolved'),
+    'no_response' => call('closeReasonNoResponse'),
+    'spam' => call('closeReasonSpam'),
+    'duplicate' => call('closeReasonDuplicate'),
+    'other' => call('closeReasonOther'),
+    _ => reason,
+  };
+
+  /// An order state as the server spells it, in the reader's language. A
+  /// state this build does not know is shown as the server named it.
+  String orderStateName(String state) => switch (state) {
+    'draft' => call('orderStateDraft'),
+    'pending' => call('orderStatePending'),
+    'paid' => call('orderStatePaid'),
+    'processing' => call('orderStateProcessing'),
+    'shipped' => call('orderStateShipped'),
+    'delivered' => call('orderStateDelivered'),
+    'cancelled' => call('orderStateCancelled'),
+    'refunded' => call('orderStateRefunded'),
+    _ => state,
+  };
 
   /// A member's role, named the way the web dashboard names it. A role this
   /// build does not know yet is shown as the server wrote it, not as nothing.

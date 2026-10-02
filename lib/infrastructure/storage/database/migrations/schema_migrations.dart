@@ -32,7 +32,14 @@ abstract final class SchemaMigrations {
   /// v7 -- `conversations.window_expires_at` and
   ///       `is_within_customer_service_window`, so the composer knows whether
   ///       WhatsApp will accept a free-form message before one is typed.
-  static const int version = 7;
+  /// v8 -- the conversation's customer panel: `customers.metadata` for the
+  ///       WhatsApp username and id, `customer_notes.follow_up_at` and
+  ///       `follow_up_done_at` so open follow-ups can be listed, and
+  ///       `customer_orders` for a contact's recent orders.
+  /// v9 -- `conversation_notes`: a thread's own record - internal notes, the
+  ///       log of what happened to it, the assistant's summaries - drawn
+  ///       between the bubbles the way the web's inbox draws them.
+  static const int version = 9;
 
   static MigrationStrategy strategy(GeneratedDatabase database) {
     return MigrationStrategy(
@@ -93,6 +100,29 @@ abstract final class SchemaMigrations {
             schema.conversations.isWithinCustomerServiceWindow,
           );
         },
+        from7To8: (Migrator migrator, Schema8 schema) async {
+          /*
+            Every new column has a default or is nullable, so an upgraded
+            device reads as "not yet told" until its next sync: an empty
+            metadata object, no follow-up on any entry, no orders. The next
+            refresh of a contact fills all three from the server.
+          */
+          await migrator.addColumn(schema.customers, schema.customers.metadata);
+          await migrator.addColumn(
+            schema.customerNotes,
+            schema.customerNotes.followUpAt,
+          );
+          await migrator.addColumn(
+            schema.customerNotes,
+            schema.customerNotes.followUpDoneAt,
+          );
+          await migrator.createTable(schema.customerOrders);
+          await _createOrderIndexes(database);
+        },
+        from8To9: (Migrator migrator, Schema9 schema) async {
+          await migrator.createTable(schema.conversationNotes);
+          await _createConversationNoteIndexes(database);
+        },
       ),
       beforeOpen: (OpeningDetails details) async {
         // Drift does not enforce foreign keys unless asked, and the messages
@@ -141,6 +171,28 @@ abstract final class SchemaMigrations {
     }
 
     await _createCustomerIndexes(database);
+    await _createOrderIndexes(database);
+    await _createConversationNoteIndexes(database);
+  }
+
+  /// The record index, shared by `onCreate` and the v9 step: one thread's
+  /// entries in time order, which is the only way the table is read.
+  static Future<void> _createConversationNoteIndexes(
+    GeneratedDatabase database,
+  ) async {
+    await database.customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_conversation_notes_conversation_created '
+      'ON conversation_notes (conversation_id, created_at)',
+    );
+  }
+
+  /// The order index, shared by `onCreate` and the v8 step: one contact's
+  /// orders, newest first, which is the only way the table is read.
+  static Future<void> _createOrderIndexes(GeneratedDatabase database) async {
+    await database.customStatement(
+      'CREATE INDEX IF NOT EXISTS idx_customer_orders_customer_placed '
+      'ON customer_orders (customer_id, placed_at DESC)',
+    );
   }
 
   /// The contact indexes, shared by `onCreate` and the v4 step.

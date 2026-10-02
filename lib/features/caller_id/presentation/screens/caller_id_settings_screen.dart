@@ -234,9 +234,8 @@ class CallerIdSettingsScreen extends ConsumerWidget {
                       enabled: on,
                       label: strings.callerIdServerLookup,
                       description: strings.callerIdServerLookupDescription,
-                      onChanged: (bool value) => update(
-                        settings.copyWith(serverLookupEnabled: value),
-                      ),
+                      onChanged: (bool value) =>
+                          update(settings.copyWith(serverLookupEnabled: value)),
                     ),
                     AppSwitch(
                       value: settings.useCachedData,
@@ -422,8 +421,11 @@ class _StatusCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final TajeerColors colors = context.colors;
 
-    final (String label, AppBadgeVariant variant, String description) =
-        !settings.enabled
+    final (
+      String label,
+      AppBadgeVariant variant,
+      String description,
+    ) = !settings.enabled
         ? (
             strings.callerIdStatusOff,
             AppBadgeVariant.muted,

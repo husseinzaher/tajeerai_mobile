@@ -71,6 +71,12 @@ class AppMessages {
     required this.readReceipt,
     required this.removed,
     required this.unreadCount,
+    required this.internalNote,
+    required this.internalNoteHint,
+    required this.conversationSummary,
+    required this.summarize,
+    required this.summarizing,
+    required this.systemAuthor,
     required this.failedCount,
     required this.pinned,
     required this.muted,
@@ -168,6 +174,17 @@ class AppMessages {
 
   /// Takes `{count}`.
   final String unreadCount;
+
+  /// The thread's record: what the team writes to itself, and what the
+  /// assistant writes for it.
+  final String internalNote;
+  final String internalNoteHint;
+  final String conversationSummary;
+  final String summarize;
+  final String summarizing;
+
+  /// Who wrote an entry nobody wrote: a closing, an assignment, a summary.
+  final String systemAuthor;
 
   /// How many messages in a thread did not go out. `{count}`.
   final String failedCount;

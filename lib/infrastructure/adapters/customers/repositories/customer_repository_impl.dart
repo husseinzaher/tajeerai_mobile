@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 
 import '../../../../failures/app_failure.dart';
@@ -221,9 +223,26 @@ class CustomerRepositoryImpl implements CustomerRepository {
       typeName: row.typeName,
       source: row.source,
       photoUrl: row.photoUrl,
+      metadata: _decodeMetadata(row.metadata),
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     );
+  }
+
+  /// The stored JSON object, or nothing: a row written before the column
+  /// existed carries the default, and a damaged one is not worth a crash.
+  static Map<String, Object?> _decodeMetadata(String raw) {
+    if (raw.isEmpty || raw == '{}') return const <String, Object?>{};
+
+    try {
+      final Object? decoded = jsonDecode(raw);
+
+      return decoded is Map<String, Object?>
+          ? decoded
+          : const <String, Object?>{};
+    } on FormatException {
+      return const <String, Object?>{};
+    }
   }
 
   /// The one place the lookup keys are derived, so no write can produce a row
@@ -249,6 +268,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
       typeName: Value<String?>(customer.typeName),
       source: Value<String?>(customer.source),
       photoUrl: Value<String?>(customer.photoUrl),
+      metadata: Value<String>(jsonEncode(customer.metadata)),
       createdAt: Value<DateTime>(customer.createdAt),
       updatedAt: Value<DateTime?>(customer.updatedAt),
     );
@@ -261,6 +281,8 @@ class CustomerRepositoryImpl implements CustomerRepository {
       body: row.body,
       authorId: row.authorId,
       authorName: row.authorName,
+      followUpAt: row.followUpAt,
+      followUpDoneAt: row.followUpDoneAt,
       createdAt: row.createdAt,
     );
   }
@@ -272,6 +294,8 @@ class CustomerRepositoryImpl implements CustomerRepository {
       body: Value<String>(note.body),
       authorId: Value<String?>(note.authorId),
       authorName: Value<String?>(note.authorName),
+      followUpAt: Value<DateTime?>(note.followUpAt),
+      followUpDoneAt: Value<DateTime?>(note.followUpDoneAt),
       createdAt: Value<DateTime>(note.createdAt),
     );
   }

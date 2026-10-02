@@ -35,6 +35,21 @@ final class AppTimelineUnread extends AppTimelineEntry {
   int get hashCode => count.hashCode;
 }
 
+/// One entry of the thread's record: a note, a log line, a summary.
+@immutable
+final class AppTimelineRecord extends AppTimelineEntry {
+  const AppTimelineRecord(this.record);
+
+  final AppRecordEntryData record;
+
+  @override
+  bool operator ==(Object other) =>
+      other is AppTimelineRecord && other.record.id == record.id;
+
+  @override
+  int get hashCode => record.id.hashCode;
+}
+
 /// One message, and where it sits in a run from the same author.
 @immutable
 final class AppTimelineMessage extends AppTimelineEntry {
@@ -71,13 +86,34 @@ abstract final class AppTimelineBuilder {
 
   /// [messages] must be oldest first. [unreadCount] counts the newest incoming
   /// messages that are unread; the marker goes before the oldest of them.
+  /// Lays out [messages] with [records] - the thread's own notes, log lines
+  /// and summaries - slotted between them in time order, the way the web's
+  /// inbox draws a thread. Runs are computed over messages alone: a record
+  /// between two bubbles breaks the run, because it was never part of the
+  /// exchange.
   static List<AppTimelineEntry> build(
     List<AppMessageData> messages, {
+    List<AppRecordEntryData> records = const <AppRecordEntryData>[],
     int unreadCount = 0,
     Duration window = runWindow,
   }) {
     final int? firstUnread = _firstUnread(messages, unreadCount);
     final List<AppTimelineEntry> entries = <AppTimelineEntry>[];
+    final List<AppRecordEntryData> pending =
+        List<AppRecordEntryData>.of(records)..sort(
+          (AppRecordEntryData a, AppRecordEntryData b) => a.at.compareTo(b.at),
+        );
+    int nextRecord = 0;
+    DateTime? lastDay;
+
+    void addRecord(AppRecordEntryData record) {
+      final DateTime day = _day(record.at);
+      if (lastDay != day) {
+        entries.add(AppTimelineDay(day));
+        lastDay = day;
+      }
+      entries.add(AppTimelineRecord(record));
+    }
 
     for (int index = 0; index < messages.length; index++) {
       final AppMessageData message = messages[index];
@@ -86,28 +122,51 @@ abstract final class AppTimelineBuilder {
           ? messages[index + 1]
           : null;
 
-      if (previous == null || _day(previous.sentAt) != _day(message.sentAt)) {
-        entries.add(AppTimelineDay(_day(message.sentAt)));
+      // Every record written before this message goes first.
+      bool recordBefore = false;
+      while (nextRecord < pending.length &&
+          !pending[nextRecord].at.isAfter(message.sentAt)) {
+        addRecord(pending[nextRecord++]);
+        recordBefore = true;
+      }
+
+      final DateTime day = _day(message.sentAt);
+      if (lastDay != day) {
+        entries.add(AppTimelineDay(day));
+        lastDay = day;
       }
       if (index == firstUnread) {
         entries.add(AppTimelineUnread(unreadCount));
       }
 
+      final bool recordAfter =
+          nextRecord < pending.length &&
+          next != null &&
+          !pending[nextRecord].at.isAfter(next.sentAt);
+
       entries.add(
         AppTimelineMessage(
           message,
-          // The unread marker breaks a run: the member has to see where the
-          // new part starts, even inside one author's burst.
+          // The unread marker breaks a run, and so does a record: the member
+          // has to see where the new part starts, even inside one author's
+          // burst.
           startsRun:
               previous == null ||
               index == firstUnread ||
+              recordBefore ||
               !_joins(previous, message, window),
           endsRun:
               next == null ||
               index + 1 == firstUnread ||
+              recordAfter ||
               !_joins(message, next, window),
         ),
       );
+    }
+
+    // Whatever was written after the last message.
+    while (nextRecord < pending.length) {
+      addRecord(pending[nextRecord++]);
     }
 
     return entries;

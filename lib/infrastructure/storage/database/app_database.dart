@@ -4,11 +4,14 @@ import 'package:drift_flutter/drift_flutter.dart';
 
 import '../../adapters/auth/local/auth_tables.dart';
 import '../../adapters/conversations/local/conversation_dao.dart';
+import '../../adapters/conversations/local/conversation_note_dao.dart';
 import '../../adapters/conversations/local/conversation_tables.dart';
 import '../../adapters/caller_id/local/caller_identity_cache_dao.dart';
 import '../../adapters/caller_id/local/caller_identity_cache_tables.dart';
 import '../../adapters/customers/local/customer_dao.dart';
 import '../../adapters/customers/local/customer_tables.dart';
+import '../../adapters/orders/local/order_dao.dart';
+import '../../adapters/orders/local/order_tables.dart';
 import 'daos/outbox_dao.dart';
 import 'daos/sync_dao.dart';
 import 'migrations/schema_migrations.dart';
@@ -48,8 +51,10 @@ part 'app_database.g.dart';
   tables: <Type>[
     Conversations,
     Messages,
+    ConversationNotes,
     Customers,
     CustomerNotes,
+    CustomerOrders,
     CallerIdentityCaches,
     SessionUsers,
     OutboxEntries,
@@ -60,7 +65,9 @@ part 'app_database.g.dart';
     OutboxDao,
     SyncDao,
     ConversationDao,
+    ConversationNoteDao,
     CustomerDao,
+    OrderDao,
     CallerIdentityCacheDao,
   ],
 )

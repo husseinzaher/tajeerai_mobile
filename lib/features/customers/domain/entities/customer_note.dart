@@ -11,6 +11,8 @@ final class CustomerNote {
     required this.createdAt,
     this.authorId,
     this.authorName,
+    this.followUpAt,
+    this.followUpDoneAt,
   });
 
   final String id;
@@ -26,4 +28,16 @@ final class CustomerNote {
   final String? authorName;
 
   final DateTime createdAt;
+
+  /// When to come back to this, when the writer said so.
+  final DateTime? followUpAt;
+
+  /// When somebody did. Set by the server when the follow-up is completed.
+  final DateTime? followUpDoneAt;
+
+  /// Still owed: a reminder was set and nobody has closed it.
+  bool get isFollowUpDue => followUpAt != null && followUpDoneAt == null;
+
+  /// Owed and already past its time.
+  bool isOverdue(DateTime now) => isFollowUpDue && followUpAt!.isBefore(now);
 }

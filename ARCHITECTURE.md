@@ -513,6 +513,13 @@ HTTP is **secondary**. It is used for exactly three things:
    screens would be a larger change than the screens. They sync into the local
    database like everything else, so the screens still read offline.
 
+   The same clause covers a **thread's own record** — the internal notes a
+   team writes to itself, the log of what happened to the thread, and the
+   assistant's summaries (`/v1/conversations/:id/notes`, `/summary`). The
+   socket carries messages and nothing about the record, and the web inbox
+   reads it over HTTP for the same reason. It syncs into `conversation_notes`
+   and the thread reads it from there, offline like the messages beside it.
+
 4. **The blog** — public articles, read without a session.
 
    The socket is authenticated by construction: its handshake carries a token,

@@ -1,4 +1,5 @@
 import '../value_objects/phone_digits.dart';
+import '../value_objects/whatsapp_contact.dart';
 
 /// Somebody the workspace sells to.
 ///
@@ -23,6 +24,7 @@ final class Customer {
     this.typeName,
     this.source,
     this.photoUrl,
+    this.metadata = const <String, Object?>{},
     this.updatedAt,
   });
 
@@ -46,8 +48,16 @@ final class Customer {
   final String? source;
 
   final String? photoUrl;
+
+  /// The server's free-form object: what a channel learned about the person
+  /// that has no column of its own. Read through [WhatsAppContact]; never
+  /// written here.
+  final Map<String, Object?> metadata;
   final DateTime createdAt;
   final DateTime? updatedAt;
+
+  /// The WhatsApp identity a channel attached to this contact, if any.
+  WhatsAppContact get whatsApp => WhatsAppContact.fromMetadata(metadata);
 
   /// What a list row and a caller card show. Never stored -- an empty name is
   /// an empty name, and writing a placeholder into the column would make it

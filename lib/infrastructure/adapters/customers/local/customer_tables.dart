@@ -54,6 +54,11 @@ class Customers extends Table {
 
   TextColumn get photoUrl => text().nullable()();
 
+  /// The server's free-form `metadata` object, as JSON text. Read for the
+  /// WhatsApp username and user id a channel wrote there; kept whole rather
+  /// than as two columns because the server adds keys without a schema change.
+  TextColumn get metadata => text().withDefault(const Constant('{}'))();
+
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime().nullable()();
 
@@ -92,6 +97,12 @@ class CustomerNotes extends Table {
   /// Their name as it stood when they wrote it, snapshotted by the server --
   /// so this screen never has to resolve a member who may be gone.
   TextColumn get authorName => text().nullable()();
+
+  /// When to come back to this, and when somebody did. An entry with the
+  /// first and not the second is an open follow-up - what the conversation's
+  /// customer panel lists under "follow-ups".
+  DateTimeColumn get followUpAt => dateTime().nullable()();
+  DateTimeColumn get followUpDoneAt => dateTime().nullable()();
 
   DateTimeColumn get createdAt => dateTime()();
 

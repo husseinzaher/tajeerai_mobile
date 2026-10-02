@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../app/theme/theme.dart';
 import '../buttons/app_button.dart';
+import '../inputs/app_switch.dart';
 import '../channels/channel_capabilities.dart';
 import '../inputs/app_text_field.dart';
 import '../localization/ds_localization.dart';
@@ -133,6 +134,10 @@ class AppComposer extends StatefulWidget {
     this.onRecordCancel,
     this.onTypingChanged,
     this.quickReplies = const <String>[],
+    this.internalNote = false,
+    this.onInternalNoteChanged,
+    this.onSummarize,
+    this.summarizing = false,
     super.key,
   });
 
@@ -164,6 +169,17 @@ class AppComposer extends StatefulWidget {
   final ValueChanged<bool>? onTypingChanged;
 
   final List<String> quickReplies;
+
+  /// Whether the next send is a note the team writes to itself rather than a
+  /// message to the customer. The switch is drawn only when
+  /// [onInternalNoteChanged] is given; the field says so while it is on, and
+  /// the send button loses its primary colour so nobody mistakes the mode.
+  final bool internalNote;
+  final ValueChanged<bool>? onInternalNoteChanged;
+
+  /// Asks the assistant to summarise the thread. Drawn when given.
+  final VoidCallback? onSummarize;
+  final bool summarizing;
 
   @override
   State<AppComposer> createState() => _AppComposerState();
@@ -263,6 +279,45 @@ class _AppComposerState extends State<AppComposer> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
+            // The record's two controls, above the field the way the web's
+            // inbox draws them: the internal-note switch at the start, the
+            // summary action at the end.
+            if ((widget.onInternalNoteChanged != null ||
+                    widget.onSummarize != null) &&
+                !widget.recording)
+              Padding(
+                padding: const EdgeInsetsDirectional.fromSTEB(
+                  TajeerSpacing.sm,
+                  TajeerSpacing.xs,
+                  TajeerSpacing.sm,
+                  0,
+                ),
+                child: Row(
+                  children: <Widget>[
+                    if (widget.onInternalNoteChanged != null)
+                      Expanded(
+                        child: AppSwitch(
+                          value: widget.internalNote,
+                          label: strings.internalNote,
+                          onChanged: widget.onInternalNoteChanged,
+                        ),
+                      )
+                    else
+                      const Spacer(),
+                    if (widget.onSummarize != null)
+                      AppButton(
+                        label: widget.summarizing
+                            ? strings.summarizing
+                            : strings.summarize,
+                        size: AppButtonSize.small,
+                        variant: AppButtonVariant.ghost,
+                        leading: const Icon(LucideIcons.sparkles),
+                        loading: widget.summarizing,
+                        onPressed: widget.summarizing ? null : widget.onSummarize,
+                      ),
+                  ],
+                ),
+              ),
             if (widget.quickReplies.isNotEmpty && !widget.recording)
               AppQuickReplyBar(replies: widget.quickReplies, onSelected: _fill),
             if (reply != null)
@@ -315,7 +370,9 @@ class _AppComposerState extends State<AppComposer> {
                         ? _RecordingStrip(elapsed: widget.recordingElapsed)
                         : AppTextField(
                             controller: controller.text,
-                            hintText: widget.hintText,
+                            hintText: widget.internalNote
+                                ? strings.internalNoteHint
+                                : widget.hintText,
                             // Grows to five lines, then scrolls: a long
                             // message must not push the send button away.
                             maxLines: 5,
@@ -343,7 +400,9 @@ class _AppComposerState extends State<AppComposer> {
                               child: const Icon(LucideIcons.send),
                             ),
                             semanticLabel: strings.send,
-                            variant: AppButtonVariant.primary,
+                            variant: widget.internalNote
+                                ? AppButtonVariant.secondary
+                                : AppButtonVariant.primary,
                             loading: widget.sending,
                             onPressed: controller.canSend && !widget.sending
                                 ? () => unawaited(_send())

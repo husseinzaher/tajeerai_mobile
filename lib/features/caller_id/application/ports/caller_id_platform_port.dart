@@ -24,6 +24,7 @@ abstract interface class CallerIdPlatformPort {
     required String databasePath,
     required String apiBaseUrl,
     String? accessToken,
+
     /// The app's language code, so the native card reads like the app does.
     String? locale,
   });

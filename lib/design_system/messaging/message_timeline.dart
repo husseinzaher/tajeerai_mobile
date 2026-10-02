@@ -12,6 +12,7 @@ import '../localization/ds_messages.dart';
 import 'attachment_previews.dart';
 import 'day_and_system_lines.dart';
 import 'message_bubble.dart';
+import 'record_cards.dart';
 import 'message_data.dart';
 import 'timeline_builder.dart';
 import 'typing_indicator.dart';
@@ -28,6 +29,7 @@ class AppMessageTimeline extends StatelessWidget {
     required this.emptyTitle,
     this.emptyDescription,
     this.unreadCount = 0,
+    this.records = const <AppRecordEntryData>[],
     this.typing = false,
     this.typingName,
     this.onRetry,
@@ -50,6 +52,10 @@ class AppMessageTimeline extends StatelessWidget {
 
   /// The newest incoming messages that are unread. See [AppTimelineBuilder].
   final int unreadCount;
+
+  /// The thread's own record - notes, log lines, summaries - slotted between
+  /// the bubbles in time order.
+  final List<AppRecordEntryData> records;
 
   /// Whether the other side is typing. The indicator sits below the newest
   /// message, even in a thread that has none yet.
@@ -97,6 +103,7 @@ class AppMessageTimeline extends StatelessWidget {
   Widget _list(BuildContext context, List<AppMessageData> messages) {
     final AppMessages strings = context.strings;
     final List<AppTimelineEntry> entries = AppTimelineBuilder.build(
+      records: records,
       messages,
       unreadCount: unreadCount,
     );
@@ -136,6 +143,15 @@ class AppMessageTimeline extends StatelessWidget {
               ),
             ),
           ),
+          AppTimelineRecord(:final AppRecordEntryData record) => switch (record
+              .kind) {
+            AppRecordKind.log => AppSystemMessage(
+              text: record.text ?? '',
+              icon: LucideIcons.info,
+            ),
+            AppRecordKind.note => AppInternalNoteCard(entry: record, now: now),
+            AppRecordKind.summary => AppSummaryCard(entry: record, now: now),
+          },
           AppTimelineMessage(
             :final AppMessageData message,
             :final bool startsRun,

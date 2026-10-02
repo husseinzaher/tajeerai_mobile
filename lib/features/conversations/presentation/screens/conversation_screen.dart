@@ -9,18 +9,22 @@ import 'package:open_filex/open_filex.dart';
 
 import '../../../../app/bootstrap/dependencies.dart';
 import '../../../../app/localization/translations/app_strings.dart';
+import '../../../../app/router/routes.dart';
 import '../../../../design_system/design_system.dart';
 import '../../application/ports/attachment_picker.dart';
 import '../../application/ports/voice_recorder.dart';
 import '../../domain/entities/conversation.dart';
+import '../../domain/entities/conversation_note.dart';
 import '../../domain/entities/message.dart';
 import '../controllers/conversation_attachment_opener.dart';
 import '../controllers/conversation_audio_controller.dart';
+import '../controllers/conversation_record_controller.dart';
 import '../controllers/conversation_thread_controller.dart';
 import '../controllers/conversation_video_controller.dart';
 import '../widgets/async_view_state.dart';
 import '../widgets/attachment_view_data.dart';
 import '../widgets/conversation_view_data.dart';
+import '../widgets/customer_panel_sheet.dart';
 import '../widgets/message_view_data.dart';
 import '../../domain/value_objects/session_window.dart';
 
@@ -40,6 +44,9 @@ class ConversationScreen extends ConsumerStatefulWidget {
 }
 
 class _ConversationScreenState extends ConsumerState<ConversationScreen> {
+  /// Whether the composer is writing a note the customer never sees.
+  bool _internalNote = false;
+
   final ScrollController _scroll = ScrollController();
   final AppComposerController _composer = AppComposerController();
   late final VoiceRecorder _voiceRecorder;
@@ -137,6 +144,90 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     conversationThreadControllerProvider(widget.conversationId).notifier,
   );
 
+  /// Writes the composer's text onto the record instead of sending it.
+  ///
+  /// Answers like a send: true clears the field. A refused note keeps the
+  /// text, and the controller's outcome says why in a toast.
+  Future<bool> _addInternalNote(AppComposerDraft draft) async {
+    final String body = (draft.text ?? '').trim();
+    if (body.isEmpty) return false;
+
+    final ConversationRecordController record = ref.read(
+      conversationRecordControllerProvider(widget.conversationId).notifier,
+    );
+    await record.addNote(body);
+
+    return ref
+            .read(conversationRecordControllerProvider(widget.conversationId))
+            .outcome ==
+        RecordOutcome.noteSaved;
+  }
+
+  /// One entry of the record as the timeline draws it, with the sentence a
+  /// log line reads as resolved here, in the reader's language. Null for a
+  /// kind this build has no sentence for and no body to fall back on.
+  AppRecordEntryData? _recordEntry(ConversationNote entry, AppStrings strings) {
+    final String author = entry.authorName ?? strings.logSystem;
+    final String? text = switch (entry.type) {
+      'note' => entry.body,
+      'summary' => entry.body,
+      'closed' => entry.reason == null
+          ? strings.logClosed.replaceAll('{name}', author)
+          : strings.logClosedWithReason
+                .replaceAll('{name}', author)
+                .replaceAll('{reason}', strings.closeReasonName(entry.reason!)),
+      'reopened' => strings.logReopened.replaceAll('{name}', author),
+      _ => entry.body?.trim(),
+    };
+    if (text == null || text.isEmpty) return null;
+
+    return AppRecordEntryData(
+      id: entry.id,
+      kind: switch (entry.type) {
+        'note' => AppRecordKind.note,
+        'summary' => AppRecordKind.summary,
+        _ => AppRecordKind.log,
+      },
+      at: entry.createdAt,
+      text: text,
+      authorName: entry.authorName,
+    );
+  }
+
+  /// The customer panel, over the thread.
+  ///
+  /// The panel's actions leave through the router rather than through the
+  /// customers feature: a contact's own screen and the note form are routes,
+  /// and a route is the one door every feature may use.
+  Future<void> _openCustomerPanel(Conversation thread) {
+    final String? customerId = thread.customerId;
+
+    return AppBottomSheet.show<void>(
+      context: context,
+      sheet: CustomerPanelSheet(
+        conversation: thread,
+        onOpenCustomer: () {
+          Navigator.of(context).pop();
+          unawaited(
+            context.push(
+              customerId == null
+                  ? AppRoutes.customerNewPath()
+                  : AppRoutes.customerDetailPath(customerId),
+            ),
+          );
+        },
+        onAddReminder: customerId == null
+            ? null
+            : () {
+                Navigator.of(context).pop();
+                unawaited(
+                  context.push(AppRoutes.customerNoteNewPath(customerId)),
+                );
+              },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final AppStrings strings = ref.watch(appStringsProvider);
@@ -180,6 +271,42 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
       });
     });
 
+    // The thread's record, and the refresh that keeps it honest. Read from
+    // the database like the messages; refreshed once per open thread.
+    ref.watch(threadRecordRefreshProvider(widget.conversationId));
+    final List<ConversationNote> record =
+        ref.watch(threadRecordProvider(widget.conversationId)).value ??
+        const <ConversationNote>[];
+    final RecordActionState recordActions = ref.watch(
+      conversationRecordControllerProvider(widget.conversationId),
+    );
+
+    ref.listen(conversationRecordControllerProvider(widget.conversationId), (
+      RecordActionState? previous,
+      RecordActionState next,
+    ) {
+      final RecordOutcome? outcome = next.outcome;
+      if (outcome == null || outcome == previous?.outcome) return;
+
+      AppSnackbar.show(
+        context,
+        message: switch (outcome) {
+          RecordOutcome.noteSaved => strings.noteSaved,
+          RecordOutcome.noteFailed => strings.noteSaveFailed,
+          RecordOutcome.summaryDone => strings.summaryDone,
+          RecordOutcome.summaryFailed => strings.summaryFailed,
+        },
+        tone: switch (outcome) {
+          RecordOutcome.noteFailed ||
+          RecordOutcome.summaryFailed => AppSnackbarTone.warning,
+          _ => AppSnackbarTone.success,
+        },
+      );
+      ref
+          .read(conversationRecordControllerProvider(widget.conversationId).notifier)
+          .clearOutcome();
+    });
+
     ref.listen(conversationThreadControllerProvider(widget.conversationId), (
       ComposerState? previous,
       ComposerState next,
@@ -215,9 +342,17 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
               title: thread.toSummary(strings).title,
               avatarUrl: thread.customerAvatarUrl,
               onBack: () => context.pop(),
+              // The person behind the thread, a tap away: the same panel the
+              // web's inbox docks beside a conversation, as a sheet here.
+              onTitleTap: () => _openCustomerPanel(thread),
             ),
       timeline: AppMessageTimeline(
         typing: typing,
+        records: <AppRecordEntryData>[
+          for (final ConversationNote entry in record)
+            if (_recordEntry(entry, strings) case final AppRecordEntryData data)
+              data,
+        ],
         state: messages.toViewState(
           (List<Message> items) => <AppMessageData>[
             for (final Message item in items) item.toMessageData(),
@@ -254,9 +389,24 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
             strings.archivedReadOnly,
           _ => strings.sessionExpiredHint,
         },
-        sending: composer.isSending,
+        sending: composer.isSending || recordActions.isSavingNote,
         hintText: strings.writeMessage,
-        onSend: _thread.sendDraft,
+        // An internal note goes to the thread's record, never to the
+        // customer; everything else goes the way it always did.
+        onSend: _internalNote ? _addInternalNote : _thread.sendDraft,
+        internalNote: _internalNote,
+        onInternalNoteChanged: (bool value) =>
+            setState(() => _internalNote = value),
+        onSummarize: () => unawaited(
+          ref
+              .read(
+                conversationRecordControllerProvider(
+                  widget.conversationId,
+                ).notifier,
+              )
+              .summarize(),
+        ),
+        summarizing: recordActions.isSummarizing,
         // Reported when the field stops being empty and again when it empties,
         // never per keystroke -- the controller turns that into the customer's
         // bubble and keeps it alive while the reply is written.

@@ -94,6 +94,7 @@ export 'messaging/message_reactions.dart';
 export 'messaging/message_status_icon.dart';
 export 'messaging/message_timeline.dart';
 export 'messaging/quick_reply_bar.dart';
+export 'messaging/record_cards.dart';
 export 'messaging/reply_preview.dart';
 export 'messaging/timeline_builder.dart';
 export 'messaging/typing_indicator.dart';

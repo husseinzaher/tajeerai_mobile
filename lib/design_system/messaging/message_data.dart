@@ -211,3 +211,42 @@ class AppMessageData {
     Object.hashAll(reactions),
   );
 }
+
+/// What kind of record entry sits between the bubbles.
+enum AppRecordKind {
+  /// Something the team wrote to itself. The customer never saw it.
+  note,
+
+  /// A line about the conversation: closed, reopened, assigned, summarised.
+  log,
+
+  /// The assistant's summary of the thread so far.
+  summary,
+}
+
+/// One entry of a thread's own record, as the timeline draws it.
+///
+/// Not a message: nothing here was sent to or received from the customer.
+/// The caller resolves the sentence a log line reads as, in the reader's
+/// language, before handing it over - the design system draws the shape of a
+/// record and knows nothing of which words a closing reason takes.
+@immutable
+class AppRecordEntryData {
+  const AppRecordEntryData({
+    required this.id,
+    required this.kind,
+    required this.at,
+    this.text,
+    this.authorName,
+  });
+
+  final String id;
+  final AppRecordKind kind;
+  final DateTime at;
+
+  /// The note's body, the summary's body, or the log line's sentence.
+  final String? text;
+
+  /// Null for an entry the system wrote.
+  final String? authorName;
+}
