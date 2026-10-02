@@ -8,7 +8,6 @@ import '../../../../app/localization/translations/app_strings.dart';
 import '../../../../app/theme/app_theme.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../app/theme/theme_mode_manager.dart';
-import '../../../../app/bootstrap/dependencies.dart';
 import '../../../../design_system/design_system.dart';
 import '../../application/ports/caller_id_platform_port.dart';
 import '../../domain/entities/caller_id_settings.dart';
@@ -67,15 +66,6 @@ class CallerIdSettingsScreen extends ConsumerWidget {
                   settings: settings,
                   strings: strings,
                   preset: ref.watch(themeSelectionProvider).preset,
-                  // The member's own photo stands in for the caller's: a real
-                  // picture shows what the card looks like with one, and it
-                  // is the one photo this screen is sure to have. Through the
-                  // auth feature's contract, never its controller.
-                  avatarUrl: ref
-                      .read(sessionCapabilityProvider)
-                      .currentSession
-                      ?.user
-                      .avatarUrl,
                 ),
                 const SizedBox(height: TajeerSpacing.md),
                 _StatusCard(
@@ -286,13 +276,17 @@ class _PreviewStage extends StatefulWidget {
     required this.settings,
     required this.strings,
     required this.preset,
-    this.avatarUrl,
   });
 
   final CallerIdSettings settings;
   final AppStrings strings;
   final TajeerPreset preset;
-  final String? avatarUrl;
+
+  /// A drawn stand-in, bundled with the app: a preview must not depend on the
+  /// network, and must not borrow a real person's face.
+  static const AssetImage _demoAvatar = AssetImage(
+    'assets/caller_id/demo_avatar.png',
+  );
 
   @override
   State<_PreviewStage> createState() => _PreviewStageState();
@@ -318,7 +312,7 @@ class _PreviewStageState extends State<_PreviewStage> {
       directionLabel: strings.callerIdIncomingPreview,
       brandLabel: strings.callerIdBrand,
       displayName: strings.callerIdPreviewName,
-      avatarUrl: widget.avatarUrl,
+      avatarImage: _PreviewStage._demoAvatar,
       businessName: strings.callerIdPreviewBusiness,
       tags: <String>[strings.callerIdPreviewTag],
       facts: <AppCallerCardFact>[

@@ -13,6 +13,7 @@ class AppAvatar extends StatelessWidget {
   const AppAvatar({
     required this.name,
     this.imageUrl,
+    this.image,
     this.size = 40,
     this.presence = AppPresence.unknown,
     this.badge,
@@ -21,6 +22,11 @@ class AppAvatar extends StatelessWidget {
 
   final String name;
   final String? imageUrl;
+
+  /// A picture that is not fetched - a bundled asset, a decoded bitmap. Takes
+  /// precedence over [imageUrl]; a preview of the caller card is the one
+  /// place in the app that draws somebody who does not exist.
+  final ImageProvider<Object>? image;
   final double size;
 
   /// Drawn as a ringed dot at the bottom-end corner.
@@ -103,7 +109,13 @@ class AppAvatar extends StatelessWidget {
         color: colors.surfaceMuted,
         shape: BoxShape.circle,
       ),
-      child: imageUrl == null || imageUrl!.isEmpty
+      child: image != null
+          ? Image(
+              image: image!,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stack) => _fallback(context),
+            )
+          : imageUrl == null || imageUrl!.isEmpty
           ? _fallback(context)
           : Image.network(
               imageUrl!,

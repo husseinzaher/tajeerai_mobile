@@ -62,6 +62,7 @@ final class AppCallerCardData {
     this.displayName,
     this.businessName,
     this.avatarUrl,
+    this.avatarImage,
     this.tags = const <String>[],
     this.spamLabel,
     this.lastNote,
@@ -85,6 +86,9 @@ final class AppCallerCardData {
   final String? displayName;
   final String? businessName;
   final String? avatarUrl;
+
+  /// A bundled stand-in picture, for a preview of the card. Wins over [avatarUrl].
+  final ImageProvider<Object>? avatarImage;
   final List<String> tags;
   final String? spamLabel;
 
@@ -264,6 +268,7 @@ class AppCallerCard extends StatelessWidget {
             child: AppAvatar(
               name: data.primaryLabel,
               imageUrl: data.avatarUrl,
+              image: data.avatarImage,
               size: 56,
             ),
           ),
