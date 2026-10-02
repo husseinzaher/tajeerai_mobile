@@ -792,10 +792,6 @@ class AppStrings {
       'en': 'Note added',
       'ar': 'تمت إضافة الملاحظة',
     },
-    'noteSaveFailed': <String, String>{
-      'en': 'The note could not be added.',
-      'ar': 'تعذّر إضافة الملاحظة.',
-    },
     'summaryDone': <String, String>{
       'en': 'The summary was added to the conversation',
       'ar': 'تمت إضافة الملخص إلى المحادثة',
@@ -1126,7 +1122,6 @@ class AppStrings {
   String get closeReasonDuplicate => call('closeReasonDuplicate');
   String get closeReasonOther => call('closeReasonOther');
   String get noteSaved => call('noteSaved');
-  String get noteSaveFailed => call('noteSaveFailed');
   String get summaryDone => call('summaryDone');
   String get summaryFailed => call('summaryFailed');
   String get summaryEmptyThread => call('summaryEmptyThread');

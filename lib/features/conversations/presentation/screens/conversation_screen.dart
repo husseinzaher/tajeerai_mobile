@@ -149,7 +149,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
   /// Answers like a send: true clears the field. A refused note keeps the
   /// text, and the controller's outcome says why in a toast.
   Future<bool> _addInternalNote(AppComposerDraft draft) async {
-    final String body = (draft.text ?? '').trim();
+    final String body = draft.text.trim();
     if (body.isEmpty) return false;
 
     final ConversationRecordController record = ref.read(
