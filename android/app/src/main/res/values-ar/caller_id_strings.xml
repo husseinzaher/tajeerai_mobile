@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="caller_id_brand">تاجر</string>
+    <string name="caller_id_avatar">صورة المتصل</string>
+    <string name="caller_id_close">إغلاق</string>
+    <string name="caller_id_incoming">مكالمة واردة</string>
+    <string name="caller_id_outgoing">مكالمة صادرة</string>
+    <string name="caller_id_call_ended">انتهت المكالمة</string>
+    <string name="caller_id_missed_call">مكالمة فائتة</string>
+    <string name="caller_id_duration">المدة %1$s</string>
+    <string name="caller_id_unknown_caller">متصل غير معروف</string>
+    <string name="caller_id_last_note">آخر ملاحظة</string>
+    <string name="caller_id_last_order">آخر طلب</string>
+    <string name="caller_id_address">العنوان</string>
+    <string name="caller_id_order_line">%1$s · %2$s · %3$s</string>
+    <string name="caller_id_open_customer">فتح العميل</string>
+    <string name="caller_id_add_customer">إضافة كعميل</string>
+    <string name="caller_id_call_back">معاودة الاتصال</string>
+    <string name="caller_id_order_state_draft">مسودة</string>
+    <string name="caller_id_order_state_pending">قيد الانتظار</string>
+    <string name="caller_id_order_state_paid">مدفوع</string>
+    <string name="caller_id_order_state_processing">قيد التجهيز</string>
+    <string name="caller_id_order_state_shipped">تم الشحن</string>
+    <string name="caller_id_order_state_delivered">تم التوصيل</string>
+    <string name="caller_id_order_state_cancelled">ملغي</string>
+    <string name="caller_id_order_state_refunded">مسترد</string>
+    <string name="caller_id_message">رسالة</string>
+    <string name="caller_id_answered">تم الرد</string>
+    <string name="caller_id_log_incoming_answered">مكالمة واردة من %1$s، تم الرد، المدة %2$s.</string>
+    <string name="caller_id_log_incoming_missed">مكالمة واردة فائتة من %1$s.</string>
+    <string name="caller_id_log_outgoing_answered">مكالمة صادرة إلى %1$s، المدة %2$s.</string>
+    <string name="caller_id_log_outgoing_unanswered">مكالمة صادرة إلى %1$s، لم يتم الرد.</string>
+</resources>

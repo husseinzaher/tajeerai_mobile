@@ -7,4 +7,4 @@
     android:paddingHorizontal="8dp"
     android:paddingVertical="4dp"
     android:textAppearance="@style/CallerIdCaption"
-    android:textColor="#353535" />
+    android:textColor="@color/caller_id_text_secondary" />

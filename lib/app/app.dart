@@ -87,6 +87,13 @@ class _TajeerAppState extends ConsumerState<TajeerApp> {
         .accessChanges
         .listen((_) => unawaited(coordinator.reloadSession()));
 
+    // The native caller card reads the app's language from the runtime
+    // config, so a change of language here has to reach it too.
+    ref.listenManual(
+      localeProvider,
+      (_, __) => unawaited(_syncCallerIdRuntime()),
+    );
+
     coordinator.events.listen((event) async {
       switch (event) {
         case SignedIn(:final session, :final wasRestored):
@@ -124,6 +131,14 @@ class _TajeerAppState extends ConsumerState<TajeerApp> {
           await socket.start();
           await _syncCallerIdRuntime();
 
+          // The contact list reads the local database only, and until now the
+          // first walk ran only when somebody pulled to refresh on that
+          // screen - so a fresh install showed no contacts, and the caller
+          // card had nothing local to identify a ringing number with. Not
+          // awaited: a workspace with thousands of contacts must not hold up
+          // the rest of sign-in, and the walk resumes where it stopped.
+          unawaited(ref.read(customerSyncProvider).synchronize());
+
         case SignedOut():
           await ref.read(socketManagerProvider).stop();
 
@@ -150,6 +165,8 @@ class _TajeerAppState extends ConsumerState<TajeerApp> {
           databasePath: databasePath,
           apiBaseUrl: config.apiRoot,
           accessToken: accessToken,
+          // The native card reads the app's language, not the phone's.
+          locale: ref.read(localeProvider).code,
         );
 
     final settings = await ref.read(callerIdSettingsCoordinatorProvider).read();

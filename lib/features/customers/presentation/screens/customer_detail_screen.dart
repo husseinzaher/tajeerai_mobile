@@ -26,21 +26,32 @@ class CustomerDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AppStrings strings = ref.watch(appStringsProvider);
-    final Customer? customer = ref
-        .watch(customerDetailProvider(customerId))
-        .value;
+    final AsyncValue<Customer?> detail = ref.watch(
+      customerDetailProvider(customerId),
+    );
+    final Customer? customer = detail.value;
 
     // Fires once per contact and is not awaited: the screen is already
     // readable from the database, and a refresh must never gate the first
-    // frame.
-    ref.watch(customerDetailRefreshProvider(customerId));
+    // frame. It does decide what an *empty* database means, though: a
+    // contact this device has never synced - one opened from the caller
+    // card, or from an online search - is "loading" until the refresh has
+    // had its say, and "gone" only after it. Saying gone first and then
+    // drawing the person a second later read as an error.
+    final AsyncValue<void> refresh = ref.watch(
+      customerDetailRefreshProvider(customerId),
+    );
+    final bool settling =
+        detail.isLoading || (customer == null && refresh.isLoading);
 
     return AppScaffold(
       toolbar: AppToolbar(
         title: customer?.displayName ?? strings.customers,
         showBack: true,
       ),
-      body: customer == null
+      body: settling
+          ? const AppLoadingState()
+          : customer == null
           ? AppEmptyState(
               title: strings.customerGone,
               icon: LucideIcons.userX,

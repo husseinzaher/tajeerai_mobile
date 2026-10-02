@@ -30,6 +30,14 @@ class CallerIdSettingsCoordinator {
     return _platform.requestCallScreeningRole();
   }
 
+  Future<bool> requestContactsPermission() {
+    return _platform.requestContactsPermission();
+  }
+
+  Future<bool> requestPhoneStatePermission() {
+    return _platform.requestPhoneStatePermission();
+  }
+
   Future<void> openOverlaySettings() {
     return _platform.openOverlaySettings();
   }
@@ -38,11 +46,13 @@ class CallerIdSettingsCoordinator {
     required String databasePath,
     required String apiBaseUrl,
     String? accessToken,
+    String? locale,
   }) {
     return _platform.syncRuntimeConfig(
       databasePath: databasePath,
       apiBaseUrl: apiBaseUrl,
       accessToken: accessToken,
+      locale: locale,
     );
   }
 }

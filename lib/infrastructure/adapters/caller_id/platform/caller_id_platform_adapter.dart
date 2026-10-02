@@ -17,12 +17,24 @@ class CallerIdPlatformAdapter implements CallerIdPlatformPort {
       callScreeningRoleHeld: status['callScreeningRoleHeld'] == true,
       canDrawOverlays: status['canDrawOverlays'] == true,
       callScreeningAvailable: status['callScreeningAvailable'] != false,
+      readContactsGranted: status['readContactsGranted'] == true,
+      readPhoneStateGranted: status['readPhoneStateGranted'] == true,
     );
   }
 
   @override
   Future<bool> requestCallScreeningRole() {
     return _gateway.requestCallScreeningRole();
+  }
+
+  @override
+  Future<bool> requestContactsPermission() {
+    return _gateway.requestContactsPermission();
+  }
+
+  @override
+  Future<bool> requestPhoneStatePermission() {
+    return _gateway.requestPhoneStatePermission();
   }
 
   @override
@@ -40,11 +52,13 @@ class CallerIdPlatformAdapter implements CallerIdPlatformPort {
     required String databasePath,
     required String apiBaseUrl,
     String? accessToken,
+    String? locale,
   }) {
     return _gateway.syncRuntimeConfig(
       databasePath: databasePath,
       apiBaseUrl: apiBaseUrl,
       accessToken: accessToken,
+      locale: locale,
     );
   }
 }
@@ -66,6 +80,12 @@ class NoopCallerIdPlatformAdapter implements CallerIdPlatformPort {
   Future<bool> requestCallScreeningRole() async => false;
 
   @override
+  Future<bool> requestContactsPermission() async => false;
+
+  @override
+  Future<bool> requestPhoneStatePermission() async => false;
+
+  @override
   Future<void> openOverlaySettings() async {}
 
   @override
@@ -76,5 +96,6 @@ class NoopCallerIdPlatformAdapter implements CallerIdPlatformPort {
     required String databasePath,
     required String apiBaseUrl,
     String? accessToken,
+    String? locale,
   }) async {}
 }

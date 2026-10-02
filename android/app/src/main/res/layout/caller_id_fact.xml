@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One fact on the caller card: a muted label and its value, side by side. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:paddingTop="3dp"
+    android:paddingBottom="3dp"
+    android:visibility="gone">
+
+    <TextView
+        android:id="@+id/caller_fact_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minWidth="72dp"
+        android:textAppearance="@style/CallerIdCaption"
+        android:textColor="@color/caller_id_text_muted" />
+
+    <TextView
+        android:id="@+id/caller_fact_value"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_weight="1"
+        android:ellipsize="end"
+        android:maxLines="2"
+        android:textAlignment="viewStart"
+        android:textAppearance="@style/CallerIdCaption"
+        android:textColor="@color/caller_id_text_secondary" />
+</LinearLayout>

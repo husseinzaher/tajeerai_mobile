@@ -515,6 +515,167 @@ class AppStrings {
       'en': 'Use cached caller data',
       'ar': 'استخدام بيانات المتصل المخزّنة',
     },
+    'callerIdStatusReady': <String, String>{'en': 'Ready', 'ar': 'جاهز'},
+    'callerIdStatusSetup': <String, String>{
+      'en': 'Needs setup',
+      'ar': 'يحتاج إعداد',
+    },
+    'callerIdStatusOff': <String, String>{'en': 'Off', 'ar': 'متوقف'},
+    'callerIdReadyDescription': <String, String>{
+      'en': 'The card will appear on your next call.',
+      'ar': 'ستظهر البطاقة في مكالمتك القادمة.',
+    },
+    'callerIdSetupDescription': <String, String>{
+      'en': 'Finish the steps below so the card can appear.',
+      'ar': 'أكمل الخطوات بالأسفل حتى تظهر البطاقة.',
+    },
+    'callerIdOffDescription': <String, String>{
+      'en': 'Turn it on to recognise callers from your customer list.',
+      'ar': 'فعّله ليتعرّف على المتصلين من قائمة عملائك.',
+    },
+    'callerIdPreview': <String, String>{
+      'en': 'Live preview',
+      'ar': 'معاينة مباشرة',
+    },
+    'callerIdPreviewNote': <String, String>{
+      'en': 'Wants a callback on Sunday',
+      'ar': 'تريد اتصالًا يوم الأحد',
+    },
+    'callerIdSetupSteps': <String, String>{
+      'en': 'Setup steps',
+      'ar': 'خطوات الإعداد',
+    },
+    'callerIdScreeningDescription': <String, String>{
+      'en': 'Lets Android hand incoming calls to the app to identify them.',
+      'ar': 'يسمح لأندرويد بتمرير المكالمات إلى التطبيق للتعرّف على المتصل.',
+    },
+    'callerIdOverlayDescription': <String, String>{
+      'en': 'Needed to draw the card above the call screen.',
+      'ar': 'مطلوب لرسم البطاقة فوق شاشة المكالمة.',
+    },
+    'callerIdGrant': <String, String>{'en': 'Allow', 'ar': 'السماح'},
+    'callerIdGranted': <String, String>{'en': 'Granted', 'ar': 'ممنوحة'},
+    'callerIdCalls': <String, String>{'en': 'Calls', 'ar': 'المكالمات'},
+    'callerIdShowIncomingDescription': <String, String>{
+      'en': 'Identify who is calling you.',
+      'ar': 'التعرّف على من يتصل بك.',
+    },
+    'callerIdShowOutgoingDescription': <String, String>{
+      'en': 'Show the card when you call a customer.',
+      'ar': 'عرض البطاقة عندما تتصل بعميل.',
+    },
+    'callerIdUnknownOnlyDescription': <String, String>{
+      'en': 'Hide the card for customers the phone already recognises.',
+      'ar': 'إخفاء البطاقة للعملاء الذين يتعرّف عليهم الهاتف بالفعل.',
+    },
+    'callerIdShowContactsDescription': <String, String>{
+      'en': 'Also show it for customers you already know.',
+      'ar': 'عرضها أيضًا للعملاء الذين تعرفهم.',
+    },
+    'callerIdCardPosition': <String, String>{
+      'en': 'Card position',
+      'ar': 'موضع البطاقة',
+    },
+    'callerIdPositionTop': <String, String>{'en': 'Top', 'ar': 'أعلى'},
+    'callerIdPositionCenter': <String, String>{'en': 'Centre', 'ar': 'الوسط'},
+    'callerIdPositionBottom': <String, String>{'en': 'Bottom', 'ar': 'أسفل'},
+    'callerIdCardSize': <String, String>{
+      'en': 'Card size',
+      'ar': 'حجم البطاقة',
+    },
+    'callerIdSizeCompact': <String, String>{'en': 'Compact', 'ar': 'مضغوطة'},
+    'callerIdSizeFull': <String, String>{'en': 'Detailed', 'ar': 'مفصّلة'},
+    'callerIdShowPhoneNumber': <String, String>{
+      'en': 'Show phone number',
+      'ar': 'عرض رقم الهاتف',
+    },
+    'callerIdShowBusinessInfo': <String, String>{
+      'en': 'Show customer type',
+      'ar': 'عرض نوع العميل',
+    },
+    'callerIdShowTags': <String, String>{'en': 'Show tags', 'ar': 'عرض الوسوم'},
+    'callerIdAutoDismissDescription': <String, String>{
+      'en': 'How long the card stays on screen.',
+      'ar': 'مدة بقاء البطاقة على الشاشة.',
+    },
+    'callerIdDismissOnTapDescription': <String, String>{
+      'en': 'Tap the card to hide it.',
+      'ar': 'انقر البطاقة لإخفائها.',
+    },
+    'callerIdLocalLookupDescription': <String, String>{
+      'en': 'Match the number against customers saved on this phone. Fastest.',
+      'ar': 'مطابقة الرقم مع العملاء المحفوظين على هذا الهاتف، وهو الأسرع.',
+    },
+    'callerIdServerLookupDescription': <String, String>{
+      'en': 'Ask the workspace when this phone does not know the number.',
+      'ar': 'سؤال مساحة العمل عندما لا يعرف الهاتف الرقم.',
+    },
+    'callerIdUseCacheDescription': <String, String>{
+      'en': 'Remember results for a week so repeat callers appear instantly.',
+      'ar': 'حفظ النتائج لأسبوع لتظهر الأرقام المتكررة فورًا.',
+    },
+    'callerIdSecondsUnit': <String, String>{'en': 's', 'ar': 'ث'},
+    'callerIdContacts': <String, String>{
+      'en': 'Contacts access',
+      'ar': 'الوصول لجهات الاتصال',
+    },
+    'callerIdContactsDescription': <String, String>{
+      'en': 'Lets the card appear for callers saved in your phone, not only for unknown numbers.',
+      'ar': 'يسمح بظهور البطاقة للمتصلين المحفوظين في هاتفك، لا للأرقام غير المعروفة فقط.',
+    },
+    'callerIdPhoneState': <String, String>{
+      'en': 'Call status',
+      'ar': 'حالة المكالمة',
+    },
+    'callerIdPhoneStateDescription': <String, String>{
+      'en': 'Keeps the card up for the whole call and shows a summary when it ends.',
+      'ar': 'يُبقي البطاقة طوال المكالمة ويعرض ملخصًا عند انتهائها.',
+    },
+    'callerIdNeverDismiss': <String, String>{
+      'en': 'Never',
+      'ar': 'لا يختفي',
+    },
+    'callerIdLogCalls': <String, String>{
+      'en': 'Log calls to the customer record',
+      'ar': 'تسجيل المكالمات في سجل العميل',
+    },
+    'callerIdLogCallsDescription': <String, String>{
+      'en': 'After each call, a note is added to the customer on the server: incoming or outgoing, answered and for how long, or missed.',
+      'ar': 'بعد كل مكالمة تُضاف ملاحظة لسجل العميل على السيرفر: واردة أو صادرة، تم الرد ومدتها، أو فائتة.',
+    },
+    'callerIdPreviewDuring': <String, String>{
+      'en': 'During the call',
+      'ar': 'أثناء المكالمة',
+    },
+    'callerIdPreviewAfter': <String, String>{
+      'en': 'After the call',
+      'ar': 'بعد المكالمة',
+    },
+    'callerIdBrand': <String, String>{'en': 'TajeerAi', 'ar': 'تاجر'},
+    'callerIdLastNote': <String, String>{'en': 'Last note', 'ar': 'آخر ملاحظة'},
+    'callerIdLastOrder': <String, String>{'en': 'Last order', 'ar': 'آخر طلب'},
+    'callerIdAddress': <String, String>{'en': 'Address', 'ar': 'العنوان'},
+    'callerIdPreviewOrder': <String, String>{
+      'en': '#1042 · Delivered · 450.00 SAR',
+      'ar': '#1042 · تم التوصيل · 450.00 SAR',
+    },
+    'callerIdPreviewAddress': <String, String>{
+      'en': 'King Fahd Rd, Al Olaya, Riyadh',
+      'ar': 'طريق الملك فهد، العليا، الرياض',
+    },
+    'callerIdMissedCall': <String, String>{
+      'en': 'Missed call',
+      'ar': 'مكالمة فائتة',
+    },
+    'callerIdCallBack': <String, String>{
+      'en': 'Call back',
+      'ar': 'اتصل مرة أخرى',
+    },
+    'callerIdMessage': <String, String>{'en': 'Message', 'ar': 'رسالة'},
+    'callerIdOpenCustomer': <String, String>{
+      'en': 'Open customer',
+      'ar': 'فتح العميل',
+    },
   };
 
   /// The table itself, for the test that checks every entry is translated.
@@ -695,6 +856,59 @@ class AppStrings {
   String get callerIdLocalLookup => call('callerIdLocalLookup');
   String get callerIdServerLookup => call('callerIdServerLookup');
   String get callerIdUseCache => call('callerIdUseCache');
+  String get callerIdStatusReady => call('callerIdStatusReady');
+  String get callerIdStatusSetup => call('callerIdStatusSetup');
+  String get callerIdStatusOff => call('callerIdStatusOff');
+  String get callerIdReadyDescription => call('callerIdReadyDescription');
+  String get callerIdSetupDescription => call('callerIdSetupDescription');
+  String get callerIdOffDescription => call('callerIdOffDescription');
+  String get callerIdPreview => call('callerIdPreview');
+  String get callerIdPreviewNote => call('callerIdPreviewNote');
+  String get callerIdSetupSteps => call('callerIdSetupSteps');
+  String get callerIdScreeningDescription => call('callerIdScreeningDescription');
+  String get callerIdOverlayDescription => call('callerIdOverlayDescription');
+  String get callerIdGrant => call('callerIdGrant');
+  String get callerIdGranted => call('callerIdGranted');
+  String get callerIdCalls => call('callerIdCalls');
+  String get callerIdShowIncomingDescription => call('callerIdShowIncomingDescription');
+  String get callerIdShowOutgoingDescription => call('callerIdShowOutgoingDescription');
+  String get callerIdUnknownOnlyDescription => call('callerIdUnknownOnlyDescription');
+  String get callerIdShowContactsDescription => call('callerIdShowContactsDescription');
+  String get callerIdCardPosition => call('callerIdCardPosition');
+  String get callerIdPositionTop => call('callerIdPositionTop');
+  String get callerIdPositionCenter => call('callerIdPositionCenter');
+  String get callerIdPositionBottom => call('callerIdPositionBottom');
+  String get callerIdCardSize => call('callerIdCardSize');
+  String get callerIdSizeCompact => call('callerIdSizeCompact');
+  String get callerIdSizeFull => call('callerIdSizeFull');
+  String get callerIdShowPhoneNumber => call('callerIdShowPhoneNumber');
+  String get callerIdShowBusinessInfo => call('callerIdShowBusinessInfo');
+  String get callerIdShowTags => call('callerIdShowTags');
+  String get callerIdAutoDismissDescription => call('callerIdAutoDismissDescription');
+  String get callerIdDismissOnTapDescription => call('callerIdDismissOnTapDescription');
+  String get callerIdLocalLookupDescription => call('callerIdLocalLookupDescription');
+  String get callerIdServerLookupDescription => call('callerIdServerLookupDescription');
+  String get callerIdUseCacheDescription => call('callerIdUseCacheDescription');
+  String get callerIdSecondsUnit => call('callerIdSecondsUnit');
+  String get callerIdContacts => call('callerIdContacts');
+  String get callerIdContactsDescription => call('callerIdContactsDescription');
+  String get callerIdPhoneState => call('callerIdPhoneState');
+  String get callerIdPhoneStateDescription => call('callerIdPhoneStateDescription');
+  String get callerIdNeverDismiss => call('callerIdNeverDismiss');
+  String get callerIdLogCalls => call('callerIdLogCalls');
+  String get callerIdLogCallsDescription => call('callerIdLogCallsDescription');
+  String get callerIdPreviewDuring => call('callerIdPreviewDuring');
+  String get callerIdPreviewAfter => call('callerIdPreviewAfter');
+  String get callerIdBrand => call('callerIdBrand');
+  String get callerIdLastNote => call('callerIdLastNote');
+  String get callerIdLastOrder => call('callerIdLastOrder');
+  String get callerIdAddress => call('callerIdAddress');
+  String get callerIdPreviewOrder => call('callerIdPreviewOrder');
+  String get callerIdPreviewAddress => call('callerIdPreviewAddress');
+  String get callerIdMissedCall => call('callerIdMissedCall');
+  String get callerIdCallBack => call('callerIdCallBack');
+  String get callerIdMessage => call('callerIdMessage');
+  String get callerIdOpenCustomer => call('callerIdOpenCustomer');
 
   /// A member's role, named the way the web dashboard names it. A role this
   /// build does not know yet is shown as the server wrote it, not as nothing.

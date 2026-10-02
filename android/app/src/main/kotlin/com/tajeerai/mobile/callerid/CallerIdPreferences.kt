@@ -29,6 +29,7 @@ class CallerIdPreferences(context: Context) {
         arguments["databasePath"]?.toString()?.let { editor.putString(KEY_DB_PATH, it) }
         arguments["apiBaseUrl"]?.toString()?.let { editor.putString(KEY_API_BASE, it) }
         arguments["accessToken"]?.toString()?.let { editor.putString(KEY_ACCESS_TOKEN, it) }
+        arguments["locale"]?.toString()?.let { editor.putString(KEY_LOCALE, it) }
         editor.apply()
     }
 
@@ -74,16 +75,23 @@ class CallerIdPreferences(context: Context) {
 
     fun useCachedData(): Boolean = prefs.getBoolean("useCachedData", true)
 
+    /** Write each call to the contact's record on the server as a note. */
+    fun logCallsToServer(): Boolean = prefs.getBoolean("logCallsToServer", false)
+
     fun databasePath(): String? = prefs.getString(KEY_DB_PATH, null)
 
     fun apiBaseUrl(): String? = prefs.getString(KEY_API_BASE, null)
 
     fun accessToken(): String? = prefs.getString(KEY_ACCESS_TOKEN, null)
 
+    /** The app's language (`ar`, `en`), so the card reads like the rest of the app. */
+    fun locale(): String? = prefs.getString(KEY_LOCALE, null)
+
     companion object {
         private const val PREFS_NAME = "caller_id_settings"
         private const val KEY_DB_PATH = "runtime.databasePath"
         private const val KEY_API_BASE = "runtime.apiBaseUrl"
         private const val KEY_ACCESS_TOKEN = "runtime.accessToken"
+        private const val KEY_LOCALE = "runtime.locale"
     }
 }

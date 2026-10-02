@@ -58,6 +58,34 @@ void main() {
     });
   });
 
+  /* The caller card's way in: a tap on the card while a phone rings. */
+  group('a contact, from the caller card', () {
+    test('opens a contact over the app’s own scheme', () {
+      expect(
+        resolve('tajeerai://customers/c1'),
+        AppRoutes.customerDetailPath('c1'),
+      );
+    });
+
+    test('opens the new-contact form with the number that rang', () {
+      expect(
+        resolve('tajeerai://customers/new?phone=%2B966501234567'),
+        '${AppRoutes.customerNewPath()}?phone=%2B966501234567',
+      );
+      expect(resolve('tajeerai://customers/new'), AppRoutes.customerNewPath());
+    });
+
+    /* A web page must not be able to open a contact; only this app's own card. */
+    test('refuses a contact link from the web', () {
+      expect(resolve('https://tajeerai.com/customers/c1'), isNull);
+    });
+
+    test('refuses a malformed contact link', () {
+      expect(resolve('tajeerai://customers'), isNull);
+      expect(resolve('tajeerai://customers/c1/notes'), isNull);
+    });
+  });
+
   group('what it refuses', () {
     /* The one that matters: otherwise any page anywhere could send a reader
        wherever it liked inside this app. */

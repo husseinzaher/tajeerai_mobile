@@ -25,12 +25,30 @@ class AndroidCallerIdGateway {
       'callScreeningRoleHeld': false,
       'canDrawOverlays': false,
       'callScreeningAvailable': false,
+      'readContactsGranted': false,
+      'readPhoneStateGranted': false,
     };
   }
 
   Future<bool> requestCallScreeningRole() async {
     final Object? result = await _channel.invokeMethod<Object?>(
       'requestCallScreeningRole',
+    );
+
+    return result == true;
+  }
+
+  Future<bool> requestContactsPermission() async {
+    final Object? result = await _channel.invokeMethod<Object?>(
+      'requestContactsPermission',
+    );
+
+    return result == true;
+  }
+
+  Future<bool> requestPhoneStatePermission() async {
+    final Object? result = await _channel.invokeMethod<Object?>(
+      'requestPhoneStatePermission',
     );
 
     return result == true;
@@ -48,11 +66,13 @@ class AndroidCallerIdGateway {
     required String databasePath,
     required String apiBaseUrl,
     String? accessToken,
+    String? locale,
   }) {
     return _channel.invokeMethod<void>('syncRuntimeConfig', <String, Object?>{
       'databasePath': databasePath,
       'apiBaseUrl': apiBaseUrl,
       'accessToken': accessToken,
+      'locale': locale,
     });
   }
 }

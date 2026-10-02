@@ -47,7 +47,18 @@ abstract final class DeepLink {
 
     final List<String> segments = _meaningfulSegments(uri);
 
-    if (segments.isEmpty || segments.first != 'blog') return null;
+    if (segments.isEmpty) return null;
+
+    /*
+      The caller card's way in. Only over the app's own scheme: the card is
+      drawn by this app on this phone, so nothing a web page sends should be
+      able to open a contact. The guard still owns whether a session exists.
+    */
+    if (segments.first == 'customers' && uri.scheme == scheme) {
+      return _customer(segments, uri.queryParameters);
+    }
+
+    if (segments.first != 'blog') return null;
 
     if (segments.length == 1) return AppRoutes.blog;
 
@@ -59,6 +70,25 @@ abstract final class DeepLink {
     final String slug = segments[1];
 
     return slug.isEmpty ? AppRoutes.blog : AppRoutes.blogArticlePath(slug);
+  }
+
+  /// `tajeerai://customers/<id>` opens a contact; `tajeerai://customers/new`
+  /// opens the form, carrying `?phone=` so a stranger who rang can be saved
+  /// without retyping the number.
+  static String? _customer(List<String> segments, Map<String, String> query) {
+    if (segments.length != 2 || segments[1].isEmpty) return null;
+
+    if (segments[1] == 'new') {
+      final String? phone = query['phone'];
+      final String path = AppRoutes.customerNewPath();
+
+      return phone == null || phone.isEmpty
+          ? path
+          : Uri(path: path, queryParameters: <String, String>{'phone': phone})
+                .toString();
+    }
+
+    return AppRoutes.customerDetailPath(segments[1]);
   }
 
   /// Whether this address belongs to this app at all.

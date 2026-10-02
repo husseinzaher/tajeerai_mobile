@@ -1,4 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="caller_id_brand">TajeerAi</string>
     <string name="caller_id_avatar">Caller avatar</string>
+    <string name="caller_id_close">Close</string>
+    <string name="caller_id_incoming">Incoming call</string>
+    <string name="caller_id_outgoing">Outgoing call</string>
+    <string name="caller_id_call_ended">Call ended</string>
+    <string name="caller_id_missed_call">Missed call</string>
+    <!-- mm:ss, e.g. "Duration 03:12" -->
+    <string name="caller_id_duration">Duration %1$s</string>
+    <string name="caller_id_unknown_caller">Unknown caller</string>
+    <string name="caller_id_last_note">Last note</string>
+    <string name="caller_id_last_order">Last order</string>
+    <string name="caller_id_address">Address</string>
+    <!-- reference · state · amount, e.g. "#1042 · Delivered · SAR 450.00" -->
+    <string name="caller_id_order_line">%1$s · %2$s · %3$s</string>
+    <string name="caller_id_open_customer">Open customer</string>
+    <string name="caller_id_add_customer">Add as customer</string>
+    <string name="caller_id_call_back">Call back</string>
+    <string name="caller_id_order_state_draft">Draft</string>
+    <string name="caller_id_order_state_pending">Pending</string>
+    <string name="caller_id_order_state_paid">Paid</string>
+    <string name="caller_id_order_state_processing">Processing</string>
+    <string name="caller_id_order_state_shipped">Shipped</string>
+    <string name="caller_id_order_state_delivered">Delivered</string>
+    <string name="caller_id_order_state_cancelled">Cancelled</string>
+    <string name="caller_id_order_state_refunded">Refunded</string>
+    <string name="caller_id_message">Message</string>
+    <string name="caller_id_answered">Answered</string>
+    <!-- Notes written to the customer's record when call logging is on. -->
+    <string name="caller_id_log_incoming_answered">Incoming call from %1$s, answered, %2$s.</string>
+    <string name="caller_id_log_incoming_missed">Missed incoming call from %1$s.</string>
+    <string name="caller_id_log_outgoing_answered">Outgoing call to %1$s, %2$s.</string>
+    <string name="caller_id_log_outgoing_unanswered">Outgoing call to %1$s, not answered.</string>
 </resources>

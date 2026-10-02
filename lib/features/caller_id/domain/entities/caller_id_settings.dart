@@ -22,6 +22,7 @@ final class CallerIdSettings {
     this.localLookupEnabled = true,
     this.serverLookupEnabled = true,
     this.useCachedData = true,
+    this.logCallsToServer = false,
   });
 
   final bool enabled;
@@ -45,6 +46,12 @@ final class CallerIdSettings {
   final bool localLookupEnabled;
   final bool serverLookupEnabled;
   final bool useCachedData;
+
+  /// Whether each call the card saw is written to the contact's record on the
+  /// server as a note - who, which way, answered for how long or missed. Off
+  /// by default: it is the member's customer timeline, and filling it with
+  /// every ring is a choice they make, not one made for them.
+  final bool logCallsToServer;
 
   bool shouldShowFor({required bool isIncoming, required bool isKnownContact}) {
     if (!enabled || !cardEnabled) return false;
@@ -79,6 +86,7 @@ final class CallerIdSettings {
     bool? localLookupEnabled,
     bool? serverLookupEnabled,
     bool? useCachedData,
+    bool? logCallsToServer,
   }) {
     return CallerIdSettings(
       enabled: enabled ?? this.enabled,
@@ -102,6 +110,7 @@ final class CallerIdSettings {
       localLookupEnabled: localLookupEnabled ?? this.localLookupEnabled,
       serverLookupEnabled: serverLookupEnabled ?? this.serverLookupEnabled,
       useCachedData: useCachedData ?? this.useCachedData,
+      logCallsToServer: logCallsToServer ?? this.logCallsToServer,
     );
   }
 
@@ -127,6 +136,7 @@ final class CallerIdSettings {
     'localLookupEnabled': localLookupEnabled,
     'serverLookupEnabled': serverLookupEnabled,
     'useCachedData': useCachedData,
+    'logCallsToServer': logCallsToServer,
   };
 
   static CallerIdSettings fromJson(Map<String, Object?> json) {
@@ -154,6 +164,7 @@ final class CallerIdSettings {
       localLookupEnabled: json['localLookupEnabled'] != false,
       serverLookupEnabled: json['serverLookupEnabled'] != false,
       useCachedData: json['useCachedData'] != false,
+      logCallsToServer: json['logCallsToServer'] == true,
     );
   }
 
@@ -179,6 +190,7 @@ final class CallerIdSettings {
     'localLookupEnabled': localLookupEnabled,
     'serverLookupEnabled': serverLookupEnabled,
     'useCachedData': useCachedData,
+    'logCallsToServer': logCallsToServer,
   };
 
   static int _readInt(Object? value, {required int fallback}) {

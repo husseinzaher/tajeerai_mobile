@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/bootstrap/dependencies.dart';
@@ -47,7 +45,11 @@ callerIdSettingsControllerProvider =
 class CallerIdSettingsController extends Notifier<CallerIdSettingsViewState> {
   @override
   CallerIdSettingsViewState build() {
-    unawaited(refresh());
+    // Deferred, not called inline: `refresh` writes `state` on its first
+    // line, and a Notifier's state does not exist until `build` has
+    // returned. Called synchronously it threw before the first await, the
+    // failed future was discarded, and the screen sat on its spinner forever.
+    Future<void>.microtask(refresh);
 
     return const CallerIdSettingsViewState();
   }
@@ -56,9 +58,19 @@ class CallerIdSettingsController extends Notifier<CallerIdSettingsViewState> {
     state = state.copyWith(isLoading: true);
 
     final settings = await ref.read(callerIdSettingsCoordinatorProvider).read();
-    final permissions = await ref
-        .read(callerIdSettingsCoordinatorProvider)
-        .permissionStatus();
+
+    // A permission read that fails - the platform channel not answering, a
+    // device without the role manager - must not leave the screen on its
+    // spinner forever: the settings still have to be reachable, and "not
+    // granted" is the honest state to show until the read works.
+    CallerIdPermissionStatus permissions = state.permissions;
+    try {
+      permissions = await ref
+          .read(callerIdSettingsCoordinatorProvider)
+          .permissionStatus();
+    } on Object {
+      // Shown as not granted; the next refresh asks again.
+    }
 
     state = state.copyWith(
       settings: settings,
@@ -86,6 +98,20 @@ class CallerIdSettingsController extends Notifier<CallerIdSettingsViewState> {
 
   Future<void> openOverlaySettings() async {
     await ref.read(callerIdSettingsCoordinatorProvider).openOverlaySettings();
+    await refresh();
+  }
+
+  Future<void> requestContactsPermission() async {
+    await ref
+        .read(callerIdSettingsCoordinatorProvider)
+        .requestContactsPermission();
+    await refresh();
+  }
+
+  Future<void> requestPhoneStatePermission() async {
+    await ref
+        .read(callerIdSettingsCoordinatorProvider)
+        .requestPhoneStatePermission();
     await refresh();
   }
 }
