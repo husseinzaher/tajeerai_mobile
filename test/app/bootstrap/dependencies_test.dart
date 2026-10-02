@@ -13,13 +13,13 @@ import 'package:TajeerAi/features/conversations/domain/repositories/conversation
 import 'package:TajeerAi/features/conversations/domain/repositories/message_repository.dart';
 import 'package:TajeerAi/features/conversations/domain/services/conversation_service.dart';
 import 'package:TajeerAi/features/conversations/domain/services/message_service.dart';
-import 'package:TajeerAi/features/conversations/realtime/conversation_socket_handler.dart';
-import 'package:TajeerAi/infrastructure/database/app_database.dart';
+import 'package:TajeerAi/infrastructure/adapters/conversations/realtime/conversation_socket_handler.dart';
+import 'package:TajeerAi/infrastructure/storage/database/app_database.dart';
 import 'package:TajeerAi/infrastructure/device/platform_info.dart';
 import 'package:TajeerAi/infrastructure/logging/crash_reporter.dart';
-import 'package:TajeerAi/infrastructure/network/http_client.dart';
-import 'package:TajeerAi/infrastructure/realtime/socket_client.dart';
-import 'package:TajeerAi/infrastructure/realtime/socket_manager.dart';
+import 'package:TajeerAi/infrastructure/api/http_client.dart';
+import 'package:TajeerAi/infrastructure/socket/socket_client.dart';
+import 'package:TajeerAi/infrastructure/socket/socket_manager.dart';
 
 import '../../support/test_database.dart';
 

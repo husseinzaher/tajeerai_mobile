@@ -10,15 +10,16 @@ import 'package:open_filex/open_filex.dart';
 import '../../../../app/bootstrap/dependencies.dart';
 import '../../../../app/localization/translations/app_strings.dart';
 import '../../../../design_system/design_system.dart';
+import '../../application/ports/attachment_picker.dart';
+import '../../application/ports/voice_recorder.dart';
 import '../../domain/entities/conversation.dart';
 import '../../domain/entities/message.dart';
-import '../../application/coordinators/conversation_media_picker.dart';
-import '../../application/coordinators/conversation_voice_recorder.dart';
 import '../controllers/conversation_attachment_opener.dart';
 import '../controllers/conversation_audio_controller.dart';
 import '../controllers/conversation_thread_controller.dart';
 import '../controllers/conversation_video_controller.dart';
 import '../widgets/async_view_state.dart';
+import '../widgets/attachment_view_data.dart';
 import '../widgets/conversation_view_data.dart';
 import '../widgets/message_view_data.dart';
 import '../../domain/value_objects/session_window.dart';
@@ -41,7 +42,7 @@ class ConversationScreen extends ConsumerStatefulWidget {
 class _ConversationScreenState extends ConsumerState<ConversationScreen> {
   final ScrollController _scroll = ScrollController();
   final AppComposerController _composer = AppComposerController();
-  late final ConversationVoiceRecorder _voiceRecorder;
+  late final VoiceRecorder _voiceRecorder;
   late final ConversationAudioController _audio;
   late final ConversationVideoController _video;
 
@@ -79,7 +80,10 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
   void initState() {
     super.initState();
     _scroll.addListener(_onScroll);
-    _voiceRecorder = ConversationVoiceRecorder()
+    // Made rather than read: the recorder lives exactly as long as this
+    // screen, and the screen disposes it. The factory is the port's, so
+    // nothing here names the plugin that records.
+    _voiceRecorder = ref.read(voiceRecorderFactoryProvider)()
       ..onElapsed = (Duration elapsed) {
         if (mounted) {
           setState(() => _recordingElapsed = elapsed);
@@ -339,12 +343,12 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
 
   Future<void> _attach() async {
     try {
-      final AppAttachmentData? picked = await ConversationMediaPicker.pick(
-        storage: ref.read(fileStorageProvider),
-      );
+      final PickedAttachment? picked = await ref
+          .read(attachmentPickerProvider)
+          .pick();
 
       if (picked != null && mounted) {
-        _composer.addAttachment(picked);
+        _composer.addAttachment(picked.toAttachmentData());
       }
     } on FileSystemException {
       if (!mounted) return;

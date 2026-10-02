@@ -2,7 +2,7 @@ import 'dart:async';
 
 import '../../../../failures/app_failure.dart';
 import '../../../../infrastructure/logging/logger.dart';
-import '../../data/remote/conversation_remote_data_source.dart';
+import '../ports/conversation_remote_port.dart';
 
 /// Keeps the member's seat in the threads they have open.
 ///
@@ -34,12 +34,12 @@ import '../../data/remote/conversation_remote_data_source.dart';
 /// reading.
 class ConversationPresenceCoordinator {
   ConversationPresenceCoordinator({
-    required ConversationRemoteDataSource remote,
+    required ConversationRemotePort remote,
     required Logger logger,
   }) : _remote = remote,
        _logger = logger;
 
-  final ConversationRemoteDataSource _remote;
+  final ConversationRemotePort _remote;
   final Logger _logger;
 
   final Set<String> _occupied = <String>{};

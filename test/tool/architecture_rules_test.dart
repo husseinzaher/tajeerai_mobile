@@ -52,7 +52,7 @@ void main() {
         contextFor(
           'lib/features/auth/presentation/screens/login_screen.dart',
           <String>[
-            'lib/features/auth/data/repositories/auth_repository_impl.dart',
+            'lib/infrastructure/adapters/auth/repositories/auth_repository_impl.dart',
           ],
         ),
       );
@@ -78,7 +78,7 @@ void main() {
       final violations = const LayerDependencyRule().check(
         contextFor(
           'lib/features/conversations/presentation/screens/thread.dart',
-          <String>['lib/infrastructure/realtime/socket_manager.dart'],
+          <String>['lib/infrastructure/socket/socket_manager.dart'],
         ),
       );
 
@@ -136,19 +136,20 @@ void main() {
       final violations = const LayerDependencyRule().check(
         contextFor(
           'lib/features/auth/domain/services/auth_service.dart',
-          <String>['lib/infrastructure/network/http_client.dart'],
+          <String>['lib/infrastructure/api/http_client.dart'],
         ),
       );
 
       expect(violations, hasLength(1));
     });
 
-    test('flags the domain importing its own feature data layer', () {
+    test('flags the domain importing its own feature adapters', () {
       final violations = const LayerDependencyRule().check(
-        contextFor(
-          'lib/features/auth/domain/services/auth_service.dart',
-          <String>['lib/features/auth/data/local/auth_local_data_source.dart'],
-        ),
+        contextFor('lib/features/auth/domain/services/auth_service.dart', <
+          String
+        >[
+          'lib/infrastructure/adapters/auth/local/auth_local_data_source.dart',
+        ]),
       );
 
       expect(violations, hasLength(1));
@@ -186,7 +187,7 @@ void main() {
       final violations = const LayerDependencyRule().check(
         contextFor(
           'lib/features/conversations/application/coordinators/outbox.dart',
-          <String>['lib/infrastructure/database/daos/outbox_dao.dart'],
+          <String>['lib/infrastructure/storage/database/daos/outbox_dao.dart'],
         ),
       );
 
@@ -194,10 +195,10 @@ void main() {
     });
   });
 
-  group('RULES 11-12 -- infrastructure stays business-agnostic', () {
+  group('RULES 11-12 -- shared infrastructure stays business-agnostic', () {
     test('flags infrastructure importing a screen', () {
       final violations = const LayerDependencyRule().check(
-        contextFor('lib/infrastructure/realtime/socket_manager.dart', <String>[
+        contextFor('lib/infrastructure/socket/socket_manager.dart', <String>[
           'lib/features/auth/presentation/screens/login_screen.dart',
         ]),
       );
@@ -208,7 +209,7 @@ void main() {
 
     test('flags infrastructure importing feature business code', () {
       final violations = const LayerDependencyRule().check(
-        contextFor('lib/infrastructure/realtime/socket_manager.dart', <String>[
+        contextFor('lib/infrastructure/socket/socket_manager.dart', <String>[
           'lib/features/conversations/domain/entities/message.dart',
         ]),
       );
@@ -222,10 +223,13 @@ void main() {
       // database, so the tables have to be declared on it. Moving every
       // feature's schema into infrastructure would be the worse violation.
       final violations = const LayerDependencyRule().check(
-        contextFor('lib/infrastructure/database/app_database.dart', <String>[
-          'lib/features/conversations/data/local/conversation_tables.dart',
-          'lib/features/conversations/data/local/conversation_dao.dart',
-        ]),
+        contextFor(
+          'lib/infrastructure/storage/database/app_database.dart',
+          <String>[
+            'lib/infrastructure/adapters/conversations/local/conversation_tables.dart',
+            'lib/infrastructure/adapters/conversations/local/conversation_dao.dart',
+          ],
+        ),
       );
 
       expect(violations, isEmpty);
@@ -233,8 +237,8 @@ void main() {
 
     test('the exception does not extend to other infrastructure files', () {
       final violations = const LayerDependencyRule().check(
-        contextFor('lib/infrastructure/realtime/socket_client.dart', <String>[
-          'lib/features/conversations/data/local/conversation_tables.dart',
+        contextFor('lib/infrastructure/socket/socket_client.dart', <String>[
+          'lib/infrastructure/adapters/conversations/local/conversation_tables.dart',
         ]),
       );
 
@@ -243,9 +247,12 @@ void main() {
 
     test('the exception does not extend to non-schema feature files', () {
       final violations = const LayerDependencyRule().check(
-        contextFor('lib/infrastructure/database/app_database.dart', <String>[
-          'lib/features/conversations/domain/services/message_service.dart',
-        ]),
+        contextFor(
+          'lib/infrastructure/storage/database/app_database.dart',
+          <String>[
+            'lib/features/conversations/domain/services/message_service.dart',
+          ],
+        ),
       );
 
       expect(violations, hasLength(1));
@@ -571,7 +578,7 @@ void main() {
   });
 
   group('RULE 36 -- HTTP is reached only where its policy is reviewed', () {
-    const String client = 'lib/infrastructure/network/http_client.dart';
+    const String client = 'lib/infrastructure/api/http_client.dart';
 
     List<Violation> check(
       String path, {
@@ -581,10 +588,10 @@ void main() {
       contextFor(path, imports, packages: packages),
     );
 
-    test('a feature data source may use the HTTP client', () {
+    test('an adapter remote source may use the HTTP client', () {
       expect(
         check(
-          'lib/features/customers/data/remote/customer_remote_data_source.dart',
+          'lib/infrastructure/adapters/customers/remote/customer_remote_data_source.dart',
           imports: <String>[client],
         ),
         isEmpty,
@@ -594,7 +601,7 @@ void main() {
     test('a controller, a repository or a coordinator may not', () {
       for (final String path in <String>[
         'lib/features/customers/presentation/controllers/customers_controller.dart',
-        'lib/features/customers/data/repositories/customer_repository_impl.dart',
+        'lib/infrastructure/adapters/customers/repositories/customer_repository_impl.dart',
         'lib/features/customers/application/coordinators/customer_sync.dart',
       ]) {
         final violations = check(path, imports: <String>[client]);
@@ -604,23 +611,23 @@ void main() {
       }
     });
 
-    test('the composition root and the network layer may', () {
+    test('the composition root and the HTTP layer may', () {
       expect(
         check('lib/app/bootstrap/dependencies.dart', imports: <String>[client]),
         isEmpty,
       );
       expect(
         check(
-          'lib/infrastructure/network/interceptors/logging_interceptor.dart',
+          'lib/infrastructure/api/interceptors/logging_interceptor.dart',
           packages: <String>['dio'],
         ),
         isEmpty,
       );
     });
 
-    test('nothing outside the network layer names the HTTP library', () {
+    test('nothing outside the HTTP layer names the HTTP library', () {
       final violations = check(
-        'lib/features/auth/data/remote/auth_remote_data_source.dart',
+        'lib/infrastructure/adapters/auth/remote/auth_remote_data_source.dart',
         packages: <String>['cookie_jar', 'dio'],
       );
 
@@ -649,9 +656,9 @@ void main() {
     test('flags feature A importing feature B data', () {
       final violations = const FeatureBoundaryRule().check(
         contextFor(
-          'lib/features/conversations/data/repositories/x.dart',
+          'lib/infrastructure/adapters/conversations/repositories/x.dart',
           <String>[
-            'lib/features/auth/data/repositories/auth_repository_impl.dart',
+            'lib/infrastructure/adapters/auth/repositories/auth_repository_impl.dart',
           ],
         ),
       );
@@ -659,11 +666,31 @@ void main() {
       expect(violations.single.rule, contains('RULE 14'));
     });
 
-    test('flags feature A importing feature B realtime internals', () {
+    test('holds an adapter to the boundary of the feature it serves', () {
+      // The conversation socket handler may not reach auth's socket
+      // credentials, any more than a conversation screen may: an adapter
+      // carries its feature's name, and the same rule applies.
       final violations = const FeatureBoundaryRule().check(
-        contextFor('lib/features/conversations/realtime/handler.dart', <String>[
-          'lib/features/auth/realtime/auth_socket_credentials.dart',
-        ]),
+        contextFor(
+          'lib/infrastructure/adapters/conversations/realtime/handler.dart',
+          <String>[
+            'lib/infrastructure/adapters/auth/realtime/auth_socket_credentials.dart',
+          ],
+        ),
+      );
+
+      expect(violations.single.rule, contains('RULE 14'));
+    });
+
+    test('flags feature A importing feature B application internals', () {
+      // A coordinator is how a feature does its work, not what it offers.
+      final violations = const FeatureBoundaryRule().check(
+        contextFor(
+          'lib/features/caller_id/application/coordinators/lookup.dart',
+          <String>[
+            'lib/features/customers/application/coordinators/customer_sync_coordinator.dart',
+          ],
+        ),
       );
 
       expect(violations.single.rule, contains('RULE 15'));
@@ -712,7 +739,9 @@ void main() {
       final violations = const FeatureBoundaryRule().check(
         contextFor(
           'lib/features/orders/presentation/screens/order_screen.dart',
-          <String>['lib/features/customers/data/repositories/impl.dart'],
+          <String>[
+            'lib/infrastructure/adapters/customers/repositories/impl.dart',
+          ],
         ),
       );
 
@@ -751,7 +780,7 @@ void main() {
         contextFor(
           'lib/features/conversations/presentation/controllers/thread.dart',
           <String>[
-            'lib/features/conversations/data/local/conversation_dao.dart',
+            'lib/infrastructure/adapters/conversations/local/conversation_dao.dart',
           ],
         ),
       );
@@ -794,7 +823,7 @@ void main() {
       final violations = const InfrastructureRule().check(
         contextFor(
           'lib/features/conversations/presentation/controllers/thread.dart',
-          <String>['lib/infrastructure/realtime/socket_exception.dart'],
+          <String>['lib/infrastructure/socket/socket_exception.dart'],
         ),
       );
 
@@ -805,18 +834,18 @@ void main() {
       final violations = const InfrastructureRule().check(
         contextFor(
           'lib/features/auth/domain/services/auth_service.dart',
-          <String>['lib/infrastructure/network/http_exception.dart'],
+          <String>['lib/infrastructure/api/http_exception.dart'],
         ),
       );
 
       expect(violations, hasLength(1));
     });
 
-    test('allows the data layer to translate them', () {
+    test('allows an adapter to translate them', () {
       final violations = const InfrastructureRule().check(
         contextFor(
-          'lib/features/auth/data/repositories/auth_repository_impl.dart',
-          <String>['lib/infrastructure/network/http_exception.dart'],
+          'lib/infrastructure/adapters/auth/repositories/auth_repository_impl.dart',
+          <String>['lib/infrastructure/api/http_exception.dart'],
         ),
       );
 
@@ -841,7 +870,7 @@ void main() {
       final violations = const GeneratedCodeRule().check(
         contextFor(
           'lib/features/conversations/presentation/controllers/x.g.dart',
-          <String>['lib/features/auth/data/repositories/impl.dart'],
+          <String>['lib/infrastructure/adapters/auth/repositories/impl.dart'],
         ),
       );
 
@@ -866,12 +895,249 @@ void main() {
       final violations = const GeneratedCodeRule().check(
         contextFor(
           'lib/features/conversations/presentation/controllers/x.dart',
-          <String>['lib/features/auth/data/repositories/impl.dart'],
+          <String>['lib/infrastructure/adapters/auth/repositories/impl.dart'],
         ),
       );
 
       // Caught by FeatureBoundaryRule instead; this rule is only about
       // generated output.
+      expect(violations, isEmpty);
+    });
+  });
+
+  group('RULE 1 -- presentation must not import an adapter', () {
+    test('flags a controller importing a remote data source', () {
+      final violations = const LayerDependencyRule().check(
+        contextFor(
+          'lib/features/customers/presentation/controllers/list.dart',
+          <String>[
+            'lib/infrastructure/adapters/customers/remote/customer_remote_data_source.dart',
+          ],
+        ),
+      );
+
+      expect(violations, hasLength(1));
+      expect(violations.single.rule, contains('RULE 1'));
+    });
+
+    test('allows a controller importing an application port', () {
+      final violations = const LayerDependencyRule().check(
+        contextFor(
+          'lib/features/conversations/presentation/controllers/thread.dart',
+          <String>[
+            'lib/features/conversations/application/ports/voice_recorder.dart',
+          ],
+        ),
+      );
+
+      expect(violations, isEmpty);
+    });
+  });
+
+  group('RULE 11 -- infrastructure is told, it does not reach up', () {
+    test('flags an engine importing the app configuration', () {
+      final violations = const LayerDependencyRule().check(
+        contextFor('lib/infrastructure/api/http_client.dart', <String>[
+          'lib/app/config/app_config.dart',
+        ]),
+      );
+
+      expect(violations, hasLength(1));
+      expect(violations.single.rule, contains('RULE 11'));
+    });
+
+    test('flags an adapter importing the composition root', () {
+      final violations = const LayerDependencyRule().check(
+        contextFor(
+          'lib/infrastructure/adapters/auth/repositories/auth_repository_impl.dart',
+          <String>['lib/app/bootstrap/dependencies.dart'],
+        ),
+      );
+
+      expect(violations, hasLength(1));
+      expect(violations.single.rule, contains('RULE 11'));
+    });
+  });
+
+  group('RULE 12 -- the engines know no adapter', () {
+    test('flags the socket engine importing a feature adapter', () {
+      final violations = const LayerDependencyRule().check(
+        contextFor('lib/infrastructure/socket/socket_manager.dart', <String>[
+          'lib/infrastructure/adapters/conversations/realtime/conversation_socket_handler.dart',
+        ]),
+      );
+
+      expect(violations, hasLength(1));
+      expect(violations.single.rule, contains('RULE 12'));
+    });
+
+    test('an adapter may use the engines', () {
+      final violations = const LayerDependencyRule().check(
+        contextFor(
+          'lib/infrastructure/adapters/conversations/remote/conversation_remote_data_source.dart',
+          <String>[
+            'lib/infrastructure/socket/socket_manager.dart',
+            'lib/infrastructure/storage/database/app_database.dart',
+            'lib/infrastructure/logging/logger.dart',
+          ],
+        ),
+      );
+
+      expect(violations, isEmpty);
+    });
+  });
+
+  group('RULE 37 -- application depends on ports, not adapters', () {
+    test('flags a coordinator importing a remote data source', () {
+      final violations = const LayerDependencyRule().check(
+        contextFor(
+          'lib/features/conversations/application/coordinators/outbox.dart',
+          <String>[
+            'lib/infrastructure/adapters/conversations/remote/conversation_remote_data_source.dart',
+          ],
+        ),
+      );
+
+      expect(violations, hasLength(1));
+      expect(violations.single.rule, contains('RULE 37'));
+      expect(violations.single.allowedAlternative, contains('ports'));
+    });
+
+    test('flags a coordinator importing a DTO', () {
+      final violations = const LayerDependencyRule().check(
+        contextFor(
+          'lib/features/conversations/application/coordinators/sync.dart',
+          <String>[
+            'lib/infrastructure/adapters/conversations/models/conversation_dto.dart',
+          ],
+        ),
+      );
+
+      expect(violations, hasLength(1));
+      expect(violations.single.rule, contains('RULE 37'));
+    });
+
+    test('allows a coordinator using the shared engines and its own port', () {
+      final violations = const LayerDependencyRule().check(
+        contextFor(
+          'lib/features/conversations/application/coordinators/outbox.dart',
+          <String>[
+            'lib/infrastructure/storage/database/daos/outbox_dao.dart',
+            'lib/infrastructure/logging/logger.dart',
+            'lib/features/conversations/application/ports/conversation_remote_port.dart',
+            'lib/features/conversations/domain/repositories/message_repository.dart',
+          ],
+        ),
+      );
+
+      expect(violations, isEmpty);
+    });
+  });
+
+  group('RULE 38 -- what an adapter may see of its feature', () {
+    const String adapter =
+        'lib/infrastructure/adapters/conversations/repositories/message_repository_impl.dart';
+
+    test('its domain, its ports, its contracts and its events', () {
+      final violations = const LayerDependencyRule().check(
+        contextFor(adapter, <String>[
+          'lib/features/conversations/domain/entities/message.dart',
+          'lib/features/conversations/domain/repositories/message_repository.dart',
+          'lib/features/conversations/application/ports/conversation_commands.dart',
+          'lib/features/conversations/application/contracts/x.dart',
+          'lib/features/conversations/application/events/typing_changed.dart',
+          // Its own sibling adapters, and the engines.
+          'lib/infrastructure/adapters/conversations/local/conversation_dao.dart',
+          'lib/infrastructure/storage/database/app_database.dart',
+        ]),
+      );
+
+      expect(violations, isEmpty);
+    });
+
+    test('never its coordinators', () {
+      final violations = const LayerDependencyRule().check(
+        contextFor(adapter, <String>[
+          'lib/features/conversations/application/coordinators/outbox_coordinator.dart',
+        ]),
+      );
+
+      expect(violations, hasLength(1));
+      expect(violations.single.rule, contains('RULE 38'));
+    });
+
+    test('never its shared state', () {
+      final violations = const LayerDependencyRule().check(
+        contextFor(adapter, <String>[
+          'lib/features/conversations/application/state/sync_state.dart',
+        ]),
+      );
+
+      expect(violations, hasLength(1));
+      expect(violations.single.rule, contains('RULE 38'));
+    });
+
+    test('never its presentation', () {
+      final violations = const LayerDependencyRule().check(
+        contextFor(adapter, <String>[
+          'lib/features/conversations/presentation/controllers/thread.dart',
+        ]),
+      );
+
+      // Both the layer rule and the general infrastructure rule object.
+      expect(violations, isNotEmpty);
+      expect(
+        violations.map((Violation v) => v.rule),
+        anyElement(contains('RULE 38')),
+      );
+    });
+  });
+
+  group('RULE 39 -- a feature holds exactly three layers', () {
+    test('flags a file in a directory that is not a layer', () {
+      final violations = const ForbiddenDirectoryRule().checkProject(
+        <FileLocation>[
+          PathClassifier.classify(
+            'lib/features/auth/data/repositories/auth_repository_impl.dart',
+          ),
+          PathClassifier.classify(
+            'lib/features/auth/data/repositories/session_dto.dart',
+          ),
+        ],
+      );
+
+      // One violation per directory, naming the feature's adapters as the
+      // place to go.
+      expect(violations, hasLength(1));
+      expect(violations.single.rule, contains('RULE 39'));
+      expect(
+        violations.single.allowedAlternative,
+        contains('infrastructure/adapters/auth/'),
+      );
+    });
+
+    test('flags a file directly under the feature', () {
+      final violations = const ForbiddenDirectoryRule().checkProject(
+        <FileLocation>[PathClassifier.classify('lib/features/auth/auth.dart')],
+      );
+
+      expect(violations, hasLength(1));
+      expect(violations.single.rule, contains('RULE 39'));
+    });
+
+    test('allows the three layers', () {
+      final violations = const ForbiddenDirectoryRule().checkProject(
+        <FileLocation>[
+          PathClassifier.classify(
+            'lib/features/auth/presentation/screens/login_screen.dart',
+          ),
+          PathClassifier.classify('lib/features/auth/application/ports/x.dart'),
+          PathClassifier.classify(
+            'lib/features/auth/domain/entities/user.dart',
+          ),
+        ],
+      );
+
       expect(violations, isEmpty);
     });
   });

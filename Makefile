@@ -78,7 +78,7 @@ watch:
 # because the generator's output is committed.
 migrations:
 	dart run drift_dev make-migrations
-	dart format lib/infrastructure/database test/drift
+	dart format lib/infrastructure/storage/database test/drift
 
 run:
 	flutter run $(ON_DEVICE) --dart-define-from-file=$(ENV_FILE)

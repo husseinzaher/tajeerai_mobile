@@ -6,54 +6,62 @@ import 'package:uuid/uuid.dart';
 import '../../features/auth/application/contracts/session_capability.dart';
 import '../../features/auth/application/coordinators/session_coordinator.dart';
 import '../../features/auth/application/coordinators/social_sign_in_coordinator.dart';
-import '../../features/auth/data/local/auth_local_data_source.dart';
-import '../../features/auth/data/remote/auth_remote_data_source.dart';
-import '../../features/auth/data/repositories/auth_repository_impl.dart';
+import '../../infrastructure/adapters/auth/local/auth_local_data_source.dart';
+import '../../infrastructure/adapters/auth/remote/auth_remote_data_source.dart';
+import '../../infrastructure/adapters/auth/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/domain/services/auth_service.dart';
-import '../../features/auth/realtime/auth_socket_credentials.dart';
+import '../../infrastructure/adapters/auth/realtime/auth_socket_credentials.dart';
 import '../../features/conversations/application/coordinators/conversation_presence_coordinator.dart';
 import '../../features/conversations/application/coordinators/conversation_sync_coordinator.dart';
 import '../../features/conversations/application/coordinators/message_media_coordinator.dart';
 import '../../features/conversations/application/coordinators/outbox_coordinator.dart';
-import '../../features/conversations/data/remote/conversation_media_remote_data_source.dart';
-import '../../features/conversations/data/remote/conversation_remote_data_source.dart';
-import '../../features/conversations/data/repositories/conversation_repository_impl.dart';
-import '../../features/conversations/data/repositories/message_repository_impl.dart';
+import '../../features/conversations/application/events/typing_changed.dart';
+import '../../features/conversations/application/ports/attachment_picker.dart';
+import '../../features/conversations/application/ports/conversation_media_port.dart';
+import '../../features/conversations/application/ports/conversation_remote_port.dart';
+import '../../features/conversations/application/ports/voice_recorder.dart';
+import '../../infrastructure/adapters/conversations/device/media_picker.dart';
+import '../../infrastructure/adapters/conversations/device/record_voice_recorder.dart';
+import '../../infrastructure/adapters/conversations/remote/conversation_media_remote_data_source.dart';
+import '../../infrastructure/adapters/conversations/remote/conversation_remote_data_source.dart';
+import '../../infrastructure/adapters/conversations/repositories/conversation_repository_impl.dart';
+import '../../infrastructure/adapters/conversations/repositories/message_repository_impl.dart';
 import '../../features/conversations/domain/repositories/conversation_repository.dart';
 import '../../features/conversations/domain/repositories/message_repository.dart';
 import '../../features/conversations/domain/services/conversation_service.dart';
 import '../../features/conversations/domain/services/message_service.dart';
-import '../../features/conversations/realtime/conversation_socket_handler.dart';
+import '../../infrastructure/adapters/conversations/realtime/conversation_socket_handler.dart';
 import '../../features/caller_id/application/coordinators/caller_id_settings_coordinator.dart';
 import '../../features/caller_id/application/coordinators/caller_lookup_coordinator.dart';
 import '../../features/caller_id/application/ports/caller_id_platform_port.dart';
-import '../../features/caller_id/data/local/caller_id_settings_store.dart';
-import '../../features/caller_id/data/platform/caller_id_platform_adapter.dart';
-import '../../features/caller_id/data/remote/caller_lookup_remote_data_source.dart';
-import '../../features/caller_id/data/repositories/caller_id_settings_repository_impl.dart';
-import '../../features/caller_id/data/repositories/caller_lookup_repository_impl.dart';
+import '../../infrastructure/adapters/caller_id/local/caller_id_settings_store.dart';
+import '../../infrastructure/adapters/caller_id/platform/caller_id_platform_adapter.dart';
+import '../../infrastructure/adapters/caller_id/remote/caller_lookup_remote_data_source.dart';
+import '../../infrastructure/adapters/caller_id/repositories/caller_id_settings_repository_impl.dart';
+import '../../infrastructure/adapters/caller_id/repositories/caller_lookup_repository_impl.dart';
 import '../../features/caller_id/domain/repositories/caller_id_settings_repository.dart';
 import '../../features/caller_id/domain/repositories/caller_lookup_repository.dart';
 import '../../features/customers/application/contracts/customer_directory_capability.dart';
 import '../../features/customers/application/coordinators/customer_directory_coordinator.dart';
 import '../../features/customers/application/coordinators/customer_sync_coordinator.dart';
-import '../../features/blog/data/remote/blog_remote_data_source.dart';
-import '../../features/blog/data/repositories/blog_repository_impl.dart';
+import '../../infrastructure/adapters/blog/remote/blog_remote_data_source.dart';
+import '../../infrastructure/adapters/blog/repositories/blog_repository_impl.dart';
 import '../../features/blog/domain/repositories/blog_repository.dart';
-import '../../features/customers/data/remote/customer_remote_data_source.dart';
-import '../../features/customers/data/repositories/customer_repository_impl.dart';
+import '../../infrastructure/adapters/customers/remote/customer_remote_data_source.dart';
+import '../../infrastructure/adapters/customers/repositories/customer_repository_impl.dart';
 import '../../features/customers/domain/repositories/customer_repository.dart';
-import '../../infrastructure/database/app_database.dart';
+import '../../infrastructure/storage/database/app_database.dart';
 import '../../infrastructure/device/connectivity/connectivity_monitor.dart';
 import '../../infrastructure/device/platform_info.dart';
 import '../../infrastructure/logging/crash_reporter.dart';
 import '../../infrastructure/logging/logger.dart';
-import '../../infrastructure/network/http_client.dart';
-import '../../infrastructure/network/token_refresher.dart';
-import '../../infrastructure/realtime/socket_client.dart';
-import '../../infrastructure/realtime/socket_connection.dart';
-import '../../infrastructure/realtime/socket_manager.dart';
+import '../../infrastructure/api/configuration/http_configuration.dart';
+import '../../infrastructure/api/http_client.dart';
+import '../../infrastructure/api/token_refresher.dart';
+import '../../infrastructure/socket/socket_client.dart';
+import '../../infrastructure/socket/socket_connection.dart';
+import '../../infrastructure/socket/socket_manager.dart';
 import '../../infrastructure/storage/file_storage.dart';
 import '../../infrastructure/storage/preferences_storage.dart';
 import '../../infrastructure/device/google_sign_in/google_sign_in_gateway.dart';
@@ -155,8 +163,17 @@ final Provider<ConnectivityMonitor> connectivityProvider =
 // ---------------------------------------------------------------------------
 
 final Provider<HttpClient> httpClientProvider = Provider<HttpClient>((ref) {
+  final AppConfig config = ref.watch(appConfigProvider);
+
   return HttpClient.create(
-    config: ref.watch(appConfigProvider),
+    // The network layer is told its addresses rather than reading the app's
+    // configuration: infrastructure does not reach up into `app/`.
+    config: HttpConfiguration(
+      apiRoot: config.apiRoot,
+      origin: config.apiBaseUrl,
+      connectTimeout: config.connectTimeout,
+      receiveTimeout: config.receiveTimeout,
+    ),
     logger: ref.watch(httpLoggerProvider),
     userAgent: ref.watch(platformInfoProvider).userAgent,
     // Read when a request needs them, not when the client is built: the
@@ -290,14 +307,21 @@ final Provider<AuthSocketCredentials> socketCredentialsProvider =
 // Conversations feature
 // ---------------------------------------------------------------------------
 
-final Provider<ConversationRemoteDataSource>
-conversationRemoteDataSourceProvider = Provider<ConversationRemoteDataSource>(
-  (ref) => ConversationRemoteDataSource(ref.watch(socketManagerProvider)),
-);
+/// The server, as the feature's application layer sees it.
+///
+/// Exposed as the port rather than the adapter, so a coordinator that depends
+/// on this provider cannot reach past what the port allows -- the boundary is
+/// a type here, not a convention. The adapter behind it is the only class in
+/// the app that knows the server is reached over Socket.IO.
+final Provider<ConversationRemotePort> conversationRemotePortProvider =
+    Provider<ConversationRemotePort>(
+      (ref) => ConversationRemoteDataSource(ref.watch(socketManagerProvider)),
+    );
 
-final Provider<ConversationMediaRemoteDataSource>
-conversationMediaRemoteDataSourceProvider =
-    Provider<ConversationMediaRemoteDataSource>(
+/// Attachment upload and download, over HTTP -- the one part of the
+/// conversation feature that is not a socket frame (ARCHITECTURE.md §11).
+final Provider<ConversationMediaPort> conversationMediaPortProvider =
+    Provider<ConversationMediaPort>(
       (ref) => ConversationMediaRemoteDataSource(ref.watch(httpClientProvider)),
     );
 
@@ -305,7 +329,7 @@ final Provider<ConversationRepository> conversationRepositoryProvider =
     Provider<ConversationRepository>((ref) {
       return ConversationRepositoryImpl(
         dao: ref.watch(appDatabaseProvider).conversationDao,
-        remote: ref.watch(conversationRemoteDataSourceProvider),
+        remote: ref.watch(conversationRemotePortProvider),
         logger: ref.watch(databaseLoggerProvider),
       );
     });
@@ -317,7 +341,7 @@ final Provider<MessageRepository> messageRepositoryProvider =
       return MessageRepositoryImpl(
         dao: database.conversationDao,
         outbox: database.outboxDao,
-        remote: ref.watch(conversationRemoteDataSourceProvider),
+        remote: ref.watch(conversationRemotePortProvider),
         storage: ref.watch(fileStorageProvider),
         logger: ref.watch(databaseLoggerProvider),
       );
@@ -327,11 +351,25 @@ final Provider<MessageMediaCoordinator> messageMediaCoordinatorProvider =
     Provider<MessageMediaCoordinator>((ref) {
       return MessageMediaCoordinator(
         messages: ref.watch(messageRepositoryProvider),
-        remote: ref.watch(conversationMediaRemoteDataSourceProvider),
+        remote: ref.watch(conversationMediaPortProvider),
         storage: ref.watch(fileStorageProvider),
         logger: ref.watch(syncLoggerProvider),
       );
     });
+
+/// Picks a file for the composer and stages it where the outbox can read it.
+final Provider<AttachmentPicker> attachmentPickerProvider =
+    Provider<AttachmentPicker>(
+      (ref) => MediaPicker(storage: ref.watch(fileStorageProvider)),
+    );
+
+/// Makes a voice recorder for one thread screen.
+///
+/// A factory rather than an instance: a recorder holds an encoder and a timer
+/// for exactly as long as a screen is open, and the screen is what disposes
+/// it. Exposed as the port, so the screen never names the plugin behind it.
+final Provider<VoiceRecorder Function()> voiceRecorderFactoryProvider =
+    Provider<VoiceRecorder Function()>((ref) => RecordVoiceRecorder.new);
 
 final Provider<ConversationService> conversationServiceProvider =
     Provider<ConversationService>(
@@ -366,8 +404,8 @@ final Provider<OutboxCoordinator> outboxCoordinatorProvider =
         database: database,
         outbox: database.outboxDao,
         messages: ref.watch(messageRepositoryProvider),
-        remote: ref.watch(conversationRemoteDataSourceProvider),
-        media: ref.watch(conversationMediaRemoteDataSourceProvider),
+        remote: ref.watch(conversationRemotePortProvider),
+        media: ref.watch(conversationMediaPortProvider),
         logger: ref.watch(syncLoggerProvider),
       );
 
@@ -384,7 +422,7 @@ final Provider<OutboxCoordinator> outboxCoordinatorProvider =
 final Provider<ConversationPresenceCoordinator> conversationPresenceProvider =
     Provider<ConversationPresenceCoordinator>((ref) {
       final coordinator = ConversationPresenceCoordinator(
-        remote: ref.watch(conversationRemoteDataSourceProvider),
+        remote: ref.watch(conversationRemotePortProvider),
         logger: ref.watch(socketLoggerProvider),
       );
 
@@ -420,6 +458,16 @@ final Provider<ConversationSocketHandler> conversationSocketHandlerProvider =
 
       return handler;
     });
+
+/// Typing bubbles, as the realtime adapter reports them.
+///
+/// A stream of the application's own event type, so the controller that shows
+/// a bubble depends on the feature's vocabulary and never on the adapter that
+/// decoded the frame.
+final Provider<Stream<TypingChanged>> conversationTypingEventsProvider =
+    Provider<Stream<TypingChanged>>(
+      (ref) => ref.watch(conversationSocketHandlerProvider).transientEvents,
+    );
 
 // ---------------------------------------------------------------------------
 // Blog feature

@@ -2,7 +2,7 @@ import 'dart:async';
 
 import '../../../../failures/app_failure.dart';
 import '../../../../infrastructure/logging/logger.dart';
-import '../../../../infrastructure/network/token_refresher.dart';
+import '../../../../infrastructure/api/token_refresher.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/services/auth_service.dart';
 import '../../domain/value_objects/session_renewal.dart';

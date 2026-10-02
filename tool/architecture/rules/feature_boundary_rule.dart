@@ -7,6 +7,11 @@ import '../path_classifier.dart';
 /// through an explicit application contract; everything else is coupling that
 /// makes the two impossible to change separately.
 ///
+/// It holds a feature's adapters in `infrastructure/adapters/<feature>/` to
+/// the same boundary: an adapter carries its feature's name, so the caller-id
+/// lookup repository may read the customer directory contract and nothing else
+/// of customers.
+///
 /// Rule 30 falls out of how this is written: nothing here enumerates the
 /// features that exist, so a feature added next year is checked by the same
 /// code with no edit.
@@ -23,7 +28,7 @@ class FeatureBoundaryRule implements ArchitectureRule {
   ///
   /// `application/contracts/` holds interfaces that state *what* a feature
   /// offers, without exposing how. Everything else -- entities, services,
-  /// repositories, data, realtime, screens -- is internal.
+  /// repositories, ports, adapters, screens -- is internal.
   static const String contractsSegment = '/application/contracts/';
 
   @override
@@ -75,10 +80,12 @@ class FeatureBoundaryRule implements ArchitectureRule {
     return switch (target.layer) {
       Layer.presentation =>
         'RULE 13 - Feature A must not import Feature B presentation.',
-      Layer.data =>
-        'RULE 14 - Feature A must not import Feature B data implementation.',
-      Layer.featureRealtime =>
-        'RULE 15 - Feature A must not import Feature B realtime internals.',
+      Layer.adapter =>
+        'RULE 14 - Feature A must not import Feature B\'s infrastructure '
+            'adapters.',
+      Layer.application =>
+        'RULE 15 - Feature A must not import Feature B application '
+            'internals.',
       _ =>
         'RULE 13/14/15 - Features must communicate through explicit '
             'application contracts.',
@@ -89,8 +96,7 @@ class FeatureBoundaryRule implements ArchitectureRule {
     Layer.presentation => 'presentation layer',
     Layer.application => 'application internals',
     Layer.domain => 'domain layer',
-    Layer.data => 'data layer',
-    Layer.featureRealtime => 'realtime layer',
+    Layer.adapter => 'infrastructure adapters',
     _ => 'internals',
   };
 }

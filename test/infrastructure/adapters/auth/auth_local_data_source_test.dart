@@ -1,0 +1,100 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:TajeerAi/infrastructure/adapters/auth/local/auth_local_data_source.dart';
+import 'package:TajeerAi/features/auth/domain/entities/user.dart';
+import 'package:TajeerAi/infrastructure/adapters/conversations/local/conversation_tables.dart';
+import 'package:TajeerAi/infrastructure/storage/database/app_database.dart';
+import 'package:TajeerAi/infrastructure/storage/secure_storage.dart';
+
+import '../../../support/fixed_clock.dart';
+import '../../../support/test_database.dart';
+import 'fakes/in_memory_secure_storage.dart';
+
+const _session = Session(
+  user: AuthenticatedUser(
+    id: 'u1',
+    name: 'Ada Lovelace',
+    email: 'ada@demo.test',
+    role: 'member',
+    locale: 'ar',
+  ),
+  workspace: Workspace(id: 't1', name: 'Demo', slug: 'demo', locale: 'ar'),
+);
+
+/// An owner with one capability withheld.
+const _withheld = Session(
+  user: AuthenticatedUser(
+    id: 'u1',
+    name: 'Ada Lovelace',
+    email: 'ada@demo.test',
+    role: 'owner',
+    locale: 'ar',
+    permissions: <String>{'manage:all'},
+    denied: <String>{'read:Customer'},
+  ),
+  workspace: Workspace(id: 't1', name: 'Demo', slug: 'demo', locale: 'ar'),
+);
+
+void main() {
+  late AppDatabase database;
+  late InMemorySecureStorage secureStorage;
+  late AuthLocalDataSource local;
+
+  setUp(() {
+    database = openTestDatabase();
+    secureStorage = InMemorySecureStorage();
+    local = AuthLocalDataSource(
+      database: database,
+      secureStorage: secureStorage,
+    );
+  });
+
+  tearDown(() => database.close());
+
+  group('the cached session', () {
+    test('keeps what the member may do and what was withheld', () async {
+      await local.saveSession(_withheld, now: testEpoch);
+
+      final Session? cached = await local.readSession();
+
+      // Losing the denial would offer an owner the one thing withheld from
+      // them on every offline start.
+      expect(cached?.user.permissions, <String>{'manage:all'});
+      expect(cached?.user.denied, <String>{'read:Customer'});
+      expect(cached?.user.can('read:Customer'), isFalse);
+    });
+
+    test('and so does the stream the router follows', () async {
+      await local.saveSession(_withheld, now: testEpoch);
+
+      final Session? watched = await local.watchSession().first;
+
+      expect(watched?.user.denied, <String>{'read:Customer'});
+    });
+  });
+
+  group('clear', () {
+    test('forgets the session, the workspace data and the tokens', () async {
+      await local.saveSession(_session, now: testEpoch);
+      await database
+          .into(database.conversations)
+          .insert(
+            ConversationsCompanion.insert(
+              id: 'c1',
+              state: ConversationStateRow.open,
+              createdAt: testEpoch,
+            ),
+          );
+      await secureStorage.write(SecureStorage.accessTokenKey, 'access-1');
+      await secureStorage.write(SecureStorage.refreshTokenKey, 'refresh-1');
+
+      await local.clear();
+
+      // Whoever signs in next on this phone starts from nothing: no session
+      // to resume, no conversation from the last workspace, no credential.
+      expect(await database.select(database.sessionUsers).get(), isEmpty);
+      expect(await database.select(database.conversations).get(), isEmpty);
+      expect(await local.readAccessToken(), isNull);
+      expect(await secureStorage.read(SecureStorage.refreshTokenKey), isNull);
+    });
+  });
+}

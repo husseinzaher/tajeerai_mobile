@@ -17,15 +17,14 @@ class InfrastructureRule implements ArchitectureRule {
 
   /// Files defining an infrastructure exception type.
   ///
-  /// May be imported by `data/` -- translating them is exactly the data
-  /// layer's job -- and by a feature's `realtime/`, which is the socket's
-  /// adapter. Nowhere else.
+  /// May be imported by an adapter -- translating them is exactly the
+  /// adapter's job -- and by the shared engines themselves. Nowhere else.
   static const List<String> _exceptionFiles = <String>[
-    'lib/infrastructure/network/http_exception.dart',
-    'lib/infrastructure/realtime/socket_exception.dart',
+    'lib/infrastructure/api/http_exception.dart',
+    'lib/infrastructure/socket/socket_exception.dart',
   ];
 
-  /// Third-party error types that must not surface above the data layer.
+  /// Third-party error types that must not surface above the adapters.
   static const Map<String, String> _forbiddenErrorPackages = <String, String>{
     'dio': 'DioException',
     'socket_io_client': 'socket transport errors',
@@ -37,8 +36,7 @@ class InfrastructureRule implements ArchitectureRule {
     final file = context.file;
 
     final translatesErrors =
-        file.layer == Layer.data ||
-        file.layer == Layer.featureRealtime ||
+        file.layer == Layer.adapter ||
         file.layer == Layer.infrastructure ||
         file.layer == Layer.app;
 
@@ -54,7 +52,7 @@ class InfrastructureRule implements ArchitectureRule {
           Violation(
             rule:
                 'RULE 27 - Infrastructure exception types must not leak '
-                'into Presentation or Domain.',
+                'into Presentation, Application or Domain.',
             source: file.path,
             forbiddenDependency: target.path,
             line: import.line,
@@ -63,7 +61,7 @@ class InfrastructureRule implements ArchitectureRule {
                 'order to react, so replacing that transport becomes a change '
                 'here too.',
             allowedAlternative:
-                'Catch the infrastructure exception in the data layer and '
+                'Catch the infrastructure exception in the adapter and '
                 'rethrow it as an AppFailure from lib/failures/.',
           ),
         );
@@ -83,7 +81,7 @@ class InfrastructureRule implements ArchitectureRule {
           Violation(
             rule:
                 'RULE 27 - Infrastructure error types must not leak past '
-                'the data layer.',
+                'the adapters.',
             source: file.path,
             forbiddenDependency: import.raw,
             line: import.line,
@@ -91,7 +89,7 @@ class InfrastructureRule implements ArchitectureRule {
                 'Importing $package here exposes $label to a layer that must '
                 'stay independent of the transport.',
             allowedAlternative:
-                'Translate it to an AppFailure at the data boundary.',
+                'Translate it to an AppFailure at the adapter boundary.',
           ),
         );
       }

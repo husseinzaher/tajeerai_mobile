@@ -3,15 +3,15 @@ import 'dart:convert';
 import 'dart:math';
 
 import '../../../../failures/app_failure.dart';
-import '../../../../infrastructure/database/app_database.dart';
-import '../../../../infrastructure/database/daos/outbox_dao.dart';
-import '../../../../infrastructure/database/tables/outbox_table.dart';
+import '../../../../infrastructure/storage/database/app_database.dart';
+import '../../../../infrastructure/storage/database/daos/outbox_dao.dart';
+import '../../../../infrastructure/storage/database/tables/outbox_table.dart';
 import '../../../../infrastructure/logging/logger.dart';
-import '../../data/remote/conversation_media_port.dart';
-import '../../data/remote/conversation_remote_data_source.dart';
+import '../ports/conversation_media_port.dart';
+import '../ports/conversation_remote_port.dart';
 import '../../domain/entities/message.dart';
 import '../../domain/repositories/message_repository.dart';
-import '../../realtime/conversation_events.dart';
+import '../ports/conversation_commands.dart';
 import '../events/conversation_app_events.dart';
 
 /// Drains the outbox.
@@ -37,7 +37,7 @@ class OutboxCoordinator {
     required AppDatabase database,
     required OutboxDao outbox,
     required MessageRepository messages,
-    required ConversationRemoteDataSource remote,
+    required ConversationRemotePort remote,
     required ConversationMediaPort media,
     required Logger logger,
     DateTime Function() clock = DateTime.now,
@@ -54,7 +54,7 @@ class OutboxCoordinator {
   final AppDatabase _database;
   final OutboxDao _outbox;
   final MessageRepository _messages;
-  final ConversationRemoteDataSource _remote;
+  final ConversationRemotePort _remote;
   final ConversationMediaPort _media;
   final Logger _logger;
   final DateTime Function() _clock;

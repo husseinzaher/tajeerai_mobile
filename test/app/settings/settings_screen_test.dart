@@ -180,7 +180,9 @@ void main() {
      * The colour identity, which the app had no way of choosing until the teal
      * preset arrived: `selectPreset` existed and nothing called it.
      */
-    testWidgets('picking a colour identity keeps it', (WidgetTester tester) async {
+    testWidgets('picking a colour identity keeps it', (
+      WidgetTester tester,
+    ) async {
       await pump(tester);
 
       await tester.tap(find.text('Teal'));

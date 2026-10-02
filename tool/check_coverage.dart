@@ -31,7 +31,7 @@ const Map<String, double> _criticalAreas = <String, double>{
   'lib/features/auth/domain/': 90,
   'lib/features/conversations/domain/': 90,
   'lib/features/conversations/application/': 85,
-  'lib/features/conversations/realtime/': 85,
+  'lib/infrastructure/adapters/conversations/realtime/': 85,
   'lib/features/auth/application/': 85,
   // The contact directory a caller card answers from: a rule that is wrong
   // here shows up as the wrong person's name over a ringing phone.
@@ -39,8 +39,8 @@ const Map<String, double> _criticalAreas = <String, double>{
   // The walk that keeps that directory complete -- resume, pacing and the
   // reconciliation that deletes.
   'lib/features/customers/application/': 85,
-  'lib/infrastructure/database/daos/': 85,
-  'lib/infrastructure/realtime/': 85,
+  'lib/infrastructure/storage/database/daos/': 85,
+  'lib/infrastructure/socket/': 85,
   'lib/failures/': 90,
 };
 
@@ -70,7 +70,7 @@ bool _isExcluded(String path) {
   const excludedFiles = <String>{
     'lib/main.dart',
     'lib/app/app.dart',
-    'lib/infrastructure/realtime/socket_connection.dart',
+    'lib/infrastructure/socket/socket_connection.dart',
   };
 
   return path.endsWith('.g.dart') ||

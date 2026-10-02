@@ -3,16 +3,16 @@ import '../path_classifier.dart';
 
 /// Enforces the dependency direction between layers.
 ///
-/// Covers rules 1, 2, 6, 7, 8, 9, 10, 11 and 25. One rule object rather than
-/// nine because they are all the same question -- "may layer A import layer
-/// B?" -- and expressing that as a single table is what keeps the answers
-/// consistent. Each entry still reports its own rule number, so a violation
-/// message is as specific as if each had its own class.
+/// Covers rules 1, 2, 6, 7, 8, 9, 10, 11, 12, 25, 37 and 38. One rule object
+/// rather than twelve because they are all the same question -- "may layer A
+/// import layer B?" -- and expressing that as a single table is what keeps
+/// the answers consistent. Each entry still reports its own rule number, so a
+/// violation message is as specific as if each had its own class.
 class LayerDependencyRule implements ArchitectureRule {
   const LayerDependencyRule();
 
   @override
-  String get id => 'RULE 1/2/6-11/25';
+  String get id => 'RULE 1/2/6-12/25/37/38';
 
   @override
   String get description => 'Layer dependency direction';
@@ -43,8 +43,9 @@ class LayerDependencyRule implements ArchitectureRule {
   /// Packages the application layer may never see.
   ///
   /// Looser than the domain -- an application coordinator legitimately talks
-  /// to infrastructure abstractions -- but still no UI. A coordinator that
-  /// imports Flutter has started making presentation decisions.
+  /// to the shared engines in `infrastructure/` -- but still no UI. A
+  /// coordinator that imports Flutter has started making presentation
+  /// decisions.
   static const Map<String, String> forbiddenInApplication = <String, String>{
     'flutter': 'Flutter',
     'go_router': 'the router',
@@ -78,8 +79,8 @@ class LayerDependencyRule implements ArchitectureRule {
                     'client, a database engine or device APIs.',
                 allowedAlternative:
                     'Express the need as an interface in domain/repositories/ '
-                    'and implement it in the feature data layer, which is '
-                    'allowed to depend on infrastructure.',
+                    'and implement it in infrastructure/adapters/<feature>/, '
+                    'which is allowed to depend on the engines.',
               ),
             );
           }
@@ -136,21 +137,24 @@ class LayerDependencyRule implements ArchitectureRule {
 
     switch (file.layer) {
       case Layer.presentation:
-        // RULE 1 -- presentation must not import data.
-        if (target.layer == Layer.data) {
+        // RULE 1 -- presentation must not import an adapter.
+        if (target.layer == Layer.adapter) {
           violations.add(
             Violation(
-              rule: 'RULE 1 - Presentation must not import Data.',
+              rule:
+                  'RULE 1 - Presentation must not import an infrastructure '
+                  'adapter.',
               source: file.path,
               forbiddenDependency: target.path,
               line: line,
               reason:
-                  'A screen or controller reaching into the data layer binds '
-                  'the UI to how data is stored and fetched, so a change to '
-                  'persistence becomes a change to the UI.',
+                  'A screen or controller reaching into an adapter binds the '
+                  'UI to how data is stored, fetched and decoded, so a change '
+                  'to persistence or to the wire format becomes a change to '
+                  'the UI.',
               allowedAlternative:
-                  'Depend on a domain service or a domain repository '
-                  'interface, resolved through a provider.',
+                  'Depend on a domain service, a domain repository interface '
+                  'or an application port, resolved through a provider.',
             ),
           );
         }
@@ -170,9 +174,9 @@ class LayerDependencyRule implements ArchitectureRule {
               forbiddenDependency: target.path,
               line: line,
               reason:
-                  'Presentation is reaching a socket, database or HTTP client '
-                  'directly. The UI must react to persisted application '
-                  'state, never drive a transport.',
+                  'Presentation is reaching a socket, database, HTTP client '
+                  'or device API directly. The UI must react to persisted '
+                  'application state, never drive a transport.',
               allowedAlternative:
                   'Go through a controller, then a domain service or an '
                   'application coordinator. Infrastructure is wired in '
@@ -181,42 +185,19 @@ class LayerDependencyRule implements ArchitectureRule {
           );
         }
 
-        // RULE 26 -- feature realtime payload types must not reach the UI.
-        if (target.layer == Layer.featureRealtime &&
-            PathClassifier.isWidgetOrScreen(file.path)) {
-          violations.add(
-            Violation(
-              rule:
-                  'RULE 26 - Raw realtime payload types must not leak into '
-                  'presentation.',
-              source: file.path,
-              forbiddenDependency: target.path,
-              line: line,
-              reason:
-                  'A widget importing realtime event types couples the UI to '
-                  'the wire format. Widgets must render domain entities read '
-                  'from local state.',
-              allowedAlternative:
-                  'Let the socket handler persist the event and have the '
-                  'widget watch the database through a controller.',
-            ),
-          );
-        }
-
       case Layer.domain:
         // RULE 8/9 -- domain must not import infrastructure or UI.
         if (target.layer == Layer.infrastructure ||
+            target.layer == Layer.adapter ||
             target.layer == Layer.designSystem ||
             target.layer == Layer.app ||
             target.layer == Layer.presentation ||
-            target.layer == Layer.data ||
-            target.layer == Layer.featureRealtime ||
             target.layer == Layer.application) {
           violations.add(
             Violation(
               rule:
                   'RULE 8/9/25 - Domain must not import Infrastructure, '
-                  'Data, Application, UI or app wiring.',
+                  'Adapters, Application, UI or app wiring.',
               source: file.path,
               forbiddenDependency: target.path,
               line: line,
@@ -250,46 +231,108 @@ class LayerDependencyRule implements ArchitectureRule {
           );
         }
 
-      case Layer.infrastructure:
-        // RULE 11 -- infrastructure must not import presentation.
-        if (target.layer == Layer.presentation ||
-            target.layer == Layer.designSystem) {
+        // RULE 37 -- application depends on ports, never on their
+        // implementations.
+        if (target.layer == Layer.adapter) {
           violations.add(
             Violation(
-              rule: 'RULE 11 - Infrastructure must not import Presentation.',
+              rule:
+                  'RULE 37 - Application must not import an infrastructure '
+                  'adapter.',
               source: file.path,
               forbiddenDependency: target.path,
               line: line,
               reason:
-                  'Infrastructure is business- and UI-agnostic. Importing a '
-                  'screen or a widget inverts the dependency direction.',
+                  'A coordinator that names a repository implementation, a '
+                  'remote data source or a DTO can only be tested against '
+                  'that implementation, and the port it should depend on '
+                  'stops being the boundary.',
               allowedAlternative:
-                  'Expose a stream or a callback the presentation layer '
-                  'subscribes to.',
+                  'Depend on the domain repository interface or on a port in '
+                  'application/ports/, and let app/bootstrap/dependencies.dart '
+                  'supply the adapter.',
             ),
           );
         }
 
-        // RULE 12 -- infrastructure must not import feature business code.
-        //
-        // The single documented exception is the database, which must know
-        // its own tables to generate a schema; see ARCHITECTURE.md.
-        if (target.isFeatureFile && !_isDatabaseSchemaImport(file, target)) {
+      case Layer.infrastructure:
+      case Layer.adapter:
+        // RULE 11 -- infrastructure must not import presentation, the design
+        // system, or the app's composition.
+        if (target.layer == Layer.presentation ||
+            target.layer == Layer.designSystem ||
+            target.layer == Layer.app) {
           violations.add(
             Violation(
               rule:
-                  'RULE 12 - Infrastructure must not import feature '
-                  'implementation.',
+                  'RULE 11 - Infrastructure must not import Presentation, '
+                  'the Design System or app/.',
               source: file.path,
               forbiddenDependency: target.path,
               line: line,
               reason:
-                  'Infrastructure providing a technical capability must not '
-                  'know which business feature uses it, or it cannot be '
-                  'reused by the next one.',
+                  'Infrastructure is business- and UI-agnostic, and it is '
+                  'told what it needs by the composition root. Importing a '
+                  'screen, a widget or the app\'s configuration inverts the '
+                  'dependency direction.',
               allowedAlternative:
-                  'Keep the capability generic and let the feature adapt it, '
-                  'as features/<name>/realtime/ does for the socket.',
+                  'Take the value as a constructor parameter and let '
+                  'app/bootstrap/dependencies.dart supply it; expose a stream '
+                  'or a callback for anything the UI must react to.',
+            ),
+          );
+        }
+
+        if (file.layer == Layer.infrastructure) {
+          // RULE 12 -- shared infrastructure knows no feature and no adapter.
+          //
+          // The single documented exception is the database, which must know
+          // its own tables to generate a schema; see ARCHITECTURE.md.
+          if ((target.isFeatureFile || target.layer == Layer.adapter) &&
+              !_isDatabaseSchemaImport(file, target)) {
+            violations.add(
+              Violation(
+                rule:
+                    'RULE 12 - Shared infrastructure must not import a '
+                    'feature or an adapter.',
+                source: file.path,
+                forbiddenDependency: target.path,
+                line: line,
+                reason:
+                    'A shared engine that knows which business feature uses '
+                    'it, or how, cannot be reused by the next one.',
+                allowedAlternative:
+                    'Keep the engine generic and let the feature adapt it in '
+                    'infrastructure/adapters/<feature>/, as the conversation '
+                    'socket handler does for the socket.',
+              ),
+            );
+          }
+        } else if (target.isFeatureFile &&
+            target.layer != Layer.adapter &&
+            target.feature == file.feature &&
+            target.layer != Layer.domain &&
+            !PathClassifier.isApplicationBoundary(target.path)) {
+          // RULE 38 -- an adapter sees its feature's domain and the parts of
+          // its application layer that face outward: ports, contracts and
+          // events. Never its coordinators, its state or its presentation.
+          violations.add(
+            Violation(
+              rule:
+                  'RULE 38 - An adapter may import its feature\'s domain, '
+                  'ports, contracts and events only.',
+              source: file.path,
+              forbiddenDependency: target.path,
+              line: line,
+              reason:
+                  'An adapter implements what the feature asked for. One that '
+                  'imports a coordinator, shared state or a screen has the '
+                  'dependency pointing the wrong way, and the feature can no '
+                  'longer be tested with the adapter swapped out.',
+              allowedAlternative:
+                  'Implement the port or the domain repository interface, and '
+                  'announce anything the feature must react to through an '
+                  'event in application/events/.',
             ),
           );
         }
@@ -322,8 +365,6 @@ class LayerDependencyRule implements ArchitectureRule {
         break;
 
       case Layer.app:
-      case Layer.data:
-      case Layer.featureRealtime:
       case Layer.featureRoot:
       case Layer.other:
         break;
@@ -334,19 +375,21 @@ class LayerDependencyRule implements ArchitectureRule {
 
   /// The documented exception to rule 12.
   ///
-  /// `AppDatabase` must import each feature's table definitions, because
-  /// drift generates one schema for one database and the tables have to be
-  /// declared on it. The alternative -- moving every feature's tables into
-  /// infrastructure -- would be a worse violation: it would put business
-  /// schema in a business-agnostic layer.
+  /// `AppDatabase` must import each feature's table and DAO declarations,
+  /// because drift generates one schema for one database and the tables have
+  /// to be declared on it. The alternative -- moving every feature's tables
+  /// into the shared engine -- would be the worse violation: it would put
+  /// business schema in a business-agnostic layer.
   ///
-  /// Narrowed to exactly that file importing exactly a table declaration, so
-  /// it cannot be used as a general escape hatch.
+  /// Narrowed to exactly that file importing exactly a table or DAO
+  /// declaration from an adapter's `local/`, so it cannot be used as a general
+  /// escape hatch.
   static bool _isDatabaseSchemaImport(FileLocation file, FileLocation target) {
     final isDatabaseFile =
-        file.path == 'lib/infrastructure/database/app_database.dart';
+        file.path == 'lib/infrastructure/storage/database/app_database.dart';
     final isSchemaFile =
-        target.path.contains('/data/local/') &&
+        target.layer == Layer.adapter &&
+        target.path.contains('/local/') &&
         (target.path.endsWith('_tables.dart') ||
             target.path.endsWith('_dao.dart'));
 

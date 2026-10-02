@@ -15,7 +15,7 @@ void main() {
         Layer.designSystem,
       );
       expect(
-        PathClassifier.classify('lib/infrastructure/network/http_client.dart')
+        PathClassifier.classify('lib/infrastructure/api/http_client.dart')
             .layer,
         Layer.infrastructure,
       );
@@ -32,15 +32,27 @@ void main() {
         'lib/features/auth/application/state/auth_state.dart':
             Layer.application,
         'lib/features/auth/domain/services/auth_service.dart': Layer.domain,
-        'lib/features/auth/data/repositories/auth_repository_impl.dart':
-            Layer.data,
-        'lib/features/auth/realtime/auth_socket_credentials.dart':
-            Layer.featureRealtime,
       };
 
       cases.forEach((path, expected) {
         expect(PathClassifier.classify(path).layer, expected, reason: path);
       });
+    });
+
+    test('a feature has exactly three layers; anything else is the root', () {
+      // `data/` and `realtime/` used to be layers. Their contents are
+      // infrastructure now, and a file left behind is a violation the
+      // forbidden-directory rule reports -- not a layer of its own.
+      for (final path in <String>[
+        'lib/features/auth/data/repositories/auth_repository_impl.dart',
+        'lib/features/auth/realtime/auth_socket_credentials.dart',
+        'lib/features/auth/something_else/file.dart',
+      ]) {
+        final location = PathClassifier.classify(path);
+
+        expect(location.layer, Layer.featureRoot, reason: path);
+        expect(location.feature, 'auth');
+      }
     });
 
     test('names the owning feature', () {
@@ -64,15 +76,6 @@ void main() {
       );
     });
 
-    test('classifies an unrecognised feature subdirectory as the root', () {
-      final location = PathClassifier.classify(
-        'lib/features/auth/something_else/file.dart',
-      );
-
-      expect(location.layer, Layer.featureRoot);
-      expect(location.feature, 'auth');
-    });
-
     test('normalises Windows separators', () {
       final location = PathClassifier.classify(
         r'lib\features\auth\domain\services\auth_service.dart',
@@ -80,6 +83,68 @@ void main() {
 
       expect(location.layer, Layer.domain);
       expect(location.feature, 'auth');
+    });
+  });
+
+  group('infrastructure adapters', () {
+    test('are their own layer, and carry the feature they serve', () {
+      final location = PathClassifier.classify(
+        'lib/infrastructure/adapters/conversations/repositories/'
+        'message_repository_impl.dart',
+      );
+
+      expect(location.layer, Layer.adapter);
+      // The feature-boundary rules read this, so an adapter is held to the
+      // same boundary as the feature it implements.
+      expect(location.feature, 'conversations');
+      expect(location.isFeatureFile, isTrue);
+    });
+
+    test('the shared engines carry no feature', () {
+      for (final path in <String>[
+        'lib/infrastructure/socket/socket_manager.dart',
+        'lib/infrastructure/storage/database/app_database.dart',
+        'lib/infrastructure/device/platform_info.dart',
+      ]) {
+        final location = PathClassifier.classify(path);
+
+        expect(location.layer, Layer.infrastructure, reason: path);
+        expect(location.feature, isNull, reason: path);
+      }
+    });
+
+    test('a file directly under adapters/ is an engine, not an adapter', () {
+      // `adapters/<feature>/<file>` is the shallowest an adapter can be; a
+      // stray file at `adapters/x.dart` has no feature to belong to.
+      expect(
+        PathClassifier.classify('lib/infrastructure/adapters/x.dart').layer,
+        Layer.infrastructure,
+      );
+    });
+
+    test('names the outward-facing parts of an application layer', () {
+      for (final path in <String>[
+        'lib/features/conversations/application/ports/conversation_remote_port.dart',
+        'lib/features/auth/application/contracts/session_capability.dart',
+        'lib/features/conversations/application/events/typing_changed.dart',
+      ]) {
+        expect(
+          PathClassifier.isApplicationBoundary(path),
+          isTrue,
+          reason: path,
+        );
+      }
+
+      for (final path in <String>[
+        'lib/features/conversations/application/coordinators/outbox.dart',
+        'lib/features/conversations/application/state/sync_state.dart',
+      ]) {
+        expect(
+          PathClassifier.isApplicationBoundary(path),
+          isFalse,
+          reason: path,
+        );
+      }
     });
   });
 
@@ -101,6 +166,16 @@ void main() {
             .isGenerated,
         isTrue,
       );
+    });
+
+    test('a generated DAO is an adapter like its source', () {
+      final location = PathClassifier.classify(
+        'lib/infrastructure/adapters/customers/local/customer_dao.g.dart',
+      );
+
+      expect(location.isGenerated, isTrue);
+      expect(location.layer, Layer.adapter);
+      expect(location.feature, 'customers');
     });
 
     test('a hand-written file is not flagged', () {

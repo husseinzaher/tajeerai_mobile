@@ -5,19 +5,16 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../app/bootstrap/dependencies.dart';
 import '../../../../app/localization/translations/app_strings.dart';
 import '../../../../app/router/routes.dart';
 import '../../../../app/theme/theme.dart';
 import '../../../../design_system/design_system.dart';
-import '../../../../failures/app_failure.dart';
+import '../controllers/customer_note_form_controller.dart';
 
 /// Writing an entry on a contact's record.
 ///
-/// **Online only, and it says so.** The server stamps the entry with who wrote
-/// it and when, and there is no local identity to stamp it with in the
-/// meantime -- so this does not queue through the outbox the way a message
-/// does. What it does instead is keep the draft: a failed send leaves the
+/// The screen keeps the draft and the way back; `CustomerNoteFormController`
+/// owns the write and says why it did not happen. A failed send leaves the
 /// words on screen, with a line saying why, rather than clearing the field and
 /// asking somebody to remember what they typed.
 class CustomerNoteFormScreen extends ConsumerStatefulWidget {
@@ -33,8 +30,6 @@ class CustomerNoteFormScreen extends ConsumerStatefulWidget {
 class _CustomerNoteFormScreenState
     extends ConsumerState<CustomerNoteFormScreen> {
   final TextEditingController _body = TextEditingController();
-  bool _saving = false;
-  String? _error;
 
   @override
   void dispose() {
@@ -43,48 +38,28 @@ class _CustomerNoteFormScreenState
   }
 
   Future<void> _save() async {
-    final String body = _body.text.trim();
+    final bool saved = await ref
+        .read(customerNoteFormControllerProvider.notifier)
+        .save(customerId: widget.customerId, body: _body.text);
 
-    if (body.isEmpty || _saving) return;
+    if (!saved || !mounted) return;
 
-    setState(() {
-      _saving = true;
-      _error = null;
-    });
-
-    final AppStrings strings = ref.read(appStringsProvider);
-
-    try {
-      await ref
-          .read(customerRepositoryProvider)
-          .addNote(widget.customerId, body);
-
-      if (!mounted) return;
-
-      // Back to the record, which is where this was opened from -- and where
-      // the entry just written now is. A deep link has nothing underneath it,
-      // so that case goes to the contact rather than failing to pop.
-      if (context.canPop()) {
-        context.pop();
-      } else {
-        context.go(AppRoutes.customerDetailPath(widget.customerId));
-      }
-    } on AppFailure catch (failure) {
-      if (!mounted) return;
-
-      setState(() {
-        _saving = false;
-        _error = switch (failure) {
-          TransportFailure(isOffline: true) => strings.noteNeedsConnection,
-          _ => strings.noteSaveFailed,
-        };
-      });
+    // Back to the record, which is where this was opened from -- and where
+    // the entry just written now is. A deep link has nothing underneath it,
+    // so that case goes to the contact rather than failing to pop.
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go(AppRoutes.customerDetailPath(widget.customerId));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final AppStrings strings = ref.watch(appStringsProvider);
+    final CustomerNoteFormState form = ref.watch(
+      customerNoteFormControllerProvider,
+    );
 
     return AppScaffold(
       toolbar: AppToolbar(title: strings.addNote, showBack: true),
@@ -109,14 +84,14 @@ class _CustomerNoteFormScreenState
               textCapitalization: TextCapitalization.sentences,
               onChanged: (_) => setState(() {}),
             ),
-            if (_error case final String message) ...<Widget>[
+            if (form.error case final CustomerNoteFormError error) ...<Widget>[
               const SizedBox(height: TajeerSpacing.sm),
-              AppInlineError(message: message),
+              AppInlineError(message: _describe(error, strings)),
             ],
             const SizedBox(height: TajeerSpacing.lg),
             AppButton(
               label: strings.save,
-              loading: _saving,
+              loading: form.isSaving,
               expand: true,
               // An entry that says nothing still claims somebody was here, and
               // the API refuses it -- so the screen does not offer to send it.
@@ -129,4 +104,10 @@ class _CustomerNoteFormScreenState
       ),
     );
   }
+
+  static String _describe(CustomerNoteFormError error, AppStrings strings) =>
+      switch (error) {
+        CustomerNoteFormError.needsConnection => strings.noteNeedsConnection,
+        CustomerNoteFormError.saveFailed => strings.noteSaveFailed,
+      };
 }

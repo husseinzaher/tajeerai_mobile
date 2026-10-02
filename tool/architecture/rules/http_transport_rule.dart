@@ -2,7 +2,7 @@ import '../architecture_rule.dart';
 import '../import_analyzer.dart';
 
 /// The one HTTP client.
-const String _httpClient = 'lib/infrastructure/network/http_client.dart';
+const String _httpClient = 'lib/infrastructure/api/http_client.dart';
 
 /// The HTTP stack's own packages. A file that names one of these has built a
 /// transport of its own.
@@ -12,7 +12,11 @@ const Set<String> _httpPackages = <String>{
   'cookie_jar',
 };
 
-final RegExp _remoteDataSource = RegExp(r'^lib/features/[^/]+/data/remote/');
+/// An adapter's remote data sources: the one place a feature's endpoints are
+/// written down.
+final RegExp _remoteDataSource = RegExp(
+  r'^lib/infrastructure/adapters/[^/]+/remote/',
+);
 
 /// RULE 36 — HTTP is reached only from where its policy can be reviewed.
 ///
@@ -21,10 +25,10 @@ final RegExp _remoteDataSource = RegExp(r'^lib/features/[^/]+/data/remote/');
 /// (`ARCHITECTURE.md` §11). A decision like that needs a place where it cannot
 /// be widened by accident. So:
 ///
-/// - `HttpClient` is imported only by a feature's `data/remote/` sources,
-///   where every call is a named endpoint a reviewer can hold against §11, by
-///   the network layer itself, and by the composition root that builds it;
-/// - nothing outside `infrastructure/network/` names Dio or a cookie jar.
+/// - `HttpClient` is imported only by an adapter's `remote/` sources, where
+///   every call is a named endpoint a reviewer can hold against §11, by the
+///   HTTP layer itself, and by the composition root that builds it;
+/// - nothing outside `infrastructure/api/` names Dio or a cookie jar.
 ///
 /// What it cannot see is *which* endpoint a data source calls. Whether a new
 /// remote call is one §11 allows stays a review question; this rule makes sure
@@ -37,14 +41,14 @@ class HttpTransportRule implements ArchitectureRule {
 
   @override
   String get description =>
-      'HTTP is reached only from a feature data/remote/ source, the network '
-      'layer and the composition root.';
+      'HTTP is reached only from an adapter remote/ source, the HTTP layer '
+      'and the composition root.';
 
   @override
   List<Violation> check(ArchitectureContext context) {
     final String path = context.file.path;
 
-    if (path.startsWith('lib/infrastructure/network/')) {
+    if (path.startsWith('lib/infrastructure/api/')) {
       return const <Violation>[];
     }
 
@@ -65,12 +69,12 @@ class HttpTransportRule implements ArchitectureRule {
             forbiddenDependency: import.raw,
             line: import.line,
             reason:
-                'Only the network layer knows which HTTP library this app '
-                'uses. A file that builds its own Dio, or reads a cookie jar, '
-                'is a second transport nobody reviews.',
+                'Only the HTTP layer knows which HTTP library this app uses. '
+                'A file that builds its own Dio, or reads a cookie jar, is a '
+                'second transport nobody reviews.',
             allowedAlternative:
-                'Call HttpClient from a data/remote/ source; if it lacks '
-                'something, add it to lib/infrastructure/network/.',
+                'Call HttpClient from an adapter remote/ source; if it lacks '
+                'something, add it to lib/infrastructure/api/.',
           ),
         );
 
@@ -86,11 +90,12 @@ class HttpTransportRule implements ArchitectureRule {
             line: import.line,
             reason:
                 'HTTP carries only what ARCHITECTURE.md §11 allows, and a call '
-                'made outside a data/remote/ source is one the review of that '
-                'policy never sees.',
+                'made outside an adapter remote/ source is one the review of '
+                'that policy never sees.',
             allowedAlternative:
-                "Put the call in the feature's data/remote/ data source, "
-                'behind its repository.',
+                "Put the call in the feature's adapter under "
+                'infrastructure/adapters/<feature>/remote/, behind its '
+                'repository.',
           ),
         );
       }

@@ -1,23 +1,15 @@
 import 'dart:math';
 
-import 'package:TajeerAi/features/conversations/data/remote/conversation_remote_data_source.dart';
+import 'package:TajeerAi/features/conversations/application/ports/conversation_remote_port.dart';
 import 'package:TajeerAi/features/conversations/domain/entities/conversation.dart';
 import 'package:TajeerAi/features/conversations/domain/entities/message.dart';
-import 'package:TajeerAi/infrastructure/realtime/socket_manager.dart';
 
-/// A [ConversationRemoteDataSource] that never touches a socket.
+/// A [ConversationRemotePort] that never touches a socket.
 ///
-/// Subclassed rather than reimplemented from an interface, because the real
-/// class is concrete: extracting an interface for it would be an abstraction
-/// created only to satisfy a test, which the architecture explicitly warns
-/// against. Every socket-touching method is overridden, so the inherited
-/// [SocketManager] is never used.
-class FakeConversationRemote extends ConversationRemoteDataSource {
-  FakeConversationRemote() : super(_unusedSocket);
-
-  /// Never called: every method that would reach it is overridden below.
-  static final SocketManager _unusedSocket = _NullSocketManager();
-
+/// Implements the application port directly: the coordinators and the
+/// repositories depend on the port and not on the socket adapter, which is
+/// what lets every outbox and sync test run without a transport behind it.
+class FakeConversationRemote implements ConversationRemotePort {
   final List<MessageSendResult> sentMessages = <MessageSendResult>[];
   final List<String> attemptedClientMessageIds = <String>[];
   final List<String> markedRead = <String>[];
@@ -70,6 +62,13 @@ class FakeConversationRemote extends ConversationRemoteDataSource {
 
     return result;
   }
+
+  /// Not modelled: nothing under test opens a thread through the port.
+  @override
+  Future<ConversationWithMessages> openConversation(
+    String conversationId, {
+    int messageLimit = 50,
+  }) => throw StateError('FakeConversationRemote does not model open.');
 
   @override
   Future<void> markRead(String conversationId) async {
@@ -177,13 +176,6 @@ class FakeConversationRemote extends ConversationRemoteDataSource {
 
     if (failure != null) throw failure;
   }
-}
-
-/// Stands in for the socket the fake never uses.
-class _NullSocketManager implements SocketManager {
-  @override
-  dynamic noSuchMethod(Invocation invocation) =>
-      throw StateError('FakeConversationRemote must not reach the socket.');
 }
 
 /// A [Random] with a fixed seed, so jittered backoff is reproducible.

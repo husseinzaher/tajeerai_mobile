@@ -9,7 +9,7 @@ import '../../application/coordinators/conversation_presence_coordinator.dart';
 import '../../domain/entities/conversation.dart';
 import '../../domain/entities/message.dart';
 import '../../domain/value_objects/outbound_media.dart';
-import '../../realtime/message_events.dart';
+import '../../application/events/typing_changed.dart';
 
 part 'conversation_thread_controller.g.dart';
 
@@ -85,10 +85,9 @@ class ThreadTyping extends _$ThreadTyping {
 
   @override
   bool build(String conversationId) {
-    final StreamSubscription<MessageRealtimeEvent> subscription = ref
-        .watch(conversationSocketHandlerProvider)
-        .transientEvents
-        .listen((MessageRealtimeEvent event) => _apply(event, conversationId));
+    final StreamSubscription<TypingChanged> subscription = ref
+        .watch(conversationTypingEventsProvider)
+        .listen((TypingChanged event) => _apply(event, conversationId));
 
     ref.onDispose(() {
       _expiry?.cancel();
@@ -99,8 +98,7 @@ class ThreadTyping extends _$ThreadTyping {
     return false;
   }
 
-  void _apply(MessageRealtimeEvent event, String conversationId) {
-    if (event is! TypingChanged) return;
+  void _apply(TypingChanged event, String conversationId) {
     if (event.conversationId != conversationId || !event.isCustomer) return;
 
     _expiry?.cancel();

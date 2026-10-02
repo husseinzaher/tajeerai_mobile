@@ -14,8 +14,8 @@ Four ideas, in combination:
 
 | Idea | What it means here |
 | --- | --- |
-| **Feature-first** | Code is organised by business capability, not by technical kind. All of "conversations" lives in one directory. |
-| **Vertical slice** | Each feature owns its own presentation, application, domain and data layers, and is understandable without reading another feature. |
+| **Feature-first** | Code is organised by business capability, not by technical kind. Everything "conversations" *decides* lives in one directory; everything it needs from the outside world is implemented beside the engines it needs, under one name. |
+| **Three layers per feature** | Each feature is exactly presentation, application and domain, and is understandable without reading another feature. The infrastructure it depends on is reached through the contracts it publishes, never owned. |
 | **Realtime-first** | WebSocket is the primary transport for business data. HTTP is secondary and every use of it is justified. |
 | **Offline-first** | The local database is the primary read source. The UI renders from it, online or not. |
 
@@ -60,21 +60,60 @@ lib/
 │   ├── localization/          The copy components render on their own behalf.
 │   └── showcase/              The debug-only gallery. The same components, never copies.
 │
-├── infrastructure/            Technical implementations. Business-agnostic.
-│   ├── realtime/              Generic socket engine: connect, reconnect, authenticate, encode.
-│   ├── database/              Drift engine, migrations, and the business-agnostic tables.
-│   ├── storage/               Secure storage, preferences, files.
-│   ├── network/               HTTP client and interceptors.
-│   ├── device/                Connectivity, platform info.
-│   └── logging/               Logger and crash reporting.
+├── infrastructure/            Everything that touches the outside world. Two kinds, kept apart:
+│   │
+│   │                          -- the shared engines: business-agnostic, know no feature --
+│   ├── api/                   The one HTTP client, its exceptions, interceptors and configuration.
+│   ├── socket/                The Socket.IO engine: connect, reconnect, authenticate, encode.
+│   ├── storage/               Secure storage, preferences, files, and database/ -- the Drift
+│   │                          engine, migrations, and the business-agnostic outbox and sync tables.
+│   ├── device/                Connectivity, platform info, Google sign-in, the browser, the
+│   │                          Android caller-id channel.
+│   ├── logging/               Logger and crash reporting.
+│   ├── security/              PKCE.
+│   │
+│   │                          -- the adapters: one feature's implementations over those engines --
+│   └── adapters/<feature>/    Repository implementations, remote data sources, DTOs, DAOs and
+│       ├── local/             table declarations, socket handlers and device adapters. An
+│       ├── remote/            adapter implements the feature's domain repositories and
+│       ├── models/            application ports and nothing else; it is the only code that
+│       ├── repositories/      knows the server is Socket.IO, that a row is drift, or that a
+│       ├── realtime/          frame has an envelope. It carries the feature's name and is held
+│       └── device/            to the feature's boundary.
 │
 ├── failures/                  The application-wide failure taxonomy. Depends on nothing.
 │
-└── features/                  One directory per business capability.
-    ├── auth/
+└── features/                  One directory per business capability. Decisions only -- no
+    ├── auth/                  implementation of an external system lives here.
+    ├── blog/
+    ├── caller_id/
     ├── conversations/
     └── customers/             The workspace's contacts, and the directory a caller card answers from.
 ```
+
+### Why the adapters live under `infrastructure/`, not under the feature
+
+They used to: every feature had a `data/` layer and some a `realtime/` one, and
+`AppDatabase` imported each feature's tables from inside it. That made the
+feature directory a mix of two kinds of code -- what the business decides, and
+how a socket frame is decoded -- held to two different dependency rules, and it
+made "infrastructure" a directory that was business-agnostic only by exception.
+
+Now the line is the directory. A feature is three layers that may import
+Flutter, Riverpod and each other in one direction only, and nothing in it names
+Dio, drift, Socket.IO or a device plugin. Everything that does sits under
+`infrastructure/adapters/<feature>/`, next to the engines it is built on, and
+reaches the feature it serves through that feature's *outward-facing* surface:
+its domain and its `application/ports/`, `contracts/` and `events/`. Deleting a
+feature is deleting two directories with the same name and the providers that
+join them.
+
+The grouping inside `adapters/` is **by feature, not by technical kind**,
+deliberately. `infrastructure/api/clients/` holding five features' endpoint
+classes and `infrastructure/repositories/` holding seven implementations would
+scatter one feature's seams across five directories, and the guard could no
+longer hold an adapter to its feature's boundary -- RULE 14 reads the feature
+name off the path. The engines are by kind; the adapters are by owner.
 
 ### Why `failures/` is a top-level directory
 
@@ -102,32 +141,70 @@ declared beside the controller that owns them.
 features/<feature>/
 ├── presentation/
 │   ├── screens/               Route destinations.
-│   ├── widgets/               Feature-specific widgets.
+│   ├── widgets/               Feature-specific widgets, and the mappers into design-system data.
 │   └── controllers/           Screen state and actions. Providers live here.
 │
 ├── application/
 │   ├── contracts/             What OTHER features may use. The only public door.
+│   ├── ports/                 What THIS feature needs from the outside world, as interfaces
+│   │                          its adapters implement: the server, a file picker, a recorder.
 │   ├── events/                Facts this feature announces.
 │   ├── state/                 State shared across more than one screen.
 │   └── coordinators/          Multi-step workflows.
 │
-├── domain/
-│   ├── entities/              Business objects with behaviour.
-│   ├── value_objects/         Validated values (MessageContent, Password).
-│   ├── repositories/          Data-access contracts. Interfaces only.
-│   └── services/              Business rules.
-│
-├── data/
-│   ├── models/                Wire-format decoding.
-│   ├── local/                 DAOs and table declarations.
-│   ├── remote/                Socket commands (and HTTP, where justified).
-│   └── repositories/          Implementations of the domain contracts.
-│
-└── realtime/                  Only when the feature owns realtime behaviour.
+└── domain/
+    ├── entities/              Business objects with behaviour.
+    ├── value_objects/         Validated values (MessageContent, Password).
+    ├── repositories/          Data-access contracts. Interfaces only.
+    └── services/              Business rules.
+```
+
+**Exactly these three.** A fourth directory under a feature is a violation
+(RULE 39), not a convention to be weighed: the layer a file is in is what every
+other rule reasons about, and a file in no layer is one no rule can hold to
+anything. What used to be a feature's `data/` and `realtime/` is its adapter
+set, under `infrastructure/adapters/<feature>/`, with the same inner shape:
+
+```
+infrastructure/adapters/<feature>/
+├── models/                    Wire-format decoding -- the DTOs.
+├── local/                     DAOs and table declarations.
+├── remote/                    Socket commands, and HTTP where §11 allows it.
+├── repositories/              Implementations of the domain contracts.
+├── realtime/                  The socket handler, and the event names it reads.
+└── device/                    Plugin-backed implementations of application ports.
 ```
 
 A feature creates a directory when it has something to put in it. Empty
 directories mirroring another feature's shape are noise.
+
+### Ports and contracts are different doors
+
+Both are interfaces in `application/`, and they face opposite ways.
+
+- A **contract** (`application/contracts/`) is what the feature *offers*
+  another feature: `SessionCapability`, `CustomerDirectoryCapability`.
+  Another feature imports it; this feature implements it.
+- A **port** (`application/ports/`) is what the feature *needs* from the
+  outside world: `ConversationRemotePort`, `ConversationMediaPort`,
+  `CallerIdPlatformPort`, `VoiceRecorder`, `AttachmentPicker`. This feature's
+  coordinators and screens depend on it; the feature's adapter implements it.
+
+A port exists when the thing behind it is a transport or a device -- something
+that cannot be in a unit test -- and it is the application's vocabulary, not the
+adapter's. `ConversationRemotePort.sendMessage` answers in domain entities and
+throws `AppFailure`; it does not know what a socket command is. The result
+types a port answers with (`ConversationPage`, `MessageSendResult`) live in the
+port's file, because they are its vocabulary too.
+
+Not everything infrastructure offers needs a port. The shared engines --
+`SyncDao`, `OutboxDao`, `FileStorage`, `Logger`, `AppDatabase` -- are the
+app's own business-agnostic services with one implementation each, and the
+tests run them for real (SQLite in memory, a temp directory). An application
+coordinator may import them directly; wrapping each in an interface with one
+implementation would be ceremony. What a coordinator may **not** import is an
+adapter (RULE 37): the thing that has a port in front of it is reached through
+the port.
 
 ---
 
@@ -156,33 +233,53 @@ the domain.
 ## 5. Dependency rules
 
 ```
-Presentation  →  Application  →  Domain  ←  Data  →  Infrastructure
-                                   ↑
-                            (everything may import lib/failures/)
+Presentation  →  Application  →  Domain
+                      ↓               ↑
+               (ports, contracts,     │ implements
+                events)               │
+                      ↑               │
+              Adapters  ──────────────┘
+                      ↓
+              Shared engines (api/ socket/ storage/ device/ logging/)
+
+                 (everything may import lib/failures/)
 ```
 
 Arrows point at what a layer may import.
 
 **Presentation** may import application, domain, the design system, and
-`app/bootstrap/dependencies.dart`. Never data. Never infrastructure. A widget
-may not import a repository at all — that is a controller's job.
+`app/bootstrap/dependencies.dart`. Never an adapter (RULE 1). Never an engine
+(RULE 2). A widget may not import a repository at all — that is a controller's
+job — and a screen holds no repository reference even through a provider: a
+form's save lives in its controller (`CustomerFormController`), where it can be
+sequenced and tested without a widget tree.
 
-**Application** may import domain, data contracts, and infrastructure
-abstractions. Never presentation. Never Flutter.
+**Application** may import domain, its own ports, contracts and events, and
+the shared engines. Never presentation (RULE 10). Never Flutter. Never an
+adapter (RULE 37): a coordinator reaches the server through
+`ConversationRemotePort`, and the composition root decides what is behind it.
 
 **Domain** imports nothing but Dart and `lib/failures/`. No Flutter, no
 Riverpod, no Dio, no drift, no socket, no device APIs. This is what makes every
 business rule testable with a fake repository and nothing else.
 
-**Data** implements domain contracts and may use infrastructure. It is the
-translation boundary — see §9.
+**Adapters** implement the domain's repository contracts and the application's
+ports over the shared engines. An adapter may import its feature's domain and
+the outward-facing parts of its application layer — `ports/`, `contracts/`,
+`events/` — and nothing else of it (RULE 38): never a coordinator, never shared
+state, never a screen. It is the translation boundary — see §9 — and it is held
+to the feature boundary like the feature itself: the caller-id lookup adapter
+reads the customer directory *contract*, not the customer repository (RULE 14).
 
-**Infrastructure** may import nothing from `features/`, with one documented
-exception: `AppDatabase` imports each feature's table and DAO declarations,
-because drift generates one schema for one database. The guard narrows the
-exception to that file and to `*_tables.dart` / `*_dao.dart` targets, so it
-cannot be used as a general escape hatch. The alternative — moving every
-feature's schema into infrastructure — would be the worse violation.
+**Shared engines** import nothing from `features/` and nothing from
+`adapters/` (RULE 12), with one documented exception: `AppDatabase` imports
+each adapter's table and DAO declarations, because drift generates one schema
+for one database. The guard narrows the exception to that file and to
+`adapters/*/local/*_tables.dart` / `*_dao.dart` targets, so it cannot be used
+as a general escape hatch. Neither engines nor adapters import `app/` (RULE
+11): infrastructure is *told* its configuration — `HttpClient` takes an
+`HttpConfiguration` the composition root builds from `AppConfig` — and never
+reaches up for it.
 
 **Design system** may import nothing from `features/`. A shared component that
 knows what a conversation is can no longer be shared.
@@ -192,7 +289,9 @@ knows what a conversation is can no longer be shared.
 ## 6. Feature boundaries
 
 A feature must never reach into another feature's internals — not its
-presentation, not its data, not its realtime, not even its domain.
+presentation, not its adapters, not its ports or coordinators, not even its
+domain. The same holds for its adapters: `infrastructure/adapters/caller_id/`
+is caller-id, and may see of customers only what any caller-id code may.
 
 **The only supported door is `application/contracts/`.**
 
@@ -219,9 +318,9 @@ against it rather than against an invented protocol.
 ```
 Server
   → Socket.IO frame
-  → SocketConnection            (transport: decodes frames)
-  → SocketManager               (lifecycle: connect, reconnect, credentials)
-  → ConversationSocketHandler   (feature: interprets THIS event)
+  → SocketConnection            (engine: decodes frames)
+  → SocketManager               (engine: connect, reconnect, credentials)
+  → ConversationSocketHandler   (adapter: interprets THIS event)
   → Repository                  (writes)
   → Local database
   → Reactive query
@@ -233,12 +332,20 @@ The UI never subscribes to a socket. It watches the database.
 
 ### Layer split
 
-`infrastructure/realtime/` is business-agnostic: it connects, reconnects,
+`infrastructure/socket/` is business-agnostic: it connects, reconnects,
 authenticates, encodes commands, decodes envelopes, and reports lifecycle. It
 does not know that `message.created` means anything.
 
-`features/<feature>/realtime/` interprets events for one feature and persists
-them. It does not own connection, reconnection or authentication.
+`infrastructure/adapters/conversations/realtime/` interprets events for one
+feature and persists them through the domain's repositories. It does not own
+connection, reconnection or authentication. Its outbound twin,
+`adapters/conversations/remote/`, is the one class that knows what a socket
+command is; everything above it asks through `ConversationRemotePort`.
+
+The one thing the handler publishes rather than writes is typing: a
+`TypingChanged` from `application/events/`, exposed to the thread's controller
+as a stream of that type by the composition root. The controller never learns
+which adapter decoded the frame.
 
 ### Guarantees the handler owns
 
@@ -366,9 +473,9 @@ in this database.
 `NotFoundFailure`, `ConflictFailure`, `TransportFailure`, `SocketFailure`,
 `DatabaseFailure`, `SynchronizationFailure`, `UnknownFailure`.
 
-**Infrastructure exception types never escape the data layer.** `HttpException`
+**Infrastructure exception types never escape the adapters.** `HttpException`
 and `SocketException` are confined to `infrastructure/` and translated at the
-data boundary — `ConversationRemoteDataSource._send` and
+adapter boundary — `ConversationRemoteDataSource._send` and
 `AuthRepositoryImpl` are where that happens. Rule 27 enforces it.
 
 Presentation maps a failure to copy the user can act on. A screen never renders
@@ -433,10 +540,10 @@ the same exemption `/v1/auth/` already has and for the same reason: a 401 there
 is an answer, not a stale token.
 
 **RULE 36** keeps every call where that decision can be reviewed. `HttpClient`
-is imported only by a feature's `data/remote/` sources, the network layer and
-the composition root, and nothing outside `infrastructure/network/` names Dio
-or a cookie jar. Which endpoint a data source calls is still a question for
-review; the guard makes sure every call sits where the review looks.
+is imported only by an adapter's `remote/` sources, the HTTP layer and the
+composition root, and nothing outside `infrastructure/api/` names Dio or a
+cookie jar. Which endpoint a data source calls is still a question for review;
+the guard makes sure every call sits where the review looks.
 
 A 401 renews the session once, through the same single-flight renewal the socket
 uses, and repeats the request. It has to be shared: the backend's refresh tokens
@@ -703,14 +810,21 @@ because it compiles, analyses clean, or works when tried by hand.
 | Layer | What must be tested |
 | --- | --- |
 | Domain | Every service, entity with behaviour, value object, rule and invariant — without Flutter, Riverpod, a database or a socket. |
-| Application | Coordinators and workflows: success, validation failure, dependency failure, retry, edge cases. |
-| Data | Repositories: reads, writes, mapping, failures, malformed data, empty results, duplicates. |
+| Application | Coordinators and workflows: success, validation failure, dependency failure, retry, edge cases — against fakes of the ports. |
+| Adapters | Repositories and data sources: reads, writes, mapping, failures, malformed data, empty results, duplicates. |
 | Realtime | Every handler: valid, malformed, unknown, duplicate, ordering, persistence, error handling. |
 | Database | Migrations, CRUD, indexes, transactions, reactive queries, offline persistence. |
 | Presentation | Controllers and widgets: loading, error, empty and success states; interactions; accessibility. |
 | Offline | Read offline, write offline, pending persistence, outbox, retry after reconnect, failure, acknowledgement, duplicates, sync after reconnect. |
 
 Bug fixes are test-first: reproduce in a failing test, fix, keep the test.
+
+Tests mirror the source: a feature's tests under `test/features/<f>/`, an
+adapter's under `test/infrastructure/adapters/<f>/`, the engines' under
+`test/infrastructure/<engine>/`. A fake of a port lives with the application
+tests that drive it (`FakeConversationRemote` implements
+`ConversationRemotePort`), so the application layer is tested against the
+boundary it declares rather than against a subclass of the adapter.
 
 Coverage is enforced by `tool/check_coverage.dart` — 80% overall, with higher
 floors on domain, application, realtime, the DAOs and the failure taxonomy. A
@@ -758,6 +872,8 @@ diff.
 | Coordinator | `<Workflow>Coordinator` | `OutboxCoordinator` |
 | Socket handler | `<Feature>SocketHandler` | `ConversationSocketHandler` |
 | Cross-feature contract | `<Thing>Capability` | `SessionCapability` |
+| Application port | `<Thing>Port`, or the plain noun for a device | `ConversationRemotePort`, `VoiceRecorder` |
+| Port implementation | `<Technology><Port>` or `<Aggregate>RemoteDataSource` | `RecordVoiceRecorder`, `ConversationRemoteDataSource` |
 
 Avoid `Manager`, `Helper`, `Utils`, `Common`, `Misc`, `GlobalService` unless the
 responsibility genuinely warrants it. `SocketManager` earns its name: it manages
@@ -767,7 +883,7 @@ a connection's lifecycle and nothing else.
 
 ## 15. Enforcement
 
-`tool/check_architecture.dart` implements 36 rules across eight rule files. Each
+`tool/check_architecture.dart` implements 39 rules across eight rule files. Each
 violation prints the rule, the source file and line, the forbidden dependency,
 why it is wrong, and what to use instead. Non-zero exit fails CI.
 
@@ -778,22 +894,28 @@ dart run tool/check_architecture.dart
 Rules are objects, not branches in a long function: adding one is adding a file
 under `tool/architecture/rules/` and a line in `_fileRules`.
 
-### The 36 rules
+### The 39 rules
 
-1–5 Presentation must not import data, infrastructure, repository
-implementations, database APIs or socket infrastructure.
+1–5 Presentation must not import an adapter, an engine, a repository
+implementation, a database API or the socket.
 6–9 Domain must not import Flutter, Riverpod, infrastructure or UI.
 10 Application must not import presentation.
-11–12 Infrastructure must not import presentation or feature implementation.
-13–15 Feature A must not import feature B's presentation, data or infrastructure.
+11 Infrastructure — engines and adapters alike — must not import presentation,
+the design system or `app/`.
+12 Shared engines must not import a feature or an adapter; `AppDatabase`'s
+schema imports are the one, narrowed exception.
+13–15 Feature A must not import feature B's presentation, adapters or
+application internals — and A's adapters are held to the same boundary.
 16–18 Widgets must not use the socket or database directly; screens must not
 import repositories; the design system stays business-agnostic.
 19–23 `core/`, `shared/`, `presentation/providers/`, `helpers/`, `utils/` are
 forbidden.
 24 Application must not become a global business-logic layer.
 25 Domain services stay free of infrastructure.
-26 Raw realtime payload types must not reach presentation.
-27 Infrastructure exception types must not reach presentation or domain.
+26 Retired. It kept raw realtime payload types out of widgets; the payload
+types now live in adapters, which RULE 1 keeps out of all of presentation.
+27 Infrastructure exception types must not reach presentation, application or
+domain.
 28 Generated code is not a bypass.
 29 Relative imports resolve to the same paths as `package:` imports, so a
 boundary cannot be evaded by switching import style.
@@ -806,8 +928,13 @@ or storage package.
 family, and no number where a radius or spacing token belongs.
 35 Outside the design system and the theme: no Material widget the design
 system already wraps, and none of the functions that open one.
-36 HTTP is reached only from a feature's `data/remote/`, the network layer and
-the composition root; only the network layer names Dio or a cookie jar.
+36 HTTP is reached only from an adapter's `remote/`, the HTTP layer and the
+composition root; only the HTTP layer names Dio or a cookie jar.
+37 Application must not import an adapter: it depends on ports and domain
+contracts, and the composition root supplies the implementation.
+38 An adapter may import its feature's domain and its `application/ports/`,
+`contracts/` and `events/` — never its coordinators, state or presentation.
+39 A feature holds exactly `application/`, `domain/` and `presentation/`.
 
 Rules 31–33 close holes rule 18 left open: it checked only that a design-system
 file did not import a *feature*, so `app/bootstrap/dependencies.dart`, the
@@ -881,9 +1008,11 @@ Recorded so they are decisions, not omissions.
   `analyzer ^8` while `riverpod_generator` 4.x requires `^13`. Rechecked after
   a full `pub upgrade --major-versions`; still unresolvable upstream. Revisit
   when `custom_lint` moves.
-- **Push notifications.** `infrastructure/notifications/` is intentionally
-  empty — no provider has been chosen, and an empty abstraction would be a
-  guess.
+- **Push notifications and analytics.** There is no
+  `infrastructure/notifications/` and no `infrastructure/analytics/`, and that
+  is a decision: no provider has been chosen for either, and an empty
+  directory or an empty abstraction would be a guess. Each arrives as a shared
+  engine under `infrastructure/` when the provider does.
 - **Media download and attachment rendering.** `FileStorage` provides the
   location; the flow is not built.
 - **Localization.** `AppStrings` is a plain map with the shape `gen-l10n`

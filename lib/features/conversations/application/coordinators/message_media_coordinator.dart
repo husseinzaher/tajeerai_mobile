@@ -1,6 +1,6 @@
 import '../../../../infrastructure/logging/logger.dart';
 import '../../../../infrastructure/storage/file_storage.dart';
-import '../../data/remote/conversation_media_port.dart';
+import '../ports/conversation_media_port.dart';
 import '../../domain/entities/message.dart';
 import '../../domain/repositories/message_repository.dart';
 import '../../domain/value_objects/outbound_media.dart';

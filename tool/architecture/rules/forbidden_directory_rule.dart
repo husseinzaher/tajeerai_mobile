@@ -1,15 +1,16 @@
 import '../architecture_rule.dart';
 import '../path_classifier.dart';
 
-/// Bans dumping-ground directories, and keeps the failure kernel pure.
+/// Bans dumping-ground directories, keeps a feature to its three layers, and
+/// keeps the failure kernel pure.
 ///
-/// Covers rules 19-23 and the purity constraint that makes `lib/failures/`
+/// Covers rules 19-23, 39 and the purity constraint that makes `lib/failures/`
 /// legitimate rather than `shared/` with a nicer name.
 class ForbiddenDirectoryRule implements ProjectRule {
   const ForbiddenDirectoryRule();
 
   @override
-  String get id => 'RULE 19/20/21/22/23';
+  String get id => 'RULE 19/20/21/22/23/39';
 
   @override
   String get description => 'Forbidden directories';
@@ -51,6 +52,41 @@ class ForbiddenDirectoryRule implements ProjectRule {
 
     for (final file in files) {
       if (!file.path.startsWith('lib/')) continue;
+
+      // RULE 39 -- a feature is exactly presentation, application and domain.
+      //
+      // The layer a file is in is what every other rule reasons about, so a
+      // file under features/<f>/ in no recognised layer is not merely untidy:
+      // it is a file no rule can hold to anything. `data/` and `realtime/`
+      // used to be layers here; their contents are infrastructure and live in
+      // infrastructure/adapters/<feature>/ now.
+      if (file.layer == Layer.featureRoot) {
+        final directory = file.path.substring(0, file.path.lastIndexOf('/'));
+
+        if (reported.add(directory)) {
+          violations.add(
+            Violation(
+              rule:
+                  'RULE 39 - A feature holds exactly application/, domain/ '
+                  'and presentation/.',
+              source: directory,
+              forbiddenDependency: '$directory/',
+              reason:
+                  'A file under features/${file.feature}/ outside those three '
+                  'layers is one no dependency rule can reason about. '
+                  'Repository implementations, data sources, DTOs, DAOs and '
+                  'realtime handlers are infrastructure.',
+              allowedAlternative:
+                  'A rule goes to domain/, a workflow or a port to '
+                  'application/, a screen or controller to presentation/, and '
+                  'an implementation over the engines to '
+                  'infrastructure/adapters/${file.feature}/.',
+            ),
+          );
+        }
+
+        continue;
+      }
 
       final segments = file.path.split('/');
 

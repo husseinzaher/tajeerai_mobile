@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import '../../../../failures/app_failure.dart';
-import '../../../../infrastructure/database/daos/sync_dao.dart';
+import '../../../../infrastructure/storage/database/daos/sync_dao.dart';
 import '../../../../infrastructure/logging/logger.dart';
-import '../../../../infrastructure/realtime/connection/connection_state.dart';
+import '../../../../infrastructure/socket/connection/connection_state.dart';
 import '../../domain/repositories/conversation_repository.dart';
 import '../events/conversation_app_events.dart';
 import '../state/sync_state.dart';

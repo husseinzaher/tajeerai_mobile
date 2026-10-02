@@ -36,13 +36,24 @@ It is mandatory, not advisory.
 ## While you write code
 
 **Preserve feature boundaries.** A feature never imports another feature's
-presentation, data, realtime or domain. The only door is
-`application/contracts/`. See `SessionCapability` for the worked example.
+presentation, adapters, application internals or domain. The only door is
+`application/contracts/`. See `SessionCapability` for the worked example. The
+feature's own adapters under `infrastructure/adapters/<feature>/` are held to
+the same boundary.
 
 **Never bypass a layer.** Screen → Controller → Application/Domain →
-Repository. A widget that calls a repository, a controller that opens the
-database, or a domain service that imports Dio is a defect regardless of
-whether it works.
+Repository. A widget that calls a repository, a screen that saves a form
+through a provider instead of a controller, a coordinator that imports an
+adapter, a controller that opens the database, or a domain service that
+imports Dio is a defect regardless of whether it works.
+
+**A feature is exactly three layers.** `presentation/`, `application/`,
+`domain/` — RULE 39 fails a fourth. Repository implementations, DTOs, DAOs,
+table declarations, socket handlers and plugin-backed device code are
+adapters and live in `infrastructure/adapters/<feature>/`, where they
+implement the feature's `domain/repositories/` and `application/ports/`.
+What the feature *needs* from the outside world is a port; what it *offers*
+another feature is a contract.
 
 **Never introduce a forbidden folder.** `core/`, `shared/`, `helpers/`,
 `utils/`, `misc/`, `common/`, `presentation/providers/`. If code has no obvious
@@ -55,11 +66,11 @@ fake repository and nothing else.
 **Do not make HTTP the default transport.** WebSocket carries business data.
 HTTP is for the sign-in exchange, file transfer, and the workspace data §11
 lists because the socket does not expose it. A new kind of HTTP call needs a
-reason recorded in `ARCHITECTURE.md` §11, and RULE 36 keeps every call in a
-feature's `data/remote/`.
+reason recorded in `ARCHITECTURE.md` §11, and RULE 36 keeps every call in the
+feature's adapter under `infrastructure/adapters/<feature>/remote/`.
 
-**Preserve realtime-first.** Socket events are written to the database by a
-feature's realtime handler; the UI watches the database. A widget must never
+**Preserve realtime-first.** Socket events are written to the database by the
+feature's realtime adapter; the UI watches the database. A widget must never
 subscribe to a socket.
 
 **Preserve offline-first.** The database is the primary read source. Reads do
@@ -83,8 +94,8 @@ import Riverpod, go_router, Dio, drift or a storage package (RULE 33): take the
 value as a parameter and report the change through a callback.
 
 **Keep infrastructure exceptions contained.** `HttpException` and
-`SocketException` are translated to an `AppFailure` at the data boundary and
-never travel further.
+`SocketException` are translated to an `AppFailure` at the adapter boundary
+and never travel further.
 
 ## Testing is part of the change
 
@@ -148,10 +159,16 @@ change — never to describe a violation after the fact. When it does change:
 | A business rule | `features/<f>/domain/services/` |
 | A multi-step workflow | `features/<f>/application/coordinators/` |
 | Screen state | `features/<f>/presentation/controllers/` |
-| A socket command | `features/<f>/data/remote/` |
-| Socket event handling | `features/<f>/realtime/` |
+| What a feature needs from the outside world | `features/<f>/application/ports/` — an interface its adapter implements |
+| What a feature offers another feature | `features/<f>/application/contracts/` |
+| A repository implementation, DTO, DAO or table | `infrastructure/adapters/<f>/` |
+| A socket command | `infrastructure/adapters/<f>/remote/` |
+| Socket event handling | `infrastructure/adapters/<f>/realtime/` |
+| A plugin behind a port (picker, recorder) | `infrastructure/adapters/<f>/device/` |
+| The HTTP client | `infrastructure/api/` |
+| The socket engine | `infrastructure/socket/` |
 | Dependency wiring | `app/bootstrap/dependencies.dart` |
-| A database schema change | `infrastructure/database/migrations/schema_migrations.dart`, then `make migrations` |
+| A database schema change | `infrastructure/storage/database/migrations/schema_migrations.dart`, then `make migrations` |
 | A shared component | `design_system/`, reached via `design_system.dart` |
 | The signed-in frame (drawer, bottom bar) | `app/shell/authenticated_shell.dart`, built from `design_system/shell/` |
 | A signed-in destination | `app/shell/shell_destination.dart`, then its routes in `app/router/app_router.dart` |

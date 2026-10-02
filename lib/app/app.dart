@@ -7,7 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../features/auth/application/events/auth_events.dart';
 import '../features/auth/presentation/controllers/auth_controller.dart';
-import '../infrastructure/database/drift_database_path.dart';
+import '../infrastructure/storage/database/drift_database_path.dart';
 import 'bootstrap/dependencies.dart';
 import 'localization/locale_manager.dart';
 import 'router/deep_link_listener.dart';

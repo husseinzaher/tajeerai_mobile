@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import '../../../../failures/app_failure.dart';
-import '../../../../infrastructure/database/daos/sync_dao.dart';
+import '../../../../infrastructure/storage/database/daos/sync_dao.dart';
 import '../../../../infrastructure/logging/logger.dart';
 import '../../domain/repositories/customer_repository.dart';
 

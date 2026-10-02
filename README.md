@@ -129,8 +129,9 @@ dart run tool/check_coverage.dart
 dart run tool/check_architecture.dart
 ```
 
-Thirty rules covering layer direction, feature boundaries, forbidden
-directories, presentation access, exception containment and generated code.
+Thirty-nine rules covering layer direction, feature boundaries, the three
+layers a feature may have, forbidden directories, presentation access,
+exception containment and generated code.
 Each violation prints the rule, the offending line, why it is wrong and what to
 use instead:
 
@@ -138,17 +139,17 @@ use instead:
 ARCHITECTURE VIOLATION
 
 Rule:
-RULE 14 - Feature A must not import Feature B data implementation.
+RULE 14 - Feature A must not import Feature B's infrastructure adapters.
 
 Source:
 lib/features/conversations/presentation/screens/conversation_screen.dart:12
 
 Forbidden dependency:
-lib/features/customers/data/repositories/customer_repository_impl.dart
+lib/infrastructure/adapters/customers/repositories/customer_repository_impl.dart
 
 Reason:
-The conversations feature depends directly on customers' data layer. The two
-can no longer be changed, tested or removed independently.
+The conversations feature depends directly on customers' infrastructure
+adapters. The two can no longer be changed, tested or removed independently.
 
 Allowed alternative:
 Define what conversations needs as an interface in

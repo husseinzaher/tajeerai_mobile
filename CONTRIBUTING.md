@@ -90,14 +90,21 @@ For a bug fix: write the failing test first, then fix it, and keep the test.
 
 ## Adding a feature
 
-1. Create `lib/features/<name>/` with only the layers you need.
+1. Create `lib/features/<name>/` with only the layers you need, out of
+   `presentation/`, `application/` and `domain/` — there is no fourth.
 2. Rules go in `domain/services/`, workflows in `application/coordinators/`,
    screen state in `presentation/controllers/`.
-3. If another feature needs something from yours, publish an interface in
-   `application/contracts/` and wire it in `app/bootstrap/dependencies.dart`.
-   Never let another feature import your internals.
-4. Write the tests as you go.
-5. Run `make verify`.
+3. Anything that talks to the server, the database or a device plugin is an
+   adapter: declare what the feature needs as a `domain/repositories/`
+   interface or an `application/ports/` interface, implement it in
+   `lib/infrastructure/adapters/<name>/`, and join the two in
+   `app/bootstrap/dependencies.dart`.
+4. If another feature needs something from yours, publish an interface in
+   `application/contracts/` and wire it the same way. Never let another
+   feature import your internals.
+5. Write the tests as you go — a feature's under `test/features/<name>/`, its
+   adapters' under `test/infrastructure/adapters/<name>/`.
+6. Run `make verify`.
 
 The guard checks new features automatically — nothing in it enumerates feature
 names.

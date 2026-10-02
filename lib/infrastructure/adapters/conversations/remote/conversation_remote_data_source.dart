@@ -1,0 +1,357 @@
+import '../../../socket/socket_command.dart';
+import '../../../socket/socket_exception.dart';
+import '../../../socket/socket_manager.dart';
+import '../../../../features/conversations/domain/entities/conversation.dart';
+import '../../../../features/conversations/domain/entities/message.dart';
+import '../../../../features/conversations/application/ports/conversation_commands.dart';
+import '../../../../features/conversations/application/ports/conversation_remote_port.dart';
+import '../models/conversation_dto.dart';
+import '../models/message_dto.dart';
+
+/// The conversation feature's socket commands.
+///
+/// **The socket is this feature's transport -- there is no HTTP here.**
+/// Listing the rail, opening a thread, paging history, sending, syncing: all
+/// of it goes over the connection the app already holds, which is what the
+/// backend built `SOCKET_COMMANDS` for.
+///
+/// Every method here sends a command and decodes its acknowledgement. None of
+/// them write to the database -- that is the repository's job, and keeping the
+/// two apart is what lets a repository test drive a fake of this without a
+/// socket.
+///
+/// ## The translation boundary
+///
+/// This is where `SocketException` stops. Every command goes through [_send],
+/// which converts it to an `AppFailure` before returning -- so the repository,
+/// the coordinators and the controllers above deal in the application's own
+/// vocabulary and never import a transport's exception type. The architecture
+/// guard enforces that (rule 27); this method is what makes obeying it
+/// possible without every caller writing the same `try`.
+class ConversationRemoteDataSource implements ConversationRemotePort {
+  const ConversationRemoteDataSource(this._socket);
+
+  final SocketManager _socket;
+
+  /// Sends a command, translating transport failures.
+  ///
+  /// `SocketFailure` keeps `code` and `isRetryable` from the original, which
+  /// is what the outbox needs in order to decide between backing off and
+  /// giving up -- without it having to know a socket exists.
+  Future<SocketAckSuccess> _send(
+    SocketCommand command, {
+    Duration? timeout,
+  }) async {
+    try {
+      return await _socket.send(command, timeout: timeout);
+    } on SocketException catch (error) {
+      throw error.toFailure();
+    }
+  }
+
+  /// `conversation:list`. A cursor-paginated page of the rail.
+  @override
+  Future<ConversationPage> listConversations({
+    int limit = 25,
+    String? cursor,
+    String? search,
+    bool? archived,
+  }) async {
+    final ack = await _send(
+      SocketCommand(
+        name: ConversationCommands.list,
+        payload: <String, Object?>{
+          'limit': limit,
+          if (cursor != null) 'cursor': cursor,
+          if (search != null && search.isNotEmpty) 'search': search,
+          if (archived != null) 'archived': archived,
+        },
+      ),
+    );
+
+    final items = ack.data['data'] ?? ack.data['items'] ?? ack.rawData;
+
+    // `toCursorPage` nests pagination under `meta`; reading it from the top
+    // level silently disabled paging past the first page.
+    final meta = ack.data['meta'];
+    final pagination = meta is Map ? meta : ack.data;
+
+    return ConversationPage(
+      conversations: _decodeConversations(items),
+      nextCursor: pagination['nextCursor']?.toString(),
+      hasMore: pagination['hasMore'] == true,
+    );
+  }
+
+  /// `conversation:open`. Returns the thread and its newest page in one round
+  /// trip, which is what the command exists for.
+  @override
+  Future<ConversationWithMessages> openConversation(
+    String conversationId, {
+    int messageLimit = 50,
+  }) async {
+    final ack = await _send(
+      SocketCommand(
+        name: ConversationCommands.open,
+        payload: <String, Object?>{
+          'conversationId': conversationId,
+          'messageLimit': messageLimit,
+        },
+      ),
+    );
+
+    final conversation = ack.data['conversation'];
+
+    return ConversationWithMessages(
+      conversation: conversation is Map
+          ? ConversationDto.decode(Map<String, Object?>.from(conversation))
+          : null,
+      messages: _decodeMessages(ack.data['messages'], conversationId),
+    );
+  }
+
+  /// `message:list`. A page of history older than [before].
+  @override
+  Future<MessagePage> listMessages({
+    required String conversationId,
+    DateTime? before,
+    int limit = 50,
+  }) async {
+    final ack = await _send(
+      SocketCommand(
+        name: ConversationCommands.messageList,
+        payload: <String, Object?>{
+          'conversationId': conversationId,
+          if (before != null) 'before': before.toUtc().toIso8601String(),
+          'limit': limit,
+        },
+      ),
+    );
+
+    return MessagePage(
+      messages: _decodeMessages(
+        ack.data['messages'] ?? ack.rawData,
+        conversationId,
+      ),
+      nextCursor: ack.data['nextCursor']?.toString(),
+      hasMore: ack.data['hasMore'] == true,
+    );
+  }
+
+  /// `message:send`.
+  ///
+  /// [clientMessageId] is the idempotency key, generated before the first
+  /// attempt and reused on every retry. The server answers with
+  /// `deduplicated: true` when the command matched an earlier send and created
+  /// nothing new -- which is exactly what makes a resend after a lost
+  /// acknowledgement safe.
+  @override
+  Future<MessageSendResult> sendMessage({
+    required String conversationId,
+    required String clientMessageId,
+    String type = 'text',
+    String? body,
+    String? mediaId,
+    String? filename,
+    String? mimeType,
+  }) async {
+    final ack = await _send(
+      SocketCommand(
+        name: ConversationCommands.messageSend,
+        payload: <String, Object?>{
+          'conversationId': conversationId,
+          'type': type,
+          if (body != null && body.isNotEmpty) 'body': body,
+          if (mediaId != null) 'mediaId': mediaId,
+          if (filename != null) 'filename': filename,
+          if (mimeType != null) 'mimeType': mimeType,
+          'clientMessageId': clientMessageId,
+        },
+      ),
+    );
+
+    final messageId = ack.data['messageId']?.toString();
+
+    if (messageId == null || messageId.isEmpty) {
+      throw const FormatException('Send acknowledgement carried no id.');
+    }
+
+    return MessageSendResult(
+      clientMessageId:
+          ack.data['clientMessageId']?.toString() ?? clientMessageId,
+      messageId: messageId,
+      deduplicated: ack.data['deduplicated'] == true,
+    );
+  }
+
+  /// `conversation:read`. Clears the unread count server-side.
+  @override
+  Future<void> markRead(String conversationId) async {
+    await _send(
+      SocketCommand(
+        name: ConversationCommands.read,
+        payload: <String, Object?>{'conversationId': conversationId},
+      ),
+    );
+  }
+
+  /// `message:discard`. Throws away a message the provider never accepted.
+  ///
+  /// The server refuses this for a message the customer already has -- that is
+  /// `message:delete`, a different act with a different window -- so a
+  /// rejection here is meaningful and is passed up rather than swallowed.
+  @override
+  Future<void> discardMessage({
+    required String conversationId,
+    required String messageId,
+  }) async {
+    await _send(
+      SocketCommand(
+        name: ConversationCommands.messageDiscard,
+        payload: <String, Object?>{
+          'conversationId': conversationId,
+          'messageId': messageId,
+        },
+      ),
+    );
+  }
+
+  /// `conversation.join`. Takes a seat in the thread's room.
+  ///
+  /// **Without this the thread is only half live.** Delivery ticks, media
+  /// URLs, withdrawals and typing are broadcast to the conversation room and
+  /// nowhere else, so a client that never joins keeps receiving new messages
+  /// -- those go to the inbox audience -- while quietly missing every change
+  /// to the ones it already has. The seat is also what tells the server the
+  /// member is looking, so it does not push them a notification for it.
+  ///
+  /// Acknowledged rather than fired and forgotten: the server authorises the
+  /// conversation before joining, and a refusal is worth knowing about.
+  @override
+  Future<void> joinConversation(String conversationId) async {
+    await _send(
+      SocketCommand(
+        name: ConversationCommands.join,
+        payload: <String, Object?>{'conversationId': conversationId},
+      ),
+    );
+  }
+
+  /// `conversation.leave`. Gives the seat up again.
+  @override
+  Future<void> leaveConversation(String conversationId) async {
+    await _send(
+      SocketCommand(
+        name: ConversationCommands.leave,
+        payload: <String, Object?>{'conversationId': conversationId},
+      ),
+    );
+  }
+
+  /// `conversation:sync`. Everything that changed since [since].
+  ///
+  /// The reconnect path. The server returns the *current state* of affected
+  /// rows rather than replaying events, which is both smaller after a long
+  /// absence and impossible to apply out of order.
+  @override
+  Future<RemoteSyncResult> synchronize({
+    required DateTime since,
+    String? conversationId,
+  }) async {
+    final ack = await _send(
+      SocketCommand(
+        name: ConversationCommands.sync,
+        payload: <String, Object?>{
+          'since': since.toUtc().toIso8601String(),
+          if (conversationId != null) 'conversationId': conversationId,
+        },
+      ),
+    );
+
+    final syncedAt = ConversationDto.parseTime(ack.data['syncedAt']);
+
+    return RemoteSyncResult(
+      conversations: _decodeConversations(ack.data['conversations']),
+      messages: _decodeMessages(ack.data['messages'], null),
+      // Falling back to `since` rather than to now: advancing the cursor past
+      // a window the server did not confirm would skip whatever happened in it.
+      syncedAt: syncedAt ?? since,
+      unreadTotal: _unreadTotal(ack.data['unread']),
+    );
+  }
+
+  /// Asks the provider to show the customer a typing bubble.
+  ///
+  /// Fire-and-forget: a lost typing frame is invisible, and waiting on an
+  /// acknowledgement per keystroke would be absurd.
+  ///
+  /// **The conversation and nothing else** -- that is the whole command. There
+  /// is no "stopped typing" to send, because the bubble the provider shows
+  /// expires by itself. The `isTyping` this used to carry was stripped by the
+  /// server's schema on the way in, so `isTyping: false` did not stop a
+  /// bubble: it asked for one.
+  @override
+  void sendTypingIndicator({required String conversationId}) {
+    _socket.emit(
+      SocketCommand(
+        name: ConversationCommands.typingIndicator,
+        payload: <String, Object?>{'conversationId': conversationId},
+      ),
+    );
+  }
+
+  /// Decodes a list, skipping entries that are individually malformed.
+  ///
+  /// One bad row must not lose the other twenty-four in the page -- a partial
+  /// rail is far better than an empty one.
+  static List<Conversation> _decodeConversations(Object? raw) {
+    if (raw is! List) return const <Conversation>[];
+
+    final decoded = <Conversation>[];
+
+    for (final entry in raw) {
+      if (entry is! Map) continue;
+
+      try {
+        decoded.add(ConversationDto.decode(Map<String, Object?>.from(entry)));
+      } on FormatException {
+        continue;
+      }
+    }
+
+    return decoded;
+  }
+
+  static List<Message> _decodeMessages(Object? raw, String? conversationId) {
+    if (raw is! List) return const <Message>[];
+
+    final decoded = <Message>[];
+
+    for (final entry in raw) {
+      if (entry is! Map) continue;
+
+      try {
+        decoded.add(
+          MessageDto.decode(
+            Map<String, Object?>.from(entry),
+            conversationId: conversationId,
+          ),
+        );
+      } on FormatException {
+        continue;
+      }
+    }
+
+    return decoded;
+  }
+
+  static int _unreadTotal(Object? raw) {
+    if (raw is Map) {
+      final total = raw['total'];
+
+      if (total is int) return total;
+    }
+
+    return 0;
+  }
+}

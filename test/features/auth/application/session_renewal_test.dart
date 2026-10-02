@@ -7,7 +7,7 @@ import 'package:TajeerAi/features/auth/domain/entities/user.dart';
 import 'package:TajeerAi/features/auth/domain/services/auth_service.dart';
 import 'package:TajeerAi/features/auth/domain/value_objects/session_renewal.dart';
 import 'package:TajeerAi/infrastructure/logging/logger.dart';
-import 'package:TajeerAi/infrastructure/network/token_refresher.dart';
+import 'package:TajeerAi/infrastructure/api/token_refresher.dart';
 
 import '../domain/fakes/fake_auth_repository.dart';
 

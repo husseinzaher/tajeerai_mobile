@@ -1,4 +1,4 @@
-import 'package:TajeerAi/features/conversations/data/remote/conversation_media_port.dart';
+import 'package:TajeerAi/features/conversations/application/ports/conversation_media_port.dart';
 
 class FakeConversationMediaRemote implements ConversationMediaPort {
   int uploadCalls = 0;

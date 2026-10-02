@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app/app.dart';
 import 'app/bootstrap/dependencies.dart';
 import 'app/config/app_config.dart';
-import 'infrastructure/database/app_database.dart';
+import 'infrastructure/storage/database/app_database.dart';
 import 'infrastructure/device/platform_info.dart';
 import 'infrastructure/logging/crash_reporter.dart';
 import 'infrastructure/logging/logger.dart';

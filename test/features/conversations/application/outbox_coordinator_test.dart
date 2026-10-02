@@ -6,9 +6,9 @@ import 'package:TajeerAi/failures/app_failure.dart';
 import 'package:TajeerAi/features/conversations/application/coordinators/outbox_coordinator.dart';
 import 'package:TajeerAi/features/conversations/application/events/conversation_app_events.dart';
 import 'package:TajeerAi/features/conversations/domain/entities/message.dart';
-import 'package:TajeerAi/features/conversations/realtime/conversation_events.dart';
-import 'package:TajeerAi/infrastructure/database/app_database.dart';
-import 'package:TajeerAi/infrastructure/database/tables/outbox_table.dart';
+import 'package:TajeerAi/features/conversations/application/ports/conversation_commands.dart';
+import 'package:TajeerAi/infrastructure/storage/database/app_database.dart';
+import 'package:TajeerAi/infrastructure/storage/database/tables/outbox_table.dart';
 import 'package:TajeerAi/infrastructure/logging/logger.dart';
 
 import '../../../support/fixed_clock.dart';
