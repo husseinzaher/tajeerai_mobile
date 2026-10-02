@@ -122,6 +122,10 @@ flutter:
   # and stay out of the binary — see assets/brand/README.md.
   assets:
     - assets/brand/app/
+    # The caller card preview's stand-in photo. Bundled, not fetched, and
+    # nobody's face: a settings screen must not depend on the network or on
+    # the member having a picture.
+    - assets/caller_id/
 
   # Bundled, not fetched. An offline-first client that downloads its typeface
   # renders the fallback stack on a cold first launch; see assets/fonts/README.md
