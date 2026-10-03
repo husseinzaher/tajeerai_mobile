@@ -49,8 +49,24 @@ import kotlin.math.abs
  * passed down with the runtime config. A merchant running an Arabic workspace
  * on an English phone gets an Arabic card, which is what the rest of the app
  * already does.
+ *
+ * ## There is exactly one of these in the process
+ *
+ * It used to be a `by lazy` field on `CallerIdCallScreeningService`, and
+ * Telecom binds that service once per call - so the second call got a *second*
+ * controller, which knew nothing about the first. `show()` opens by calling
+ * `dismissInternal()` precisely so a new call takes the card over from the
+ * previous one, and on a fresh instance that call tears down nothing: the
+ * first call's card could still be on screen with its own telephony watcher
+ * registered, and the second call's summary and its note to the thread were
+ * lost behind it (owner, 2026-10-03).
+ *
+ * Worse, whether that happened at all depended on whether Android chose to
+ * reuse the service instance, which is not a thing this code may rely on. One
+ * instance, reached through [of], makes "the newest call owns the card" true
+ * by construction.
  */
-class CallerIdOverlayController(private val appContext: Context) {
+class CallerIdOverlayController private constructor(private val appContext: Context) {
     private val windowManager = appContext.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     private val mainHandler = Handler(Looper.getMainLooper())
     private val imageExecutor = Executors.newSingleThreadExecutor()
@@ -86,6 +102,17 @@ class CallerIdOverlayController(private val appContext: Context) {
                 return@post
             }
 
+            /*
+              The call this card is being taken from, if it was still live.
+
+              `dismissInternal` stops its watcher, so without this the previous
+              call would never reach `showSummary` and its note would never be
+              written - a second call starting would quietly erase the first
+              one's record. The card itself is gone either way; what is kept is
+              the line on the contact and in the thread, which is the part a
+              merchant reads tomorrow.
+            */
+            closePreviousCall(settings)
             dismissInternal()
 
             activeCallId = callId
@@ -157,6 +184,38 @@ class CallerIdOverlayController(private val appContext: Context) {
                 settings,
             )
             if (summaryShown) bindActions(view, localized(settings.locale()))
+        }
+    }
+
+    /**
+     * Writes the record for a call that is losing the card to a newer one.
+     *
+     * Only when there was one, it was still being watched, and it had not
+     * already said its piece. Nothing is drawn: the card is about to be
+     * replaced, and a summary nobody can see is not worth the frame.
+     *
+     * `answered` is taken from the watcher rather than guessed, and a call
+     * taken over mid-ring is reported as what it was - unanswered.
+     */
+    private fun closePreviousCall(settings: CallerIdPreferences) {
+        val watcher = callWatcher ?: return
+        val phone = activePhone ?: return
+        if (summaryShown) return
+
+        val answered = watcher.wasAnswered()
+        val duration = formatDuration(watcher.answeredDurationMs())
+
+        Log.i(TAG, "A new call took the card; recording the previous one")
+
+        if (settings.logCallsToServer()) {
+            callLogger.log(
+                localized(settings.locale()),
+                activeIdentity,
+                phone,
+                activeDirection ?: CallerIdCallScreeningService.CallDirection.INCOMING,
+                answered,
+                duration,
+            )
         }
     }
 
@@ -609,17 +668,34 @@ class CallerIdOverlayController(private val appContext: Context) {
         }
     }
 
-    private companion object {
-        const val TAG = "CallerIdOverlay"
+    companion object {
+        @Volatile
+        private var instance: CallerIdOverlayController? = null
+
+        /**
+         * The one controller, created on first use.
+         *
+         * Keyed on nothing: there is one phone, one screen and one card. The
+         * application context is held, never an Activity or a Service, so the
+         * instance outliving either of those is correct rather than a leak.
+         */
+        fun of(context: Context): CallerIdOverlayController =
+            instance ?: synchronized(this) {
+                instance ?: CallerIdOverlayController(context.applicationContext).also {
+                    instance = it
+                }
+            }
+
+        private const val TAG = "CallerIdOverlay"
         /** Two at most: a third chip is where the row stops reading as a label and starts reading as a list. */
-        const val MAX_TAGS = 2
-        const val AVATAR_SIZE_DP = 56
-        const val AVATAR_TIMEOUT_MS = 1500
+        private const val MAX_TAGS = 2
+        private const val AVATAR_SIZE_DP = 56
+        private const val AVATAR_TIMEOUT_MS = 1500
 
         /** How long the summary stays once the call has ended. */
-        const val SUMMARY_SECONDS = 45
+        private const val SUMMARY_SECONDS = 45
 
         /** The longest a live card may stand, whatever the watcher says. */
-        const val MAX_CARD_SECONDS = 60 * 60
+        private const val MAX_CARD_SECONDS = 60 * 60
     }
 }

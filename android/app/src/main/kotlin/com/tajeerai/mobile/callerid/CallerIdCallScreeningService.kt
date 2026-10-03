@@ -17,9 +17,17 @@ import java.util.concurrent.Executors
  * read to the member as "the card never appears".
  */
 class CallerIdCallScreeningService : CallScreeningService() {
-    private val executor = Executors.newSingleThreadExecutor()
     private val lookupEngine by lazy { CallerIdLookupEngine(applicationContext) }
-    private val overlay by lazy { CallerIdOverlayController(applicationContext) }
+
+    /**
+     * The process's one card, not this instance's.
+     *
+     * Telecom binds this service once per call, so a controller owned by the
+     * instance meant the second call could not take the card - or the
+     * telephony watcher behind it - away from the first. See
+     * `CallerIdOverlayController`'s own note.
+     */
+    private val overlay by lazy { CallerIdOverlayController.of(applicationContext) }
 
     override fun onScreenCall(callDetails: Call.Details) {
         val builder = CallScreeningService.CallResponse.Builder()
@@ -115,5 +123,13 @@ class CallerIdCallScreeningService : CallScreeningService() {
 
     private companion object {
         const val TAG = "CallerIdScreening"
+
+        /**
+         * One worker for the process. It was created per service instance,
+         * which leaked a thread for every call screened - the instance is
+         * unbound the moment `respondToCall` returns, long before the lookup
+         * it started comes back.
+         */
+        val executor: java.util.concurrent.ExecutorService = Executors.newSingleThreadExecutor()
     }
 }
