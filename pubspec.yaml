@@ -68,6 +68,8 @@ dependencies:
   record: ^7.1.1
   audioplayers: ^6.8.1
   open_filex: ^4.7.0
+  in_app_purchase: ^3.3.1
+  in_app_purchase_android: ^0.5.3
   phone_numbers_parser: ^9.0.26
   video_player: ^2.10.0
   video_thumbnail: ^0.5.6

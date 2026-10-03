@@ -79,6 +79,12 @@ import '../../infrastructure/device/web_auth/web_authenticator.dart';
 import '../../infrastructure/security/pkce.dart';
 import '../../infrastructure/storage/secure_storage.dart';
 import '../config/app_config.dart';
+import '../../features/wallet/application/coordinators/top_up_coordinator.dart';
+import '../../features/wallet/application/ports/store_billing_port.dart';
+import '../../features/wallet/domain/repositories/wallet_repository.dart';
+import '../../infrastructure/adapters/wallet/device/play_billing_adapter.dart';
+import '../../infrastructure/adapters/wallet/remote/wallet_remote_data_source.dart';
+import '../../infrastructure/adapters/wallet/repositories/wallet_repository_impl.dart';
 
 /// The application's dependency graph.
 ///
@@ -519,6 +525,52 @@ final Provider<BlogRepository> blogRepositoryProvider =
       (ref) =>
           BlogRepositoryImpl(remote: ref.watch(blogRemoteDataSourceProvider)),
     );
+
+// ---------------------------------------------------------------------------
+// Wallet feature
+// ---------------------------------------------------------------------------
+
+/*
+  HTTP and no local database, like the blog - ARCHITECTURE.md §11: the backend
+  serves the wallet and billing over HTTP alone, a purchase is online by
+  nature, and a cached balance is a number somebody acts on after it stopped
+  being true.
+*/
+final Provider<WalletRemoteDataSource> walletRemoteDataSourceProvider =
+    Provider<WalletRemoteDataSource>(
+      (ref) => WalletRemoteDataSource(ref.watch(httpClientProvider)),
+    );
+
+final Provider<WalletRepository> walletRepositoryProvider =
+    Provider<WalletRepository>(
+      (ref) => WalletRepositoryImpl(
+        remote: ref.watch(walletRemoteDataSourceProvider),
+      ),
+    );
+
+/// Google Play on Android; nothing to buy from anywhere else. iOS shows the
+/// wallet read-only for now (owner, 2026-10-03) - Apple requires its own
+/// in-app purchase for digital goods, which is a separate integration.
+final Provider<StoreBillingPort> storeBillingPortProvider =
+    Provider<StoreBillingPort>((ref) {
+      if (ref.watch(platformInfoProvider).operatingSystem == 'android') {
+        return PlayBillingAdapter();
+      }
+
+      return const UnavailableStoreBillingAdapter();
+    });
+
+final Provider<TopUpCoordinator> topUpCoordinatorProvider =
+    Provider<TopUpCoordinator>((ref) {
+      final TopUpCoordinator coordinator = TopUpCoordinator(
+        repository: ref.watch(walletRepositoryProvider),
+        store: ref.watch(storeBillingPortProvider),
+      );
+
+      ref.onDispose(coordinator.dispose);
+
+      return coordinator;
+    });
 
 // ---------------------------------------------------------------------------
 // Customers feature

@@ -81,6 +81,18 @@ class SettingsScreen extends ConsumerWidget {
           ],
         ),
       ],
+      if (session != null && session.user.can('read:Wallet'))
+        AppListSection(
+          title: strings.walletTitle,
+          children: <Widget>[
+            AppListItem(
+              title: Text(strings.walletTitle),
+              subtitle: Text(strings.walletSubtitle),
+              leading: const Icon(LucideIcons.wallet),
+              onTap: () => context.push(AppRoutes.walletPath()),
+            ),
+          ],
+        ),
       if (platform.operatingSystem == 'android')
         AppListSection(
           title: strings.callerIdTitle,

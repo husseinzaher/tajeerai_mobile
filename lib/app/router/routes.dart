@@ -65,6 +65,10 @@ abstract final class AppRoutes {
   static const String callerIdSettings = 'caller-id';
   static String callerIdSettingsPath() => '$settings/$callerIdSettings';
 
+  /// The AI wallet: balance, history and - on Android - Google Play top-ups.
+  static const String wallet = 'wallet';
+  static String walletPath() => '$settings/$wallet';
+
   /// The design system's own documentation surface.
   ///
   /// Registered only under `kDebugMode`, so it never ships to a merchant. The
@@ -94,6 +98,7 @@ abstract final class AppRouteNames {
   static const String customerNoteNew = 'customer-note-new';
   static const String settings = 'settings';
   static const String callerIdSettings = 'caller-id-settings';
+  static const String wallet = 'wallet';
   static const String designSystem = 'design-system';
   static const String splash = 'splash';
 }

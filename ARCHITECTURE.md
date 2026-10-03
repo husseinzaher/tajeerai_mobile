@@ -535,6 +535,26 @@ HTTP is **secondary**. It is used for exactly three things:
    the network with an in-memory cache for the life of the screen, and the
    offline story is an honest error state rather than stale workspace data.
 
+5. **The AI wallet and its top-ups** — the balance, the statement, the
+   purchase history, and the two calls that buy a top-up through Google Play
+   (`/v1/wallet*`, `/v1/billing/topups*`, `/v1/billing/payments*`). Added
+   2026-10-03.
+
+   The backend serves the wallet and billing over HTTP alone, as it does for
+   the web. And like the blog — for a different reason — none of it syncs into
+   the local database. A balance read from a cache is a figure somebody acts on
+   after it stopped being true, and a purchase is an online act by nature:
+   Google Play itself cannot be reached offline. So the wallet reads from the
+   network every time the screen opens, and an offline reader gets an honest
+   error rather than a stale balance.
+
+   The purchase itself is a plugin behind `StoreBillingPort`
+   (`infrastructure/adapters/wallet/device/`). The app never credits and never
+   consumes: it hands the store's purchase token to the server, which verifies
+   it with Google, credits the wallet, and consumes it. A purchase whose
+   confirmation was lost is re-sent from `queryPastPurchases` the next time the
+   wallet opens, and the server is idempotent on the token.
+
 A new HTTP call for anything else is an architectural decision that belongs in
 this document, not a convenience.
 

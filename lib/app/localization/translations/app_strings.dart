@@ -423,6 +423,97 @@ class AppStrings {
       'ar': 'ستفقد الرسائل التي لم تُرسل بعد. تبقى محادثاتك محفوظة في حسابك.',
     },
 
+    // -- wallet -------------------------------------------------------------
+    'walletTitle': <String, String>{
+      'en': 'AI wallet',
+      'ar': 'محفظة الذكاء الاصطناعي',
+    },
+    'walletSubtitle': <String, String>{
+      'en': 'Balance, top-ups and history',
+      'ar': 'الرصيد والشحن والسجل',
+    },
+    'walletAvailable': <String, String>{
+      'en': 'Available balance',
+      'ar': 'الرصيد المتاح',
+    },
+    'walletReserved': <String, String>{
+      'en': '{amount} held for requests in progress',
+      'ar': '{amount} محجوز لطلبات قيد التنفيذ',
+    },
+    'walletFrozen': <String, String>{
+      'en': 'This wallet is frozen. Contact support to unfreeze it.',
+      'ar': 'هذه المحفظة مجمّدة. تواصل مع الدعم لإلغاء التجميد.',
+    },
+    'walletLoadFailed': <String, String>{
+      'en': 'Could not load the wallet. Check your connection and try again.',
+      'ar': 'تعذّر تحميل المحفظة. تحقّق من الاتصال وحاول مرة أخرى.',
+    },
+    'walletTopUp': <String, String>{'en': 'Top up', 'ar': 'شحن الرصيد'},
+    'walletOfferTitle': <String, String>{
+      'en': '{amount} to your wallet',
+      'ar': '{amount} إلى محفظتك',
+    },
+    'walletOfferBreakdown': <String, String>{
+      'en': 'Payment fee {fee} · Total to pay {total}',
+      'ar': 'رسوم الدفع {fee} · الإجمالي {total}',
+    },
+    'walletOfferStorePrice': <String, String>{
+      'en': 'Google Play charges {price}',
+      'ar': 'سعر Google Play: {price}',
+    },
+    'walletFeeOnTop': <String, String>{
+      'en': 'The payment fee is added on top - your wallet receives the full amount.',
+      'ar': 'رسوم الدفع تُضاف فوق المبلغ - محفظتك تستلم المبلغ كاملًا.',
+    },
+    'walletBuy': <String, String>{'en': 'Buy', 'ar': 'شراء'},
+    'walletTopUpCredited': <String, String>{
+      'en': '{amount} added to your wallet.',
+      'ar': 'تمت إضافة {amount} إلى محفظتك.',
+    },
+    'walletTopUpPending': <String, String>{
+      'en': 'Payment pending. Your wallet is credited as soon as Google Play confirms it.',
+      'ar': 'الدفع قيد المعالجة. ستُشحن محفظتك فور تأكيد Google Play.',
+    },
+    'walletTopUpFailed': <String, String>{
+      'en': 'The top-up did not go through. You were not charged twice - try again in a moment.',
+      'ar': 'لم يكتمل الشحن. لن تُحاسب مرتين - حاول مرة أخرى بعد قليل.',
+    },
+    'walletPurchases': <String, String>{'en': 'Purchases', 'ar': 'المشتريات'},
+    'walletNoPurchases': <String, String>{
+      'en': 'No top-ups yet',
+      'ar': 'لا توجد عمليات شحن بعد',
+    },
+    'walletPaymentFee': <String, String>{
+      'en': 'fee {amount}',
+      'ar': 'رسوم {amount}',
+    },
+    'walletStatement': <String, String>{'en': 'Statement', 'ar': 'كشف الحساب'},
+    'walletNoEntries': <String, String>{
+      'en': 'No activity yet',
+      'ar': 'لا توجد حركات بعد',
+    },
+    'walletBalanceAfter': <String, String>{
+      'en': 'Balance after: {amount}',
+      'ar': 'الرصيد بعدها: {amount}',
+    },
+    'walletStatePaid': <String, String>{'en': 'Paid', 'ar': 'مدفوع'},
+    'walletStatePending': <String, String>{
+      'en': 'Pending',
+      'ar': 'قيد الانتظار',
+    },
+    'walletStateFailed': <String, String>{'en': 'Failed', 'ar': 'فشل'},
+    'walletStateCancelled': <String, String>{'en': 'Cancelled', 'ar': 'ملغى'},
+    'walletEntryTopUp': <String, String>{'en': 'Top-up', 'ar': 'شحن'},
+    'walletEntryAiUsage': <String, String>{
+      'en': 'AI usage',
+      'ar': 'استخدام الذكاء الاصطناعي',
+    },
+    'walletEntryRefund': <String, String>{'en': 'Refund', 'ar': 'استرداد'},
+    'walletEntryOther': <String, String>{
+      'en': 'Wallet activity',
+      'ar': 'حركة على المحفظة',
+    },
+
     // -- caller id ----------------------------------------------------------
     'callerIdTitle': <String, String>{'en': 'Caller ID', 'ar': 'معرف المتصل'},
     'callerIdSubtitle': <String, String>{
@@ -982,6 +1073,54 @@ class AppStrings {
   String get appVersion => call('appVersion');
   String get signOutConfirmTitle => call('signOutConfirmTitle');
   String get signOutConfirmMessage => call('signOutConfirmMessage');
+
+  String get walletTitle => call('walletTitle');
+  String get walletSubtitle => call('walletSubtitle');
+  String get walletAvailable => call('walletAvailable');
+  String walletReserved(String amount) =>
+      call('walletReserved').replaceAll('{amount}', amount);
+  String get walletFrozen => call('walletFrozen');
+  String get walletLoadFailed => call('walletLoadFailed');
+  String get walletTopUp => call('walletTopUp');
+  String walletOfferTitle(String amount) =>
+      call('walletOfferTitle').replaceAll('{amount}', amount);
+  String walletOfferBreakdown(String fee, String total) =>
+      call('walletOfferBreakdown')
+          .replaceAll('{fee}', fee)
+          .replaceAll('{total}', total);
+  String walletOfferStorePrice(String price) =>
+      call('walletOfferStorePrice').replaceAll('{price}', price);
+  String get walletFeeOnTop => call('walletFeeOnTop');
+  String get walletBuy => call('walletBuy');
+  String walletTopUpCredited(String amount) =>
+      call('walletTopUpCredited').replaceAll('{amount}', amount);
+  String get walletTopUpPending => call('walletTopUpPending');
+  String get walletTopUpFailed => call('walletTopUpFailed');
+  String get walletPurchases => call('walletPurchases');
+  String get walletNoPurchases => call('walletNoPurchases');
+  String walletPaymentFee(String amount) =>
+      call('walletPaymentFee').replaceAll('{amount}', amount);
+  String get walletStatement => call('walletStatement');
+  String get walletNoEntries => call('walletNoEntries');
+  String walletBalanceAfter(String amount) =>
+      call('walletBalanceAfter').replaceAll('{amount}', amount);
+
+  /// The server's payment state, in the reader's words. An unknown state
+  /// reads as pending rather than as a raw key.
+  String walletPaymentState(String state) => switch (state) {
+    'paid' => call('walletStatePaid'),
+    'failed' => call('walletStateFailed'),
+    'cancelled' => call('walletStateCancelled'),
+    _ => call('walletStatePending'),
+  };
+
+  /// A statement line with no description of its own.
+  String walletEntryType(String type) => switch (type) {
+    'topup_credit' || 'payment_credit' => call('walletEntryTopUp'),
+    'ai_usage' => call('walletEntryAiUsage'),
+    'refund' || 'payment_reversal' => call('walletEntryRefund'),
+    _ => call('walletEntryOther'),
+  };
 
   String get callerIdTitle => call('callerIdTitle');
   String get callerIdSubtitle => call('callerIdSubtitle');
