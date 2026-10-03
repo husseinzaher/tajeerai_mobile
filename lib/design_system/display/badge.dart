@@ -161,15 +161,20 @@ class AppBadge extends StatelessWidget {
               data: IconThemeData(color: foreground, size: 12),
               child: leading!,
             ),
-          Text(
-            label,
-            maxLines: 1,
-            softWrap: false, // `whitespace-nowrap`
-            overflow: TextOverflow.ellipsis,
-            style: context.type.labelSm.copyWith(
-              fontFamily: TajeerTypography.sansFamily,
-              fontFamilyFallback: TajeerTypography.sansFallback,
-              color: foreground,
+          // Flexible, not bare: `mainAxisSize.min` asks the Text for its full
+          // intrinsic width, so `ellipsis` alone never fires and the badge
+          // overflows a narrow column instead of shortening its label.
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              softWrap: false, // `whitespace-nowrap`
+              overflow: TextOverflow.ellipsis,
+              style: context.type.labelSm.copyWith(
+                fontFamily: TajeerTypography.sansFamily,
+                fontFamilyFallback: TajeerTypography.sansFallback,
+                color: foreground,
+              ),
             ),
           ),
         ],

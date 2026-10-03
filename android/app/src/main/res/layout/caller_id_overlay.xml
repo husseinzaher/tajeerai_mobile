@@ -148,7 +148,7 @@
                     android:paddingTop="3dp"
                     android:paddingBottom="3dp"
                     android:textAppearance="@style/CallerIdCaption"
-                    android:textColor="@color/caller_id_primary"
+                    android:textColor="@color/caller_id_primary_text"
                     android:visibility="gone" />
             </LinearLayout>
         </LinearLayout>

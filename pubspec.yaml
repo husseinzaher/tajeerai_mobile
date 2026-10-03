@@ -74,6 +74,7 @@ dependencies:
   flutter_widget_from_html_core: ^0.17.4
   url_launcher: ^6.3.2
   app_links: ^7.2.1
+  datadog_flutter_plugin: ^3.5.2
 
 dev_dependencies:
   flutter_test:

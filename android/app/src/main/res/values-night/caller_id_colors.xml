@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The caller card with the phone in dark mode: the `tajeer` preset's dark
+     palette from design/tokens.json, plus white at low alpha for the panels
+     inside the card. See values/caller_id_colors.xml for why there are two. -->
+<resources>
+    <color name="caller_id_card">#1F2937</color>
+    <color name="caller_id_card_start">#273244</color>
+    <color name="caller_id_card_end">#111827</color>
+    <color name="caller_id_card_border">#26FFFFFF</color>
+    <color name="caller_id_surface_muted">#14FFFFFF</color>
+    <color name="caller_id_surface_strong">#1FFFFFFF</color>
+    <color name="caller_id_text_primary">#F9FAFB</color>
+    <color name="caller_id_text_secondary">#D1D5DB</color>
+    <color name="caller_id_text_muted">#A1AAB8</color>
+    <color name="caller_id_primary">#FACC15</color>
+    <!-- Equal to the fill here: on #1F2937 the yellow is 9.59:1 and reads as
+         text perfectly well, so dark needs no separate ink for the brand. -->
+    <color name="caller_id_primary_text">#FACC15</color>
+    <color name="caller_id_primary_soft">#3B2F0B</color>
+    <color name="caller_id_primary_foreground">#111827</color>
+    <color name="caller_id_success">#4ADE80</color>
+    <color name="caller_id_success_soft">#0F2A1C</color>
+    <color name="caller_id_danger">#F87171</color>
+    <color name="caller_id_danger_soft">#3B1111</color>
+</resources>

@@ -31,6 +31,13 @@
 
   <title>tajeerai_mobile</title>
   <link rel="manifest" href="manifest.json">
+
+  <!--
+    Required by datadog_flutter_plugin on web. The native SDK covers iOS and
+    Android; Flutter web loads these synchronous browser agents instead.
+  -->
+  <script type="text/javascript" src="https://www.datadoghq-browser-agent.com/us1/v6/datadog-logs.js"></script>
+  <script type="text/javascript" src="https://www.datadoghq-browser-agent.com/us1/v6/datadog-rum-slim.js"></script>
 </head>
 <body>
   <!--

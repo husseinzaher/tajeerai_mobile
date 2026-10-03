@@ -131,11 +131,19 @@ class _RecordCard extends StatelessWidget {
                   spacing: TajeerSpacing.xs2,
                   children: <Widget>[
                     Icon(chipIcon, size: 12, color: chipForeground),
-                    Text(
-                      chipLabel,
-                      style: context.type.labelSm.copyWith(
-                        color: chipForeground,
-                        fontWeight: FontWeight.w600,
+                    // Flexible: the chip sits in a card as narrow as the
+                    // phone makes it, and "ملخص المحادثة" at a large text
+                    // size is wider than that. It shortens rather than
+                    // spilling over the card's own edge.
+                    Flexible(
+                      child: Text(
+                        chipLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.type.labelSm.copyWith(
+                          color: chipForeground,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],
@@ -164,11 +172,15 @@ class _RecordCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Text(
-                    '${AppRelativeTime.clock(entry.at, locale: locale)}, '
-                    '${AppRelativeTime.forDay(entry.at, locale: locale, messages: context.strings, now: now)}',
-                    style: context.type.caption.copyWith(
-                      color: colors.textMuted,
+                  Flexible(
+                    child: Text(
+                      '${AppRelativeTime.clock(entry.at, locale: locale)}, '
+                      '${AppRelativeTime.forDay(entry.at, locale: locale, messages: context.strings, now: now)}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.type.caption.copyWith(
+                        color: colors.textMuted,
+                      ),
                     ),
                   ),
                 ],

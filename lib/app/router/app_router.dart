@@ -1,3 +1,4 @@
+import 'package:datadog_flutter_plugin/datadog_flutter_plugin.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -46,6 +47,11 @@ final Provider<GoRouter> appRouterProvider = Provider<GoRouter>((ref) {
     navigatorKey: rootNavigatorKey,
     initialLocation: AppRoutes.splash,
     refreshListenable: refresh,
+    // Named routes become RUM views. go_router reports them through the same
+    // observer interface as Navigator 1.
+    observers: <NavigatorObserver>[
+      DatadogNavigationObserver(datadogSdk: DatadogSdk.instance),
+    ],
     redirect: (context, state) {
       return AuthGuard.redirect(
         // `read`, not `watch`: the redirect is re-run by the listenable above,

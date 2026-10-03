@@ -12,6 +12,7 @@ import '../../messaging/message_bubble.dart';
 import '../../messaging/message_data.dart';
 import '../../messaging/message_status_icon.dart';
 import '../../messaging/message_timeline.dart';
+import '../../messaging/record_cards.dart';
 import '../../messaging/typing_indicator.dart';
 import '../showcase_fixtures.dart';
 import '../showcase_section.dart';
@@ -290,6 +291,50 @@ ShowcaseSection messagingSection() => ShowcaseSection(
           const AppSystemMessage(
             text: 'أُسندت المحادثة إلى أحمد',
             icon: LucideIcons.userCheck,
+          ),
+        ],
+      ),
+    ),
+    ShowcaseExample(
+      name: 'The record: a note and a summary',
+      description:
+          'Neither was sent to anybody. Amber is the team writing to itself; '
+          'the sparkle is the assistant. Both carry who wrote them and when, '
+          'so a reader scrolling back knows which is which without reading a '
+          'word of the body.',
+      builder: (BuildContext context) => Column(
+        spacing: TajeerSpacing.xs,
+        children: <Widget>[
+          AppInternalNoteCard(
+            entry: AppRecordEntryData(
+              id: 'n1',
+              kind: AppRecordKind.note,
+              at: _now.subtract(const Duration(minutes: 40)),
+              text: 'العميل يفضّل الاتصال بعد الخامسة مساءً.',
+              authorName: ShowcaseFixtures.agent,
+            ),
+            now: _now,
+          ),
+          AppSummaryCard(
+            entry: AppRecordEntryData(
+              id: 's1',
+              kind: AppRecordKind.summary,
+              at: _now.subtract(const Duration(minutes: 10)),
+              text:
+                  'سأل العميل عن توفّر المقاس الكبير، ثم عن موعد الشحن إلى '
+                  'جدة. تم تأكيد التوفّر والشحن خلال ثلاثة أيام.',
+              authorName: ShowcaseFixtures.agent,
+            ),
+            now: _now,
+          ),
+          AppSummaryCard(
+            entry: AppRecordEntryData(
+              id: 's2',
+              kind: AppRecordKind.summary,
+              at: _now,
+              text: 'لا يزال في انتظار ردّ المتجر.',
+            ),
+            now: _now,
           ),
         ],
       ),

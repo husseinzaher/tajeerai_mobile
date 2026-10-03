@@ -6,11 +6,9 @@ import 'logger.dart';
 
 /// Where uncaught errors go.
 ///
-/// An interface with a logging implementation rather than a direct Crashlytics
-/// or Sentry call: the vendor is a deployment decision that has not been made,
-/// and this is the seam that lets it be made later without touching a single
-/// call site. Wiring a real backend means one new implementation registered in
-/// `dependencies.dart` -- nothing else changes.
+/// The logging implementation is the local record. Datadog is a second
+/// implementation of this same seam (`DatadogCrashReporter`), so a call site
+/// still reports once and does not import the SDK.
 abstract interface class CrashReporter {
   /// Reports a caught-but-fatal error.
   void report(Object error, StackTrace stackTrace, {String? context});
@@ -59,6 +57,11 @@ class LoggingCrashReporter implements CrashReporter {
 /// Covers both channels: the framework's own error handler, and the
 /// platform-dispatcher hook that catches errors escaping the Dart isolate --
 /// an async gap in a controller lands in the second, not the first.
+///
+/// Whatever was already installed stays in the chain. Datadog's `runApp`
+/// installs its own handlers first; replacing them would drop the RUM error,
+/// and replacing the platform hook without keeping its `true` result would
+/// let one bad frame close the process.
 void installCrashHandlers(CrashReporter reporter) {
   final previous = FlutterError.onError;
 
@@ -71,8 +74,11 @@ void installCrashHandlers(CrashReporter reporter) {
     );
   };
 
+  final previousPlatform = PlatformDispatcher.instance.onError;
+
   PlatformDispatcher.instance.onError = (error, stackTrace) {
     reporter.report(error, stackTrace, context: 'PlatformDispatcher');
+    previousPlatform?.call(error, stackTrace);
 
     // Handled: the app keeps running. An offline-first client that closes on
     // one bad socket frame is worse than one that logs and carries on.

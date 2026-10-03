@@ -1,22 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The caller card is one dark glass surface in both appearances - it is drawn
-     over a call screen, not inside the app - built from the `tajeer` preset's
-     dark palette in design/tokens.json plus white at low alpha for panels. -->
+<!-- The caller card, in the appearance the phone is set to.
+
+     It was one dark glass surface in both, which is defensible for a card
+     drawn over a call screen - and wrong for somebody whose phone is in light
+     mode all day (owner, 2026-10-03). So these are the `tajeer` preset's LIGHT
+     values from design/tokens.json, and values-night/ carries the dark ones;
+     Android picks between them from the system's own setting.
+
+     Keep the two files key-for-key identical. A colour declared in only one of
+     them resolves to whatever the other happens to hold in that appearance,
+     which is the shape of bug nobody sees until a phone is switched over. -->
 <resources>
-    <color name="caller_id_card">#1F2937</color>
-    <color name="caller_id_card_start">#273244</color>
-    <color name="caller_id_card_end">#111827</color>
-    <color name="caller_id_card_border">#26FFFFFF</color>
-    <color name="caller_id_surface_muted">#14FFFFFF</color>
-    <color name="caller_id_surface_strong">#1FFFFFFF</color>
-    <color name="caller_id_text_primary">#F9FAFB</color>
-    <color name="caller_id_text_secondary">#D1D5DB</color>
-    <color name="caller_id_text_muted">#A1AAB8</color>
+    <color name="caller_id_card">#FFFFFF</color>
+    <color name="caller_id_card_start">#FFFFFF</color>
+    <color name="caller_id_card_end">#FAF9F5</color>
+    <color name="caller_id_card_border">#E7E3D9</color>
+    <color name="caller_id_surface_muted">#F4F2EC</color>
+    <color name="caller_id_surface_strong">#EDE9DF</color>
+    <color name="caller_id_text_primary">#111827</color>
+    <color name="caller_id_text_secondary">#374151</color>
+    <color name="caller_id_text_muted">#5F6672</color>
     <color name="caller_id_primary">#FACC15</color>
-    <color name="caller_id_primary_soft">#3B2F0B</color>
+    <!-- The brand as *ink*, which is not the brand as a fill: #FACC15 is 1.53:1
+         on white, so light mode colours brand text with `focus` instead. In
+         dark the two are one colour, which is the palette doing its job. -->
+    <color name="caller_id_primary_text">#A16207</color>
+    <color name="caller_id_primary_soft">#FEF9C3</color>
     <color name="caller_id_primary_foreground">#111827</color>
-    <color name="caller_id_success">#4ADE80</color>
-    <color name="caller_id_success_soft">#0F2A1C</color>
-    <color name="caller_id_danger">#F87171</color>
-    <color name="caller_id_danger_soft">#3B1111</color>
+    <color name="caller_id_success">#15803D</color>
+    <color name="caller_id_success_soft">#DCFCE7</color>
+    <color name="caller_id_danger">#B91C1C</color>
+    <color name="caller_id_danger_soft">#FEE2E2</color>
 </resources>

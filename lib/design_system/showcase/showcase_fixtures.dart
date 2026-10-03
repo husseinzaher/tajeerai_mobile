@@ -19,6 +19,10 @@ abstract final class ShowcaseFixtures {
   /// The number she calls from, for the Caller Card.
   static const String customerPhone = '+966501234567';
 
+  /// Someone on the store's own side: who answers, and who writes the notes
+  /// the customer never sees.
+  static const String agent = 'أحمد المطيري';
+
   // The store.
   static const String store = 'متجر النخبة';
 

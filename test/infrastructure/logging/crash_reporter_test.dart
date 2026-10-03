@@ -77,5 +77,26 @@ void main() {
         completes,
       );
     });
+
+    test('keeps the platform handler that was already installed', () {
+      final previous = PlatformDispatcher.instance.onError;
+      addTearDown(() => PlatformDispatcher.instance.onError = previous);
+
+      final seen = <Object>[];
+      PlatformDispatcher.instance.onError = (error, stackTrace) {
+        seen.add(error);
+        return false;
+      };
+
+      installCrashHandlers(reporter);
+
+      final handled = PlatformDispatcher.instance.onError!.call(
+        StateError('boom'),
+        StackTrace.current,
+      );
+
+      expect(seen, hasLength(1));
+      expect(handled, isTrue);
+    });
   });
 }

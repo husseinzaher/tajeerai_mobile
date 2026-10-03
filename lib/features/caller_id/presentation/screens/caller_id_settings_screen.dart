@@ -262,13 +262,17 @@ class CallerIdSettingsScreen extends ConsumerWidget {
 
 /// The card as it will appear, on a stage shaped like the call screen.
 ///
-/// Drawn under the **dark** theme of the member's preset whatever the app is
-/// showing, because that is what the real card is: one dark glass surface
-/// over a call screen. The stage is a fixed height so the card can sit at the
-/// top, the centre or the bottom of it the way the position setting says,
-/// and the whole thing dims when Caller ID is off - a preview at full
-/// strength of a card that will not appear is a promise the screen cannot
-/// keep. A second control shows the card as it looks once the call is over.
+/// Drawn under the appearance **the phone** is set to, not the one the app is
+/// showing. The native card reads the system's own light/dark setting - its
+/// colours are `values/` and `values-night/caller_id_colors.xml`, and Android
+/// picks between them - so a member who keeps the app dark and the phone light
+/// would otherwise be shown a card they will never see.
+///
+/// The stage is a fixed height so the card can sit at the top, the centre or
+/// the bottom of it the way the position setting says, and the whole thing
+/// dims when Caller ID is off - a preview at full strength of a card that will
+/// not appear is a promise the screen cannot keep. A second control shows the
+/// card as it looks once the call is over.
 class _PreviewStage extends StatefulWidget {
   const _PreviewStage({
     required this.settings,
@@ -375,12 +379,16 @@ class _PreviewStageState extends State<_PreviewStage> {
               duration: const Duration(milliseconds: 250),
               curve: Curves.easeOutCubic,
               alignment: alignment,
-              // The real card is always dark: the preview borrows the dark
-              // theme of the member's preset rather than the app's current one.
+              // The phone's own appearance, not the app's: the native card
+              // resolves its colours from the system's night mode, and
+              // `platformBrightnessOf` is that same setting.
               child: Theme(
-                data: AppTheme.dark(preset: widget.preset),
+                data: AppTheme.of(
+                  widget.preset,
+                  MediaQuery.platformBrightnessOf(context),
+                ),
                 child: Builder(
-                  builder: (BuildContext dark) =>
+                  builder: (BuildContext themed) =>
                       AppCallerCard(data: data, onClose: () {}),
                 ),
               ),
