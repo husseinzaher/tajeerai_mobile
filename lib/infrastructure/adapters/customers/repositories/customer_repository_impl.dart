@@ -6,6 +6,7 @@ import '../../../../failures/app_failure.dart';
 import '../../../storage/database/app_database.dart';
 import '../../../api/http_exception.dart';
 import '../../../../features/customers/domain/entities/customer.dart';
+import '../../../../features/customers/domain/entities/customer_change_proposal.dart';
 import '../../../../features/customers/domain/entities/customer_note.dart';
 import '../../../../features/customers/domain/repositories/customer_repository.dart';
 import '../../../../features/customers/domain/value_objects/phone_digits.dart';
@@ -192,6 +193,44 @@ class CustomerRepositoryImpl implements CustomerRepository {
     return note;
   }
 
+  @override
+  Future<Customer> block(String customerId, {String? reason}) {
+    return _writeBack(() => _remote.block(customerId, reason: reason));
+  }
+
+  @override
+  Future<Customer> unblock(String customerId) {
+    return _writeBack(() => _remote.unblock(customerId));
+  }
+
+  @override
+  Future<List<CustomerChangeProposal>> changeProposals(String customerId) {
+    return _guard(() => _remote.fetchChangeProposals(customerId));
+  }
+
+  @override
+  Future<void> approveChange(String customerId, String proposalId) {
+    return _guard(() => _remote.approveChange(customerId, proposalId));
+  }
+
+  @override
+  Future<void> rejectChange(String customerId, String proposalId) {
+    return _guard(() => _remote.rejectChange(customerId, proposalId));
+  }
+
+  /// Runs a write the server answers with the contact, and stores the answer
+  /// at once -- the screen and the Inbox's panel watch the row, not the call,
+  /// so neither waits for the next sync to show what just changed.
+  Future<Customer> _writeBack(Future<Customer> Function() call) async {
+    final Customer updated = await _guard(call);
+
+    await _dao.upsertAll(<CustomersCompanion>[
+      _toCompanion(updated),
+    ], seenAt: _clock().toUtc());
+
+    return updated;
+  }
+
   /// Turns a transport failure into the app's own vocabulary.
   ///
   /// A 404 on a contact means the row is gone rather than the request was
@@ -226,6 +265,9 @@ class CustomerRepositoryImpl implements CustomerRepository {
       metadata: _decodeMetadata(row.metadata),
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
+      blockedAt: row.blockedAt,
+      blockReason: row.blockReason,
+      aliases: CustomerTags.decode(row.aliases),
     );
   }
 
@@ -271,6 +313,9 @@ class CustomerRepositoryImpl implements CustomerRepository {
       metadata: Value<String>(jsonEncode(customer.metadata)),
       createdAt: Value<DateTime>(customer.createdAt),
       updatedAt: Value<DateTime?>(customer.updatedAt),
+      blockedAt: Value<DateTime?>(customer.blockedAt),
+      blockReason: Value<String?>(customer.blockReason),
+      aliases: Value<String>(CustomerTags.encode(customer.aliases)),
     );
   }
 

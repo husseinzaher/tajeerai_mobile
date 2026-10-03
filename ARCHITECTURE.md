@@ -513,6 +513,15 @@ HTTP is **secondary**. It is used for exactly three things:
    screens would be a larger change than the screens. They sync into the local
    database like everything else, so the screens still read offline.
 
+   The same clause covers **blocking and unblocking a contact, and deciding
+   the changes the AI employee proposed for one** (`/v1/customers/:id/block`,
+   `/unblock`, `/change-proposals*`, added 2026-10-03): online-only acts a
+   member performs on a contact, like appending a note, served by the same
+   module over HTTP alone. A block's answer is the contact, written locally
+   so it reads as blocked offline; the proposals are never stored, because a
+   pending decision read from a cache is one somebody may already have made
+   on the web.
+
    The same clause covers a **thread's own record** — the internal notes a
    team writes to itself, the log of what happened to the thread, and the
    assistant's summaries (`/v1/conversations/:id/notes`, `/summary`). The

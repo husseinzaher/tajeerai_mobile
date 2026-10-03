@@ -1,5 +1,6 @@
 import '../../../api/http_client.dart';
 import '../../../../features/customers/domain/entities/customer.dart';
+import '../../../../features/customers/domain/entities/customer_change_proposal.dart';
 import '../../../../features/customers/domain/entities/customer_note.dart';
 import '../../../../features/customers/domain/repositories/customer_repository.dart';
 import '../models/customer_dto.dart';
@@ -80,6 +81,52 @@ class CustomerRemoteDataSource {
     );
 
     return CustomerNoteDto.decode(json, customerId: customerId);
+  }
+
+  /// Blocks the contact. The server answers with the contact as it now
+  /// stands, which is what the repository writes locally.
+  Future<Customer> block(String customerId, {String? reason}) async {
+    return CustomerDto.decode(
+      await _http.post(
+        '/v1/customers/$customerId/block',
+        body: <String, Object?>{'reason': ?reason},
+      ),
+    );
+  }
+
+  Future<Customer> unblock(String customerId) async {
+    return CustomerDto.decode(
+      await _http.post(
+        '/v1/customers/$customerId/unblock',
+        body: const <String, Object?>{},
+      ),
+    );
+  }
+
+  /// The changes waiting for a decision. A bare array, read from `data` for
+  /// the reason [fetchNotes] gives.
+  Future<List<CustomerChangeProposal>> fetchChangeProposals(
+    String customerId,
+  ) async {
+    final Map<String, Object?> json = await _http.get(
+      '/v1/customers/$customerId/change-proposals',
+    );
+
+    return CustomerChangeProposalDto.decodeList(json['data']);
+  }
+
+  /// Both answer 204: there is nothing to decode, and the caller re-reads the
+  /// contact and the list rather than trusting a body.
+  Future<void> approveChange(String customerId, String proposalId) async {
+    await _http.post(
+      '/v1/customers/$customerId/change-proposals/$proposalId/approve',
+    );
+  }
+
+  Future<void> rejectChange(String customerId, String proposalId) async {
+    await _http.post(
+      '/v1/customers/$customerId/change-proposals/$proposalId/reject',
+    );
   }
 
   /// How many pages the walk has left, from the envelope every paginated

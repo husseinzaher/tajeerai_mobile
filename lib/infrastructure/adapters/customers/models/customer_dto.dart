@@ -1,4 +1,5 @@
 import '../../../../features/customers/domain/entities/customer.dart';
+import '../../../../features/customers/domain/entities/customer_change_proposal.dart';
 import '../../../../features/customers/domain/entities/customer_note.dart';
 
 /// Decodes the API's customer payloads.
@@ -36,6 +37,10 @@ abstract final class CustomerDto {
       metadata: _map(json['metadata']) ?? const <String, Object?>{},
       createdAt: parseTime(json['createdAt']) ?? DateTime.now().toUtc(),
       updatedAt: parseTime(json['updatedAt']),
+      blockedAt: parseTime(json['blockedAt']),
+      blockReason: _text(json['blockReason']),
+      // The same shape as tags: a list of strings, blanks dropped.
+      aliases: _tags(json['aliases']),
     );
   }
 
@@ -114,5 +119,75 @@ abstract final class CustomerNoteDto {
         if (CustomerDto._map(item) case final Map<String, Object?> json)
           decode(json, customerId: customerId),
     ];
+  }
+}
+
+/// Decodes the API's `CustomerChangeProposalView`.
+///
+/// The two values are `unknown` on the server -- a custom field can hold a
+/// number, a yes/no or a list -- and arrive here as whatever JSON made of
+/// them. They are turned into text once, here, because text is all a member
+/// is shown and all they decide on.
+abstract final class CustomerChangeProposalDto {
+  static CustomerChangeProposal decode(Map<String, Object?> json) {
+    final String? id = json['id']?.toString();
+
+    if (id == null || id.isEmpty) {
+      throw const FormatException('Change proposal carried no id.');
+    }
+
+    return CustomerChangeProposal(
+      id: id,
+      field: switch (json['field']) {
+        'name' => CustomerChangeField.name,
+        'email' => CustomerChangeField.email,
+        'phone' => CustomerChangeField.phone,
+        _ => CustomerChangeField.customField,
+      },
+      fieldDefinitionId: CustomerDto._text(json['fieldDefinitionId']),
+      fieldLabel: json['fieldLabel']?.toString() ?? '',
+      currentValue: displayValue(json['currentValue']),
+      proposedValue: displayValue(json['proposedValue']),
+      conversationId: CustomerDto._text(json['conversationId']),
+      createdAt:
+          CustomerDto.parseTime(json['createdAt']) ?? DateTime.now().toUtc(),
+    );
+  }
+
+  /// The endpoint answers with a bare array, which `HttpClient` hands over as
+  /// `{'data': [...]}`. Malformed entries are skipped, not fatal.
+  static List<CustomerChangeProposal> decodeList(Object? raw) {
+    final List<Object?> items = raw is List<Object?> ? raw : const <Object?>[];
+    final List<CustomerChangeProposal> decoded = <CustomerChangeProposal>[];
+
+    for (final Object? item in items) {
+      final Map<String, Object?>? json = CustomerDto._map(item);
+
+      if (json == null) continue;
+
+      try {
+        decoded.add(decode(json));
+      } on FormatException {
+        // One proposal without an id is not a reason to hide the others.
+      }
+    }
+
+    return decoded;
+  }
+
+  /// A value as a member reads it: a list joined, blanks as nothing.
+  static String? displayValue(Object? raw) {
+    if (raw == null) return null;
+    if (raw is List<Object?>) {
+      final String joined = raw
+          .where((Object? item) => item != null)
+          .map((Object? item) => item.toString().trim())
+          .where((String item) => item.isNotEmpty)
+          .join(', ');
+
+      return joined.isEmpty ? null : joined;
+    }
+
+    return CustomerDto._text(raw);
   }
 }

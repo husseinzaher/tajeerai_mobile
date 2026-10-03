@@ -39,7 +39,10 @@ abstract final class SchemaMigrations {
   /// v9 -- `conversation_notes`: a thread's own record - internal notes, the
   ///       log of what happened to it, the assistant's summaries - drawn
   ///       between the bubbles the way the web's inbox draws them.
-  static const int version = 9;
+  /// v10 -- `customers.blocked_at`, `block_reason` and `aliases`: whether the
+  ///       workspace blocked the contact, and the other names a merged
+  ///       duplicate brought with it.
+  static const int version = 10;
 
   static MigrationStrategy strategy(GeneratedDatabase database) {
     return MigrationStrategy(
@@ -122,6 +125,23 @@ abstract final class SchemaMigrations {
         from8To9: (Migrator migrator, Schema9 schema) async {
           await migrator.createTable(schema.conversationNotes);
           await _createConversationNoteIndexes(database);
+        },
+        from9To10: (Migrator migrator, Schema10 schema) async {
+          /*
+            Nullable or defaulted, so an upgraded device reads every contact
+            as "not blocked, no other names" until the next sync or refresh
+            says otherwise. Not blocked is the safe misreading: the server is
+            what refuses a send to a blocked contact, not this column.
+          */
+          await migrator.addColumn(
+            schema.customers,
+            schema.customers.blockedAt,
+          );
+          await migrator.addColumn(
+            schema.customers,
+            schema.customers.blockReason,
+          );
+          await migrator.addColumn(schema.customers, schema.customers.aliases);
         },
       ),
       beforeOpen: (OpeningDetails details) async {

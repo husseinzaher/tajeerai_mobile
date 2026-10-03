@@ -23,6 +23,20 @@ Stream<List<CustomerNote>> customerNotes(Ref ref, String customerId) {
   return ref.watch(customerRepositoryProvider).watchNotes(customerId);
 }
 
+/// Whether the member may change a contact: block it, unblock it, decide a
+/// proposed change. The permission the server checks on each of those --
+/// asked here only to decide what is drawn. False means the controls are not
+/// there at all, rather than there and refused.
+@riverpod
+bool canEditCustomer(Ref ref) {
+  return ref
+          .watch(sessionCapabilityProvider)
+          .currentSession
+          ?.user
+          .can('update:Customer') ??
+      false;
+}
+
 /// Brings one contact and its entries up to date.
 ///
 /// Its own provider rather than a call in the screen's `initState`, for three

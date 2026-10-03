@@ -71,4 +71,25 @@ void main() {
       expect(_customer().answersTo('0501234567'), isFalse);
     });
   });
+
+  group('isBlocked', () {
+    test('is false until the workspace blocks them', () {
+      expect(_customer().isBlocked, isFalse);
+      expect(_customer().aliases, isEmpty);
+    });
+
+    test('follows the moment of the block, not the reason', () {
+      // A block with no reason is still a block: the reason is optional on
+      // the server, and this app's own block never asks for one.
+      final Customer blocked = Customer(
+        id: 'c1',
+        name: 'Ada',
+        createdAt: testEpoch,
+        blockedAt: testEpoch,
+      );
+
+      expect(blocked.isBlocked, isTrue);
+      expect(blocked.blockReason, isNull);
+    });
+  });
 }

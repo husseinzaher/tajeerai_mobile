@@ -383,6 +383,90 @@ class AppStrings {
       'en': 'This contact was removed from the workspace',
       'ar': 'أُزيلت جهة الاتصال من مساحة العمل',
     },
+    // -- blocking a contact -------------------------------------------------
+    'customerBlock': <String, String>{
+      'en': 'Block customer',
+      'ar': 'حظر العميل',
+    },
+    'customerUnblock': <String, String>{'en': 'Unblock', 'ar': 'إلغاء الحظر'},
+    // The dialog's confirm: the act in one word, beside the system's Cancel.
+    'customerBlockConfirm': <String, String>{'en': 'Block', 'ar': 'حظر'},
+    'customerBlockConfirmTitle': <String, String>{
+      'en': 'Block this customer?',
+      'ar': 'حظر هذا العميل؟',
+    },
+    'customerBlockConfirmBody': <String, String>{
+      'en': 'Their messages won’t reach the inbox and nothing will be sent to them on any channel — campaigns included — until you unblock them.',
+      'ar': 'لن تصل رسائله إلى صندوق الوارد ولن يُرسَل إليه شيء على أي قناة — والحملات ضمنها — حتى تلغي الحظر.',
+    },
+    'customerUnblockConfirmTitle': <String, String>{
+      'en': 'Unblock this customer?',
+      'ar': 'إلغاء حظر هذا العميل؟',
+    },
+    'customerUnblockConfirmBody': <String, String>{
+      'en': 'Their messages will reach the inbox again and you can message them. What they sent while blocked was not kept.',
+      'ar': 'ستصل رسائله إلى صندوق الوارد من جديد ويمكنك مراسلته. ما أرسله أثناء الحظر لم يُحفظ.',
+    },
+    'customerBlocked': <String, String>{'en': 'Blocked', 'ar': 'محظور'},
+    'customerBlockedBanner': <String, String>{
+      'en': 'Blocked — their messages are dropped and nothing is sent to them.',
+      'ar': 'محظور — تُتجاهَل رسائله ولا يُرسَل إليه شيء.',
+    },
+    'customerBlockReason': <String, String>{
+      'en': 'Block reason',
+      'ar': 'سبب الحظر',
+    },
+    'customerBlockDone': <String, String>{
+      'en': 'Customer blocked',
+      'ar': 'تم حظر العميل',
+    },
+    'customerUnblockDone': <String, String>{
+      'en': 'Customer unblocked',
+      'ar': 'تم إلغاء حظر العميل',
+    },
+    'customerActionNeedsConnection': <String, String>{
+      'en': 'This needs a connection. Nothing was changed.',
+      'ar': 'هذا الإجراء يحتاج اتصالًا بالإنترنت. لم يتغيّر شيء.',
+    },
+    'customerActionNotAllowed': <String, String>{
+      'en': 'You don’t have permission to do this.',
+      'ar': 'ليست لديك صلاحية لهذا الإجراء.',
+    },
+    'customerActionFailed': <String, String>{
+      'en': 'That didn’t go through. Try again.',
+      'ar': 'لم يتم الإجراء. حاول مرة أخرى.',
+    },
+    'customerAliases': <String, String>{
+      'en': 'Also known as',
+      'ar': 'أسماء أخرى',
+    },
+
+    // -- changes the AI employee proposed -----------------------------------
+    'customerProposals': <String, String>{
+      'en': 'Proposed changes ({count})',
+      'ar': 'تعديلات مقترحة ({count})',
+    },
+    'customerProposalsHint': <String, String>{
+      'en': 'The AI employee read these in a conversation. The card keeps its current value until you approve.',
+      'ar': 'قرأها الموظف الآلي في محادثة. تبقى القيمة الحالية في البطاقة حتى تعتمدها.',
+    },
+    'customerProposalApprove': <String, String>{
+      'en': 'Approve',
+      'ar': 'اعتماد',
+    },
+    'customerProposalReject': <String, String>{'en': 'Reject', 'ar': 'رفض'},
+    'customerProposalApproved': <String, String>{
+      'en': 'Change approved',
+      'ar': 'تم اعتماد التعديل',
+    },
+    'customerProposalRejected': <String, String>{
+      'en': 'Change rejected',
+      'ar': 'تم رفض التعديل',
+    },
+    'customerProposalAlreadyDecided': <String, String>{
+      'en': 'Someone already decided on this change.',
+      'ar': 'سبق أن اتُّخذ قرار بشأن هذا التعديل.',
+    },
     'save': <String, String>{'en': 'Save', 'ar': 'حفظ'},
 
     // -- settings -----------------------------------------------------------
@@ -1054,6 +1138,31 @@ class AppStrings {
   String get customerSaveFailed => call('customerSaveFailed');
   String get customerExists => call('customerExists');
   String get customerGone => call('customerGone');
+  String get customerBlock => call('customerBlock');
+  String get customerUnblock => call('customerUnblock');
+  String get customerBlockConfirm => call('customerBlockConfirm');
+  String get customerBlockConfirmTitle => call('customerBlockConfirmTitle');
+  String get customerBlockConfirmBody => call('customerBlockConfirmBody');
+  String get customerUnblockConfirmTitle => call('customerUnblockConfirmTitle');
+  String get customerUnblockConfirmBody => call('customerUnblockConfirmBody');
+  String get customerBlocked => call('customerBlocked');
+  String get customerBlockedBanner => call('customerBlockedBanner');
+  String get customerBlockReason => call('customerBlockReason');
+  String get customerBlockDone => call('customerBlockDone');
+  String get customerUnblockDone => call('customerUnblockDone');
+  String get customerActionNeedsConnection =>
+      call('customerActionNeedsConnection');
+  String get customerActionNotAllowed => call('customerActionNotAllowed');
+  String get customerActionFailed => call('customerActionFailed');
+  String get customerAliases => call('customerAliases');
+  String get customerProposals => call('customerProposals');
+  String get customerProposalsHint => call('customerProposalsHint');
+  String get customerProposalApprove => call('customerProposalApprove');
+  String get customerProposalReject => call('customerProposalReject');
+  String get customerProposalApproved => call('customerProposalApproved');
+  String get customerProposalRejected => call('customerProposalRejected');
+  String get customerProposalAlreadyDecided =>
+      call('customerProposalAlreadyDecided');
   String get save => call('save');
 
   String get settings => call('settings');

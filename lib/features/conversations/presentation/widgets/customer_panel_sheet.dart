@@ -144,6 +144,12 @@ class _CustomerPanelSheetState extends ConsumerState<CustomerPanelSheet> {
           variant: registered ? AppBadgeVariant.success : AppBadgeVariant.muted,
           size: AppBadgeSize.small,
         ),
+        if (person != null && person.isBlocked)
+          AppBadge(
+            label: strings.customerBlocked,
+            variant: AppBadgeVariant.destructive,
+            size: AppBadgeSize.small,
+          ),
         if (person?.typeName case final String type)
           AppBadge(
             label: type,
@@ -238,6 +244,19 @@ class _DataTab extends StatelessWidget {
         TajeerSpacing.lg,
       ),
       children: <Widget>[
+        /*
+          First, above the fields: a member reading this panel is about to
+          reply, and a blocked contact is one nothing reaches. Unblocking is
+          the contact's own screen's - the panel only reads - and "open" in
+          the header is the way there.
+        */
+        if (person != null && person.isBlocked) ...<Widget>[
+          AppStatusBanner(
+            message: strings.customerBlockedBanner,
+            icon: LucideIcons.ban,
+          ),
+          const SizedBox(height: TajeerSpacing.sm),
+        ],
         AppSectionHeader(title: strings.customerPanelFields),
         AppDetailRow(
           label: strings.customerPanelName,

@@ -62,6 +62,16 @@ class Customers extends Table {
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime().nullable()();
 
+  /// Since when the workspace has blocked this contact; null when it has not.
+  /// Stored so a blocked contact reads as blocked offline, on the contact's
+  /// screen and in the Inbox's customer panel alike.
+  DateTimeColumn get blockedAt => dateTime().nullable()();
+  TextColumn get blockReason => text().nullable()();
+
+  /// JSON array, like [tags]: the other names a merged duplicate brought
+  /// with it. Read whole, never filtered on.
+  TextColumn get aliases => text().withDefault(const Constant('[]'))();
+
   /// When this device last saw the row in a sync.
   ///
   /// The reconciliation key: a full walk stamps every row it sees, and rows

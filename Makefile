@@ -145,27 +145,32 @@ format-check:
 analyze:
 	flutter analyze --fatal-infos --fatal-warnings
 
+# Two workers, never more: `flutter test` defaults to every core, and this
+# machine runs Docker, dev servers and other sessions beside it (owner's
+# two-worker cap, 2026-10-03). Every target below that runs tests passes it.
+TEST_CONCURRENCY ?= 2
+
 test:
-	flutter test --coverage
+	flutter test --coverage --concurrency=$(TEST_CONCURRENCY)
 
 # One file or directory, no coverage — for the edit/run loop. `make test` is
 # still what has to pass before finishing.
 test-file:
 	@test -n "$(FILE)" || (echo "Usage: make test-file FILE=test/path/to/foo_test.dart" >&2; exit 1)
-	flutter test $(FILE)
+	flutter test --concurrency=$(TEST_CONCURRENCY) $(FILE)
 
 # The pixel comparisons. They are the only tests whose result depends on how
 # the machine rasterises a font, so an environment that cannot reproduce the
 # reference rendering runs `flutter test --exclude-tags golden` instead of
 # blessing a diff.
 golden:
-	flutter test --tags golden
+	flutter test --concurrency=$(TEST_CONCURRENCY) --tags golden
 
 # Deliberate, never a reflex: a regenerated image is a design change, and the
 # point of two variants per page rather than four is that a human can review
 # every one that moved. See ARCHITECTURE.md §13.
 golden-update:
-	flutter test --tags golden --update-goldens
+	flutter test --concurrency=$(TEST_CONCURRENCY) --tags golden --update-goldens
 
 coverage:
 	dart run tool/check_coverage.dart

@@ -1,7 +1,8 @@
 import 'dart:convert';
 
 /// The tags column is a JSON array of strings, encoded and decoded in one
-/// place.
+/// place -- and so is `aliases`, which has the same shape and the same
+/// answer to a column it cannot read.
 ///
 /// Its own file because both the DAO and the repository need it: the DAO reads
 /// tags out of rows for the filter chips, the repository writes them on every

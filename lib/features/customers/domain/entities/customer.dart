@@ -26,6 +26,9 @@ final class Customer {
     this.photoUrl,
     this.metadata = const <String, Object?>{},
     this.updatedAt,
+    this.blockedAt,
+    this.blockReason,
+    this.aliases = const <String>[],
   });
 
   final String id;
@@ -55,6 +58,23 @@ final class Customer {
   final Map<String, Object?> metadata;
   final DateTime createdAt;
   final DateTime? updatedAt;
+
+  /// Since when the workspace has blocked this contact, or null when it has
+  /// not. While set, what they send is dropped rather than stored, and nothing
+  /// is sent to them on any channel -- campaigns included. The server enforces
+  /// both; this only says so.
+  final DateTime? blockedAt;
+
+  /// Why, in the words of whoever blocked them. Optional on the server, and
+  /// never asked for by this app's own block action.
+  final String? blockReason;
+
+  /// Other names the same person is known by, kept from duplicates merged
+  /// into this contact. Read-only here: the merge that produces them is the
+  /// web's.
+  final List<String> aliases;
+
+  bool get isBlocked => blockedAt != null;
 
   /// The WhatsApp identity a channel attached to this contact, if any.
   WhatsAppContact get whatsApp => WhatsAppContact.fromMetadata(metadata);

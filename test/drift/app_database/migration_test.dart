@@ -8,6 +8,8 @@ import 'generated/schema.dart';
 import 'generated/schema_v1.dart' as v1;
 import 'generated/schema_v2.dart' as v2;
 import 'generated/schema_v3.dart' as v3;
+import 'generated/schema_v9.dart' as v9;
+import 'generated/schema_v10.dart' as v10;
 
 /// Upgrades, tested against the schema each version actually shipped with.
 ///
@@ -143,6 +145,54 @@ void main() {
               tenantId: 't1',
               tenantName: 'Demo',
               updatedAt: '2026-09-01T08:00:00.000Z',
+            ),
+          ],
+        );
+      },
+    );
+  });
+
+  test('v9 to v10 keeps every contact, none of them blocked', () async {
+    await verifier.testWithDataIntegrity(
+      oldVersion: 9,
+      newVersion: 10,
+      createOld: v9.DatabaseAtV9.new,
+      createNew: v10.DatabaseAtV10.new,
+      openTestedDatabase: AppDatabase.new,
+      createItems: (Batch batch, v9.DatabaseAtV9 old) {
+        batch.insert(
+          old.customers,
+          v9.CustomersCompanion.insert(
+            id: 'c1',
+            name: 'Ada Lovelace',
+            phone: const Value<String?>('+966501234567'),
+            phoneDigits: const Value<String?>('966501234567'),
+            phoneSuffix: const Value<String?>('501234567'),
+            tags: const Value<String>('["vip"]'),
+            createdAt: '2026-09-01T08:00:00.000Z',
+            seenAt: '2026-09-01T08:00:00.000Z',
+          ),
+        );
+      },
+      validateItems: (v10.DatabaseAtV10 migrated) async {
+        // An upgraded phone has never been told about a block, and reads
+        // "not blocked" until the next refresh says otherwise. The contact,
+        // and the keys a caller card finds them by, are untouched.
+        expect(
+          await migrated.select(migrated.customers).get(),
+          const <v10.CustomersData>[
+            v10.CustomersData(
+              id: 'c1',
+              name: 'Ada Lovelace',
+              phone: '+966501234567',
+              phoneDigits: '966501234567',
+              phoneSuffix: '501234567',
+              locale: 'ar',
+              tags: '["vip"]',
+              metadata: '{}',
+              createdAt: '2026-09-01T08:00:00.000Z',
+              aliases: '[]',
+              seenAt: '2026-09-01T08:00:00.000Z',
             ),
           ],
         );

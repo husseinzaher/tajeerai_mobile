@@ -5,6 +5,7 @@ import 'package:TajeerAi/infrastructure/adapters/customers/models/customer_dto.d
 import 'package:TajeerAi/infrastructure/adapters/customers/remote/customer_remote_data_source.dart';
 import 'package:TajeerAi/infrastructure/adapters/customers/repositories/customer_repository_impl.dart';
 import 'package:TajeerAi/features/customers/domain/entities/customer.dart';
+import 'package:TajeerAi/features/customers/domain/entities/customer_change_proposal.dart';
 import 'package:TajeerAi/features/customers/domain/entities/customer_note.dart';
 import 'package:TajeerAi/features/customers/domain/repositories/customer_repository.dart';
 import 'package:TajeerAi/infrastructure/storage/database/app_database.dart';
@@ -24,6 +25,10 @@ class _ScriptedHttpClient implements HttpClient {
 
   final List<String> calls = <String>[];
 
+  /// What each POST carried, by path, so a write is checked for what it sent
+  /// as well as where.
+  final Map<String, Object?> bodies = <String, Object?>{};
+
   @override
   Future<Map<String, Object?>> get(
     String path, {
@@ -37,6 +42,7 @@ class _ScriptedHttpClient implements HttpClient {
   @override
   Future<Map<String, Object?>> post(String path, {Object? body}) async {
     calls.add(path);
+    bodies[path] = body;
 
     return _answer(path);
   }
@@ -73,12 +79,16 @@ void main() {
 
   tearDown(() => database.close());
 
+  late _ScriptedHttpClient http;
+
   CustomerRepositoryImpl repositoryFor(
     Map<String, Object?> Function(String path) answer,
   ) {
+    http = _ScriptedHttpClient(answer);
+
     return CustomerRepositoryImpl(
       dao: dao,
-      remote: CustomerRemoteDataSource(_ScriptedHttpClient(answer)),
+      remote: CustomerRemoteDataSource(http),
       clock: () => testEpoch,
     );
   }
@@ -355,6 +365,202 @@ void main() {
       expect(
         () => CustomerDto.decode(<String, Object?>{'name': 'Ada'}),
         throwsA(isA<FormatException>()),
+      );
+    });
+  });
+
+  group('block', () {
+    Future<void> storeAda() async {
+      await repositoryFor(
+        (_) => <String, Object?>{
+          'data': <Object?>[_customerJson()],
+          'meta': <String, Object?>{'lastPage': 1},
+        },
+      ).synchronizePage(page: 1);
+    }
+
+    /*
+      The screen and the Inbox's panel watch the row, not the call. A block
+      that waited for the next sync to land would read as not having worked.
+    */
+    test('writes the blocked contact locally at once', () async {
+      await storeAda();
+
+      final CustomerRepositoryImpl repository = repositoryFor(
+        (_) => <String, Object?>{
+          ..._customerJson(),
+          'blockedAt': testEpoch.toIso8601String(),
+          'blockReason': 'Spam',
+          'aliases': <String>['Augusta'],
+        },
+      );
+
+      final Customer blocked = await repository.block('c1', reason: 'Spam');
+
+      expect(http.calls, <String>['/v1/customers/c1/block']);
+      expect(http.bodies['/v1/customers/c1/block'], <String, Object?>{
+        'reason': 'Spam',
+      });
+      expect(blocked.isBlocked, isTrue);
+
+      final Customer? stored = await repository.watchCustomer('c1').first;
+
+      expect(stored?.isBlocked, isTrue);
+      expect(stored?.blockReason, 'Spam');
+      expect(stored?.aliases, <String>['Augusta']);
+      // Still findable by a ringing number: the write went through the one
+      // place the lookup keys are derived.
+      expect((await dao.findById('c1'))?.phoneSuffix, '501234567');
+    });
+
+    test('sends no reason when none was given', () async {
+      final CustomerRepositoryImpl repository = repositoryFor(
+        (_) => <String, Object?>{
+          ..._customerJson(),
+          'blockedAt': testEpoch.toIso8601String(),
+        },
+      );
+
+      await repository.block('c1');
+
+      expect(http.bodies['/v1/customers/c1/block'], <String, Object?>{});
+    });
+
+    test('unblocking writes the cleared block locally', () async {
+      await repositoryFor(
+        (_) => <String, Object?>{
+          ..._customerJson(),
+          'blockedAt': testEpoch.toIso8601String(),
+        },
+      ).block('c1');
+
+      final CustomerRepositoryImpl repository = repositoryFor(
+        (_) => _customerJson(),
+      );
+
+      final Customer unblocked = await repository.unblock('c1');
+
+      expect(http.calls, <String>['/v1/customers/c1/unblock']);
+      expect(unblocked.isBlocked, isFalse);
+      expect((await repository.findCustomer('c1'))?.isBlocked, isFalse);
+    });
+
+    /* Offline is not a block. Nothing may change locally. */
+    test('leaves the local row alone when the server is unreachable', () async {
+      await storeAda();
+
+      final CustomerRepositoryImpl offline = repositoryFor(
+        (_) =>
+            throw const HttpException(message: 'nope', isConnectionError: true),
+      );
+
+      await expectLater(
+        offline.block('c1'),
+        throwsA(
+          isA<TransportFailure>().having(
+            (TransportFailure failure) => failure.isOffline,
+            'isOffline',
+            isTrue,
+          ),
+        ),
+      );
+      expect((await offline.findCustomer('c1'))?.isBlocked, isFalse);
+    });
+
+    test('a refusal arrives as an authorization failure', () async {
+      final CustomerRepositoryImpl repository = repositoryFor(
+        (_) => throw const HttpException(message: 'no', statusCode: 403),
+      );
+
+      await expectLater(
+        repository.unblock('c1'),
+        throwsA(isA<AuthorizationFailure>()),
+      );
+    });
+  });
+
+  group('change proposals', () {
+    test('lists what the server says is pending', () async {
+      final CustomerRepositoryImpl repository = repositoryFor(
+        (_) => <String, Object?>{
+          'data': <Object?>[
+            <String, Object?>{
+              'id': 'p1',
+              'field': 'phone',
+              'fieldDefinitionId': null,
+              'fieldLabel': 'Phone',
+              'currentValue': '+966500000000',
+              'proposedValue': '+966511111111',
+              'conversationId': 'v1',
+              'createdAt': testEpoch.toIso8601String(),
+            },
+          ],
+        },
+      );
+
+      final List<CustomerChangeProposal> proposals = await repository
+          .changeProposals('c1');
+
+      expect(http.calls, <String>['/v1/customers/c1/change-proposals']);
+      expect(proposals.single.field, CustomerChangeField.phone);
+      expect(proposals.single.proposedValue, '+966511111111');
+    });
+
+    test('an empty answer is an empty list', () async {
+      final CustomerRepositoryImpl repository = repositoryFor(
+        (_) => <String, Object?>{'data': <Object?>[]},
+      );
+
+      expect(await repository.changeProposals('c1'), isEmpty);
+    });
+
+    test('approves and rejects at the proposal\'s own address', () async {
+      // Both answer 204, which `HttpClient` hands over as an empty map.
+      final CustomerRepositoryImpl repository = repositoryFor(
+        (_) => const <String, Object?>{},
+      );
+
+      await repository.approveChange('c1', 'p1');
+      await repository.rejectChange('c1', 'p2');
+
+      expect(http.calls, <String>[
+        '/v1/customers/c1/change-proposals/p1/approve',
+        '/v1/customers/c1/change-proposals/p2/reject',
+      ]);
+    });
+
+    /*
+      The three answers the screen words differently: decided already, not
+      allowed (a phone number the member cannot see), and no connection.
+    */
+    test('translates each refusal into the app\'s vocabulary', () async {
+      Future<void> expectFailure(int? status, Matcher matcher) async {
+        final CustomerRepositoryImpl repository = repositoryFor(
+          (_) => throw HttpException(
+            message: 'refused',
+            statusCode: status,
+            isConnectionError: status == null,
+          ),
+        );
+
+        await expectLater(repository.approveChange('c1', 'p1'), matcher);
+      }
+
+      await expectFailure(404, throwsA(isA<NotFoundFailure>()));
+      await expectFailure(403, throwsA(isA<AuthorizationFailure>()));
+      await expectFailure(null, throwsA(isA<TransportFailure>()));
+
+      final CustomerRepositoryImpl rejecting = repositoryFor(
+        (_) => throw const HttpException(message: 'gone', statusCode: 404),
+      );
+
+      await expectLater(
+        rejecting.rejectChange('c1', 'p1'),
+        throwsA(isA<NotFoundFailure>()),
+      );
+      await expectLater(
+        rejecting.changeProposals('c1'),
+        throwsA(isA<NotFoundFailure>()),
       );
     });
   });

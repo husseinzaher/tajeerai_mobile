@@ -1,4 +1,5 @@
 import '../entities/customer.dart';
+import '../entities/customer_change_proposal.dart';
 import '../entities/customer_note.dart';
 
 /// Data access for contacts.
@@ -9,8 +10,9 @@ import '../entities/customer_note.dart';
 /// called by a coordinator.
 ///
 /// The exceptions are spelled out rather than hidden: [searchOnline],
-/// [create] and [addNote] are network calls by definition, and are named so a
-/// reader can see which screens stop working on a plane.
+/// [create], [addNote], [block], [unblock] and the change proposals are
+/// network calls by definition, and are named so a reader can see which
+/// screens stop working on a plane.
 abstract interface class CustomerRepository {
   /// The contact list, from local storage, re-emitting on every change.
   ///
@@ -92,6 +94,28 @@ abstract interface class CustomerRepository {
 
   /// Appends an entry. Online only -- see the class comment.
   Future<CustomerNote> addNote(String customerId, String body);
+
+  /// Blocks the contact on the server, then writes what it answered locally,
+  /// so every screen watching the contact sees it at once. Online only.
+  ///
+  /// Blocking an already-blocked contact is not an error: the server keeps
+  /// the first block's time and reason.
+  Future<Customer> block(String customerId, {String? reason});
+
+  /// Lifts a block, the same way. Online only.
+  Future<Customer> unblock(String customerId);
+
+  /// The changes waiting for a member's decision, oldest first. Online only,
+  /// and never stored: see `CustomerChangeProposal`.
+  Future<List<CustomerChangeProposal>> changeProposals(String customerId);
+
+  /// Applies a proposed change to the contact. Throws `NotFoundFailure` when
+  /// somebody already decided it, and `AuthorizationFailure` when the member
+  /// may not make that change -- a phone number they cannot see, say.
+  Future<void> approveChange(String customerId, String proposalId);
+
+  /// Closes a proposal without applying it. Throws as [approveChange] does.
+  Future<void> rejectChange(String customerId, String proposalId);
 }
 
 /// One page of a walk over the server's contact list.
